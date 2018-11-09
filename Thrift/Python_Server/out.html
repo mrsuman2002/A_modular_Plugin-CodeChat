@@ -1,0 +1,588 @@
+<?xml version="1.0" encoding="unicode" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=unicode" />
+<meta name="generator" content="Docutils 0.14: http://docutils.sourceforge.net/" />
+<title>&lt;string&gt;</title>
+<style type="text/css">
+
+/*
+:Author: David Goodger (goodger@python.org)
+:Id: $Id: html4css1.css 7952 2016-07-26 18:15:59Z milde $
+:Copyright: This stylesheet has been placed in the public domain.
+
+Default cascading style sheet for the HTML output of Docutils.
+
+See http://docutils.sf.net/docs/howto/html-stylesheets.html for how to
+customize this style sheet.
+*/
+
+/* used to remove borders from tables and images */
+.borderless, table.borderless td, table.borderless th {
+  border: 0 }
+
+table.borderless td, table.borderless th {
+  /* Override padding for "table.docutils td" with "! important".
+     The right padding separates the table cells. */
+  padding: 0 0.5em 0 0 ! important }
+
+.first {
+  /* Override more specific margin styles with "! important". */
+  margin-top: 0 ! important }
+
+.last, .with-subtitle {
+  margin-bottom: 0 ! important }
+
+.hidden {
+  display: none }
+
+.subscript {
+  vertical-align: sub;
+  font-size: smaller }
+
+.superscript {
+  vertical-align: super;
+  font-size: smaller }
+
+a.toc-backref {
+  text-decoration: none ;
+  color: black }
+
+blockquote.epigraph {
+  margin: 2em 5em ; }
+
+dl.docutils dd {
+  margin-bottom: 0.5em }
+
+object[type="image/svg+xml"], object[type="application/x-shockwave-flash"] {
+  overflow: hidden;
+}
+
+/* Uncomment (and remove this text!) to get bold-faced definition list terms
+dl.docutils dt {
+  font-weight: bold }
+*/
+
+div.abstract {
+  margin: 2em 5em }
+
+div.abstract p.topic-title {
+  font-weight: bold ;
+  text-align: center }
+
+div.admonition, div.attention, div.caution, div.danger, div.error,
+div.hint, div.important, div.note, div.tip, div.warning {
+  margin: 2em ;
+  border: medium outset ;
+  padding: 1em }
+
+div.admonition p.admonition-title, div.hint p.admonition-title,
+div.important p.admonition-title, div.note p.admonition-title,
+div.tip p.admonition-title {
+  font-weight: bold ;
+  font-family: sans-serif }
+
+div.attention p.admonition-title, div.caution p.admonition-title,
+div.danger p.admonition-title, div.error p.admonition-title,
+div.warning p.admonition-title, .code .error {
+  color: red ;
+  font-weight: bold ;
+  font-family: sans-serif }
+
+/* Uncomment (and remove this text!) to get reduced vertical space in
+   compound paragraphs.
+div.compound .compound-first, div.compound .compound-middle {
+  margin-bottom: 0.5em }
+
+div.compound .compound-last, div.compound .compound-middle {
+  margin-top: 0.5em }
+*/
+
+div.dedication {
+  margin: 2em 5em ;
+  text-align: center ;
+  font-style: italic }
+
+div.dedication p.topic-title {
+  font-weight: bold ;
+  font-style: normal }
+
+div.figure {
+  margin-left: 2em ;
+  margin-right: 2em }
+
+div.footer, div.header {
+  clear: both;
+  font-size: smaller }
+
+div.line-block {
+  display: block ;
+  margin-top: 1em ;
+  margin-bottom: 1em }
+
+div.line-block div.line-block {
+  margin-top: 0 ;
+  margin-bottom: 0 ;
+  margin-left: 1.5em }
+
+div.sidebar {
+  margin: 0 0 0.5em 1em ;
+  border: medium outset ;
+  padding: 1em ;
+  background-color: #ffffee ;
+  width: 40% ;
+  float: right ;
+  clear: right }
+
+div.sidebar p.rubric {
+  font-family: sans-serif ;
+  font-size: medium }
+
+div.system-messages {
+  margin: 5em }
+
+div.system-messages h1 {
+  color: red }
+
+div.system-message {
+  border: medium outset ;
+  padding: 1em }
+
+div.system-message p.system-message-title {
+  color: red ;
+  font-weight: bold }
+
+div.topic {
+  margin: 2em }
+
+h1.section-subtitle, h2.section-subtitle, h3.section-subtitle,
+h4.section-subtitle, h5.section-subtitle, h6.section-subtitle {
+  margin-top: 0.4em }
+
+h1.title {
+  text-align: center }
+
+h2.subtitle {
+  text-align: center }
+
+hr.docutils {
+  width: 75% }
+
+img.align-left, .figure.align-left, object.align-left, table.align-left {
+  clear: left ;
+  float: left ;
+  margin-right: 1em }
+
+img.align-right, .figure.align-right, object.align-right, table.align-right {
+  clear: right ;
+  float: right ;
+  margin-left: 1em }
+
+img.align-center, .figure.align-center, object.align-center {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+table.align-center {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.align-left {
+  text-align: left }
+
+.align-center {
+  clear: both ;
+  text-align: center }
+
+.align-right {
+  text-align: right }
+
+/* reset inner alignment in figures */
+div.align-right {
+  text-align: inherit }
+
+/* div.align-center * { */
+/*   text-align: left } */
+
+.align-top    {
+  vertical-align: top }
+
+.align-middle {
+  vertical-align: middle }
+
+.align-bottom {
+  vertical-align: bottom }
+
+ol.simple, ul.simple {
+  margin-bottom: 1em }
+
+ol.arabic {
+  list-style: decimal }
+
+ol.loweralpha {
+  list-style: lower-alpha }
+
+ol.upperalpha {
+  list-style: upper-alpha }
+
+ol.lowerroman {
+  list-style: lower-roman }
+
+ol.upperroman {
+  list-style: upper-roman }
+
+p.attribution {
+  text-align: right ;
+  margin-left: 50% }
+
+p.caption {
+  font-style: italic }
+
+p.credits {
+  font-style: italic ;
+  font-size: smaller }
+
+p.label {
+  white-space: nowrap }
+
+p.rubric {
+  font-weight: bold ;
+  font-size: larger ;
+  color: maroon ;
+  text-align: center }
+
+p.sidebar-title {
+  font-family: sans-serif ;
+  font-weight: bold ;
+  font-size: larger }
+
+p.sidebar-subtitle {
+  font-family: sans-serif ;
+  font-weight: bold }
+
+p.topic-title {
+  font-weight: bold }
+
+pre.address {
+  margin-bottom: 0 ;
+  margin-top: 0 ;
+  font: inherit }
+
+pre.literal-block, pre.doctest-block, pre.math, pre.code {
+  margin-left: 2em ;
+  margin-right: 2em }
+
+pre.code .ln { color: grey; } /* line numbers */
+pre.code, code {  }
+pre.code .comment, code .comment { color: #5C6576 }
+pre.code .keyword, code .keyword { color: #3B0D06; font-weight: bold }
+pre.code .literal.string, code .literal.string { color: #0C5404 }
+pre.code .name.builtin, code .name.builtin { color: #352B84 }
+pre.code .deleted, code .deleted { background-color: #DEB0A1}
+pre.code .inserted, code .inserted { background-color: #A3D289}
+
+span.classifier {
+  font-family: sans-serif ;
+  font-style: oblique }
+
+span.classifier-delimiter {
+  font-family: sans-serif ;
+  font-weight: bold }
+
+span.interpreted {
+  font-family: sans-serif }
+
+span.option {
+  white-space: nowrap }
+
+span.pre {
+  white-space: pre }
+
+span.problematic {
+  color: red }
+
+span.section-subtitle {
+  /* font-size relative to parent (h1..h6 element) */
+  font-size: 80% }
+
+table.citation {
+  border-left: solid 1px gray;
+  margin-left: 1px }
+
+table.docinfo {
+  margin: 2em 4em }
+
+table.docutils {
+  margin-top: 0.5em ;
+  margin-bottom: 0.5em }
+
+table.footnote {
+  border-left: solid 1px black;
+  margin-left: 1px }
+
+table.docutils td, table.docutils th,
+table.docinfo td, table.docinfo th {
+  padding-left: 0.5em ;
+  padding-right: 0.5em ;
+  vertical-align: top }
+
+table.docutils th.field-name, table.docinfo th.docinfo-name {
+  font-weight: bold ;
+  text-align: left ;
+  white-space: nowrap ;
+  padding-left: 0 }
+
+/* "booktabs" style (no vertical lines) */
+table.docutils.booktabs {
+  border: 0px;
+  border-top: 2px solid;
+  border-bottom: 2px solid;
+  border-collapse: collapse;
+}
+table.docutils.booktabs * {
+  border: 0px;
+}
+table.docutils.booktabs th {
+  border-bottom: thin solid;
+  text-align: left;
+}
+
+h1 tt.docutils, h2 tt.docutils, h3 tt.docutils,
+h4 tt.docutils, h5 tt.docutils, h6 tt.docutils {
+  font-size: 100% }
+
+ul.auto-toc {
+  list-style-type: none }
+
+</style>
+<style type="text/css">
+
+/* .. Copyright (C) 2012-2018 Bryan A. Jones.
+
+    This file is part of CodeChat.
+
+    CodeChat is free software: you can redistribute it and/or modify it under
+    the terms of the GNU General Public License as published by the Free
+    Software Foundation, either version 3 of the License, or (at your option)
+    any later version.
+
+    CodeChat is distributed in the hope that it will be useful, but WITHOUT ANY
+    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+    FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+    details.
+
+    You should have received a copy of the GNU General Public License along
+    with CodeChat.  If not, see <http://www.gnu.org/licenses/>.
+
+   ********************************************
+   CodeChat.css - Style sheet for CodeChat docs
+   ********************************************
+   Stylesheet for use with CodeChat's extensions to Docutils.
+
+   The overall goal is to allow comments (everything but ``<pre>`` tags) to
+   appear with normal (double) spacing, while comments and code are single
+   spaced.
+
+   :Author: Bryan A. Jones
+   :Contact: bjones AT ece DOT msstate DOT edu
+   :Copyright: This stylesheet has been placed in the public domain.
+
+   Implementation
+   ==============
+   This will cause an error if the html4css1 style sheet is embedded instead of
+   linked, though the page still displays without problems. However, omitting
+   it will cause the linked stylesheet case to fail, so leave this in.
+ */
+@import url(html4css1.css);
+
+/* Remove all top and bottom space around ``<pre>``, making it single-spaced.
+   Also, remove the border so that code and comments mix more naturally.
+ */
+.fenced-code pre, div.fenced-code div.highlight, div.fenced-code div.highlight pre, pre.fenced-code {
+    padding-top: 0px;
+    padding-bottom: 0px;
+    padding-left: 0px;
+    margin-top: 0px;
+    margin-bottom: 0px;
+    margin-left: 0px;
+    border: none;
+    -webkit-box-shadow: none;
+}
+
+/* Tweak the size of the indent so that code and comments line up. */
+div.CodeChat-indent {
+    /* This is only needed for the ReadTheDocs theme. Otherwise, comment it out. */
+    /* font-size: 10pt; */
+}
+
+</style>
+</head>
+<body>
+<div class="document">
+
+
+<script type="text/javascript">document.addEventListener("DOMContentLoaded", function(event) {let walk_tree = function(elements,func_walk,func_child) {let walk_children = [];for (let index = 0; index < elements.length; ++index) {let that = elements[index];while (that && !func_walk(that)) {that = that.parentElement;}if (that) {that = func_walk(that);walk_children.push(that);while (that && func_child(that)) {that = func_child(that);walk_children.push(that);}}}return walk_children;};let code = document.getElementsByClassName("fenced-code");walk_tree(code, x => x.nextElementSibling, x => x.firstElementChild).map(x => {x.style.marginTop = 0;x.style.paddingTop = 0;});walk_tree(code, x => x.previousElementSibling, x => x.lastElementChild).map(x => {x.style.marginBottom = 0;x.style.paddingBottom = 0;});});</script><pre class="code fenced-code literal-block">
+#include &lt;iostream&gt;
+#include &lt;string&gt;
+#include &lt;fstream&gt;
+
+using namespace std;
+ 
+</pre>
+<!--  -->
+<!--  -->
+<div class="section" id="four-functions-name">
+<h1>Four Functions name</h1>
+<pre class="code fenced-code literal-block">
+void read();
+void output();
+void grades();
+int highest_score();
+void highest_test_score_student(int grade);
+ 
+</pre>
+<!--  -->
+<!--  -->
+</div>
+<div class="section" id="structure-variable-and-four-components">
+<h1>Structure variable and four components</h1>
+<pre class="code fenced-code literal-block">
+struct studentType{
+    string studentFName ;
+    string studentLname ;
+    int testScore;
+    char grade;
+
+}
+ 
+</pre>
+<!--  -->
+<!--  -->
+</div>
+<div class="section" id="students-array">
+<h1>20 students array</h1>
+<pre class="code fenced-code literal-block">
+studentdata[20];
+
+
+int main(){
+    read ();
+    grades();
+    output();
+    highest_test_score_student(highest_score());
+}
+</pre>
+<!--  -->
+<!--  -->
+<p>writing function which reads data</p>
+<pre class="code fenced-code literal-block">
+void read(){
+    ifstream in (&quot;Lab1Data.txt&quot;);
+    if (in.is_open()){
+        for (int i=0; i&lt;20; i++){
+            in &gt;&gt;studentdata[i].studentFName;
+            in &gt;&gt;studentdata[i].studentLname;
+            in &gt;&gt;studentdata[i].testScore;
+
+
+        }
+    }
+</pre>
+<!--  -->
+<div class="CodeChat-indent" style="margin-left:2.0em;"><!--  -->
+</div>
+<div class="section" id="if-there-is-no-file-then-gives-a-message">
+<h1>If there is no file then gives a message</h1>
+</div><!--  -->
+<pre class="code fenced-code literal-block">
+    else {cout&lt;&lt;&quot;There is no such file&quot;;}
+
+}
+</pre>
+<!--  -->
+<!--  -->
+</div>
+<div class="section" id="function-prints-name-score-and-grade">
+<h1>function prints name, score and grade</h1>
+<pre class="code fenced-code literal-block">
+void output(){
+    for (int j=0; j&lt;20; j++){
+        cout &lt;&lt; studentdata[j].studentLname&lt;&lt;&quot; , &quot;&lt;&lt;studentdata[j].studentFName&lt;&lt;&quot; &quot;&lt;&lt;studentdata[j].testScore&lt;&lt;&quot; &quot;&lt;&lt;studentdata[j].grade&lt;&lt;endl;
+
+    }
+}
+ 
+</pre>
+<!--  -->
+<!--  -->
+</div>
+<div class="section" id="gives-appropriate-char-grade-according-to-the-score-of-the-students">
+<h1>Gives appropriate char grade according to the score of the students</h1>
+<pre class="code fenced-code literal-block">
+void grades(){
+    for (int i = 0; i &lt; 20; i++)
+    {
+        if (studentdata[i].testScore &gt; 89 &amp;&amp; studentdata[i].testScore &lt;= 100)
+        {
+            studentdata[i].grade = 'A';
+        }
+        else if (studentdata[i].testScore &gt; 79 &amp;&amp; studentdata[i].testScore &lt;= 89)
+        {
+            studentdata[i].grade = 'B';
+        }
+        else if (studentdata[i].testScore &gt; 69 &amp;&amp; studentdata[i].testScore &lt;= 79)
+        {
+            studentdata[i].grade = 'C';
+        }
+        else if (studentdata[i].testScore &gt; 59 &amp;&amp; studentdata[i].testScore &lt;= 79)
+        {
+            studentdata[i].grade = 'D';
+        }
+        else if (studentdata[i].testScore &lt; 60)
+        {
+            studentdata[i].grade = 'F';
+        }
+    }
+}
+ 
+</pre>
+<!--  -->
+<!--  -->
+</div>
+<div class="section" id="checks-for-highest-score-among-20-students-and-return-the-highest-score">
+<h1>Checks for highest score among 20 students and return the highest score</h1>
+<pre class="code fenced-code literal-block">
+int highest_score(){
+    int highest=0;
+    for (int k=0; k&lt;20; k++){
+        if (studentdata[k].testScore&gt;=highest){
+            highest=studentdata[k].testScore;
+            }
+    }
+    return highest;
+}
+</pre>
+<!--  -->
+<!--  -->
+</div>
+<div class="section" id="prints-highest-test-scoring-student-name-and-score">
+<h1>Prints highest test scoring student name and score</h1>
+<pre class="code fenced-code literal-block">
+ 
+void highest_test_score_student(int grade){
+    cout&lt;&lt;&quot;Highest test scoring students are: &quot; &lt;&lt;endl;
+    for (int i=0; i&lt;20; i++){
+        if (studentdata[i].testScore==grade){
+            cout &lt;&lt;studentdata[i].studentLname&lt;&lt;&quot; , &quot;&lt;&lt;studentdata[i].studentFName &lt;&lt; &quot; &quot; &lt;&lt;studentdata[i].testScore &lt;&lt;endl;
+        }
+    }
+}
+</pre>
+<!--  -->
+</div>
+</div>
+</body>
+</html>
