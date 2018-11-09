@@ -105,7 +105,7 @@ pygments_style = 'sphinx'
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones. **CodeChat
 # note:** The ``CodeChat.CodeToRestSphinx`` extension is mandatory; without it,
 # CodeChat will not translate source code to reST and then (via Sphinx) to html.
-extensions = ['CodeChat.CodeToRestSphinx']
+extensions = ['CodeChat.CodeToRestSphinx', 'sphinx.ext.graphviz']
 
 # `templates_path <http://sphinx-doc.org/config.html#confval-templates_path>`_:
 # Add any paths that contain templates here, relative to this directory.
@@ -181,7 +181,7 @@ exclude_patterns = [
     # The ``CodeToRestSphinx`` extension creates a file named
     # ``sphinx-enki-info.txt``, which should be ignored by Sphinx.
     'sphinx-enki-info.txt',
-    'helloworld/node_modules',
+    'CodeChat_Extension/node_modules',
 ]
 
 # `default_role <http://sphinx-doc.org/config.html#confval-default_role>`_: The
