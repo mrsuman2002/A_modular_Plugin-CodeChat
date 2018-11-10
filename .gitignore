@@ -1,2 +1,5 @@
 _build/
 CodeChat_Extension/node_modules/
+A_modular_Plugin-CodeChat/Thrift/gen-py/tutorial/
+CodeChat_Extension/.vscode/
+sphinx-enki-info.txt
