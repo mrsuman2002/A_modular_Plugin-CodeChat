@@ -10,21 +10,21 @@ This project proposes the creation of a modular plug-in architecture for CodeCha
 
 The plugin architecture is shown in the Codechat Plugin Architecture.jpg https://github.com/mrsuman2002/A_modular_Plugin-CodeChat/blob/master/CodeChat%20Plugin%20Architecture.jpg
 
-# Prerequisites:
+Prerequisites:
 =============
 - Installation of python
 - Installation of Node.js
 - Installation of npm
 - Installation of thrift
 
-# Deployment:
+Deployment:
 =============
 
 
-# Built with:
+Built with:
 =============
 Yoeman Generator
 
-# License:
+License:
 ===========
 This is an open source non commerce plugin for VSCode.
