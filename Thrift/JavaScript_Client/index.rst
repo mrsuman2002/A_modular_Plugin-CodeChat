@@ -14,6 +14,7 @@ Contents:
    CodeChat.css
    default.css
    conf.py
+   Client_Readme.rst
 
 
 Indices and tables

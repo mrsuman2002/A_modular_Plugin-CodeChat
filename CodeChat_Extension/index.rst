@@ -6,9 +6,9 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-   extension.js
    package.json
-   README
+   extension.js
+   CodeChat_Extension_Readme.rst
 
 Indices and tables
 ==================

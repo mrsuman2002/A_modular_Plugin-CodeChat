@@ -1,5 +1,17 @@
+# ***********************************
+# |docname| - Files for Git to ignore
+# ***********************************
+
+syntax: glob
+# CodeChat-generated files
 _build/
+
+# Npm generated files
 node_modules/
-sphinx-enki-info.txt
+
+#Python generated
 __pycache__/
+
+# Others
+sphinx-enki-info.txt
 

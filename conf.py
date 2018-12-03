@@ -139,6 +139,8 @@ CodeChat_lexer_for_glob = {
     # CSS files are auto-detected as a CSS + Lasso file by Pygments,
     # causing it to display incorrectly. Define them as CSS only.
     '*.css': 'CSS',
+    # These` files use # as a comment. So does Perl. Ugly, no?
+    '.gitignore': 'Perl',
 }
 
 # **CodeChat note:** _`CodeChat_excludes` is a list of exclude_patterns_ which

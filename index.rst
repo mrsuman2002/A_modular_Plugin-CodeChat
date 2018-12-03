@@ -27,17 +27,15 @@ Welcome to template's documentation!
 
 
 
-
-
-
-
+.. This is a comment and I am using it to (for table of content)
 
 Contents:
 
 .. toctree::
     :maxdepth: 2
 
-    CodeChat_Extension/index
+    Readme.rst
+    CodeChat_Extension/index.rst
     Thrift/Thrift_Readme.rst
     conf.py
 
