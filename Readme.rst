@@ -18,10 +18,13 @@ The plugin architecture is shown in the Codechat Plugin Architecture.jpg https:/
 - Installation of thrift
 
 # Deployment:
+=============
 
 
 # Built with:
+=============
 Yoeman Generator
 
 # License:
+===========
 This is an open source non commerce plugin for VSCode.
