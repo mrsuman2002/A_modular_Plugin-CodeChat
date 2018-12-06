@@ -184,6 +184,8 @@ exclude_patterns = [
     # ``sphinx-enki-info.txt``, which should be ignored by Sphinx.
     'sphinx-enki-info.txt',
     'CodeChat_Extension/node_modules',
+    'Thrift/gen-nodejs',
+    'Thrift/gen-py',
 ]
 
 # `default_role <http://sphinx-doc.org/config.html#confval-default_role>`_: The

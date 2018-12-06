@@ -8,10 +8,15 @@ _build/
 
 # Npm generated files
 node_modules/
+Thrift/gen-nodejs/
+Thrift/gen-py/
+
 
 #Python generated
 __pycache__/
 
 # Others
 sphinx-enki-info.txt
+
+
 
