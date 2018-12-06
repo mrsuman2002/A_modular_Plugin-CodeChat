@@ -1,6 +1,6 @@
-
-// Entension for the CodeChat
-// ==========================
+// *****************************************
+// |docname| - This is an Extension
+// *****************************************
 const vscode = require('vscode');
 var tools = require('../Thrift/JavaScript_Client/Client');
 var subscription;
@@ -18,7 +18,7 @@ function activate(context) {
     });
 
     context.subscriptions.push(disposable);
-    // Taking the event from webview so that it can be used in onDidChangeTextDocument
+    // Taking the event from webview so that it can be used in OnDidChangeTextDocument
     // ---------------------------------------------------------------------------------
     var listener = function(event) {
         console.log("It happened", event);

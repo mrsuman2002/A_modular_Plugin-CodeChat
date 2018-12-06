@@ -1,14 +1,16 @@
-Visual Studio Code client
+Welcome to template's documentation!
 ====================================
+
+..  You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
 
 Contents:
 
-.. toctree::
-   :maxdepth: 2
+..  toctree::
+    :maxdepth: 2
 
-   package.json
-   extension.js
-   CodeChat_Extension_Readme.rst
+    extension.js
+    CodeChat_Extension_Readme.rst
 
 Indices and tables
 ==================

@@ -1,3 +1,6 @@
+// *****************************************
+// |docname| - This is a Thrift File
+// *****************************************
 
 namespace cpp tutorial
 namespace d tutorial
@@ -11,7 +14,7 @@ namespace netcore tutorial
 
 service CodechatSyc  {
    void ping(),
-   string render(1:string text,2:string path) 
+   string render(1:string text,2:string path)
 
 }
 

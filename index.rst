@@ -2,29 +2,28 @@ Welcome to template's documentation!
 ====================================
 .. digraph:: mydiagram
 
-   "\nCodehat Plugin for VS Code \n \n"[shape=rectangle]
+    CodeChat_plugin [label="\nCodehat Plugin for VS Code \n \n",shape=rectangle]
 
-   "\n\nThrift\n\n" [shape=circle]
-   "\nCodehat Plugin for VS Code \n \n" -> "\n\nThrift\n\n" [ label="Consists"];
+    Thrift [label="\n\nThrift\n\n", shape=circle]
+    CodeChat_plugin -> Thrift [ label="Consists"];
 
-   "CodeChat\n Extension" [shape=circle]
-   "\nCodehat Plugin for VS Code \n \n" -> "CodeChat\n Extension" [label="Consists"];
+    CodeChat_Extention [label="CodeChat\n Extension", shape=circle]
+    CodeChat_plugin -> CodeChat_Extention [label="Consists"];
 
-   "\n Python\n Server \n" [shape=circle]
-   "\n\nThrift\n\n"  -> "\n Python\n Server \n" [label="Consists"];
+    PythonServer [label ="\n Python\n Server \n", shape=circle]
+    Thrift  -> PythonServer  [label="Consists"];
 
-   "\n Python\n Server \n"  -> "JavaScript\nClient" [label="Consists"];
+    JavaScriptClient [label ="JavaScript\nClient", shape=circle]
+    PythonServer   -> JavaScriptClient [label="Consists"];
 
-   "JavaScript\nClient" [shape=circle]
-   "\n\nThrift\n\n"  -> "JavaScript\nClient" [label="Consists"];
-   "JavaScript\nClient" -> "CodeChat\n Extension" [label="Talks to"];
+    Thrift -> JavaScriptClient [label="Consists"];
+    JavaScriptClient -> CodeChat_Extention [label="Talks to"];
 
-   "CodeChat\nLibrary" [shape=square]
-   "CodeChat\nLibrary" -> "\n Python\n Server \n" [label="Consists"];
+    CodeChatLibrary [label= "CodeChat\nLibrary", shape=square]
+    CodeChatLibrary -> PythonServer  [label="Consists"];
 
-   "Webview" [shape=circle]
-   "CodeChat\n Extension" -> "Webview" [label="Generates"];
-
+    Webview [label="Webview", shape=circle]
+    CodeChat_Extention -> Webview [label="Generates"];
 
 
 .. This is a comment and I am using it to (for table of content)
@@ -38,6 +37,7 @@ Contents:
     CodeChat_Extension/index.rst
     Thrift/Thrift_Readme.rst
     conf.py
+    .gitignore
 
 
 
