@@ -10,11 +10,9 @@ Contents:
 
     CodeChat.css
     Client_Readme.rst
+    Client.js
 
 
-Indices and tables
-==================
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+
+

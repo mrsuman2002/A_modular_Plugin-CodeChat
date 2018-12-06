@@ -119,7 +119,7 @@ rst_epilog = (
 #
 # ``|docname|`` substitution
 # --------------------------
-# Provide a convenient way to refer to a source file's name. See `_docname_role`.
+# Provide a convenient way to refer to a source file's name.
 """
 
 .. |docname| replace:: :docname:`name`
@@ -186,7 +186,9 @@ exclude_patterns = [
     'CodeChat_Extension/node_modules',
     'Thrift/gen-nodejs',
     'Thrift/gen-py',
+    'Thrift/Python_Server/out.html',
 ]
+
 
 # `default_role <http://sphinx-doc.org/config.html#confval-default_role>`_: The
 # reST default role (used for this markup: ```text```) to use for all documents.

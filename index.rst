@@ -2,6 +2,8 @@ Welcome to template's documentation!
 ====================================
 .. digraph:: mydiagram
 
+    bgcolor="transparent"
+
     CodeChat_plugin [label="\nCodehat Plugin for VS Code \n \n",shape=rectangle]
 
     Thrift [label="\n\nThrift\n\n", shape=circle]

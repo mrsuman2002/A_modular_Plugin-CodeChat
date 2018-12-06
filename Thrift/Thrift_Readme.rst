@@ -23,5 +23,6 @@ To generate py files and node:js files using thrift, firstly, you need to `Downl
 
 .. toctree::
 
-    Python_Server/Python_Rerver_Readme
+    Python_Server/Python_Server_Readme
+    JavaScript_Client/index
 
