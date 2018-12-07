@@ -1,5 +1,6 @@
-`Apache Thrift <https://thrift.apache.org/>`_.
-==============================================
+`Apache Thrift <https://thrift.apache.org/>`_.: Scalable Cross-Language Services Implementation
+
+===================================================================================================
 
 The Apache Thrift software framework is used for scalable cross-language services development. It combines a software stack with a code generation engine to build services that work efficiently and seamlessly between Java, Python, C++ PHP, Erlang, Ruby, Perl, Haskell, C#, Cocoa, JavaScript, Node.js, Smalltalk, OCaml and Delphi and other languages.
 

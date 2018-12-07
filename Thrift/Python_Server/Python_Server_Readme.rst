@@ -1,11 +1,10 @@
-Python Server
-==============
+Python Server Documentation!
+=============================
 
 After creating the python modules i.e gen-py. You need to build your python server to communicate with CodeChat Library, written in python programming language.
 
 Supported Protocols, Transports and Servers.
-=============================================
-
+-------------------------------------------------
 The protocol layer provides serialization and deserialization. Thrift supports the following protocols :
 
 * TBinaryProtocol
@@ -16,7 +15,7 @@ The protocol layer provides serialization and deserialization. Thrift supports t
 * TDebugProtocol
 
 Tranport Layer
-==================
+---------------
 The transport layer is responsible for reading from and writing to the wire. Thrift supports the following:
 
 * TSocket

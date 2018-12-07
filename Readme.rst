@@ -11,15 +11,11 @@ This project proposes the creation of a modular plug-in architecture for CodeCha
 The plugin architecture is shown in the `Codechat Plugin Architecture.png <https://github.com/mrsuman2002/A_modular_Plugin-CodeChat/blob/master/Codechat%20Plugin%20Architecture.png>`_
 
 Prerequisites:
-=============
+===============
 - Installation of python
 - Installation of Node.js
 - Installation of npm
 - Installation of thrift
-
-Deployment:
-=============
-
 
 Built with:
 =============
@@ -27,4 +23,12 @@ Yoeman Generator
 
 License:
 ===========
-This is an open source non commerce plugin for VSCode.
+Copyright Copyright (C) 2012-2018 Bryan A. Jones.
+
+This file is part of CodeChat Plugin.
+
+CodeChat Plugin is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+CodeChat Plugin is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+You should have received `a copy of the GNU General Public License <https://github.com/mrsuman2002/A_modular_Plugin-CodeChat/blob/master/LICENSE.rst>`_ along with CodeChat. If not, see http://www.gnu.org/licenses/.

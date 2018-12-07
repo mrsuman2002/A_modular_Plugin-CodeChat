@@ -7,8 +7,8 @@ var CodechatSyc = require('../gen-nodejs/CodechatSyc');
 const vscode = require('vscode');
 const assert = require('assert');
 
-// Creating a function name myfunc to import it in `../extension.js`
-// --------------------------------------------------------------------
+// Creating a function name myfunc to import it in `../../CodeChat_Extension/extension.js`
+// -----------------------------------------------------------------------------------------
 
 function Clientfunc(webview){
 

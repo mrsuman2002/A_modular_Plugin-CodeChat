@@ -9,17 +9,16 @@ function activate(context) {
     console.log('Congratulations, your extension "CodeChat" is now active!');
     let disposable = vscode.commands.registerCommand('extension.sayHello', function () {
         vscode.window.showInformationMessage('Hello Codechat');
-        // Create and show panel
-        // ---------------------
+// Creating and showing panel
+// -----------------------------
         panel = vscode.window.createWebviewPanel('CodeChat', "CodeChat", vscode.ViewColumn.One, { });
-        // Calling function from Client.js named myfunc
-        // --------------------------------------------
+// Calling function from Client.js named myfunc
+// ---------------------------------------------
         tools.Clientfunc(panel.webview);
     });
-
     context.subscriptions.push(disposable);
-    // Taking the event from webview so that it can be used in OnDidChangeTextDocument
-    // ---------------------------------------------------------------------------------
+// Taking the event from webview so that it can be used in OnDidChangeTextDocument
+// ---------------------------------------------------------------------------------
     var listener = function(event) {
         console.log("It happened", event);
         tools.Clientfunc(panel.webview);

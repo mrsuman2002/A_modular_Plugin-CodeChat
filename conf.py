@@ -16,7 +16,7 @@
 #    with CodeChat.  If not, see <http://www.gnu.org/licenses/>.
 #
 # ****************************************************************************
-# template/conf.py - Template configuration file for a Sphinx CodeChat project
+# Template configuration file for a Sphinx CodeChat project
 # ****************************************************************************
 # This file configures Sphinx, which transforms restructured text (reST) into
 # html. See Sphinx `build configuration file docs
@@ -45,7 +45,7 @@ import sys, os
 # `project <http://sphinx-doc.org/config.html#confval-project>`_  and
 # `copyright <http://sphinx-doc.org/config.html#confval-copyright>`_:
 # General information about the project. **Change this** for your project.
-project = 'Project Name'
+project = 'CodeChat Plugin'
 copyright = '2017, Author'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -54,10 +54,10 @@ copyright = '2017, Author'
 #
 # `version <http://sphinx-doc.org/config.html#confval-version>`_: The short X.Y
 # version.
-version = '0.0'
+version = '1.0'
 # `release <http://sphinx-doc.org/config.html#confval-release>`_: The full
 # version, including alpha/beta/rc tags.
-release = 'version 0.0'
+release = 'version 1.0'
 
 # There are two options for replacing ``|today|``:
 #
@@ -147,8 +147,9 @@ CodeChat_lexer_for_glob = {
 # applies only to source documents; in constrast, exclude_patterns_ will exclude
 # the given files from all of Sphinx (for example, exclude_patterns_ files
 # won't be included even if they're mentioned in html_static_path_).
-CodeChat_excludes = []
-
+CodeChat_excludes = [
+    'CodeChat.css'
+]
 # `source_encoding <http://sphinx-doc.org/config.html#confval-source_encoding>`_:
 # The encoding of source files.
 ##source_encoding = 'utf-8-sig'
@@ -187,6 +188,7 @@ exclude_patterns = [
     'Thrift/gen-nodejs',
     'Thrift/gen-py',
     'Thrift/Python_Server/out.html',
+
 ]
 
 

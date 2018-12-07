@@ -1,5 +1,9 @@
-Welcome to template's documentation!
-====================================
+Welcome to CodeChat Plugin Documentation!
+==========================================
+
+The CodeChat plugin transforms source code into a web page, allowing software developers to view their source code as a beautiful and descriptive document by adding headings, formatting, hyperlinks, images, and diagrams. However, this plugin requires use of a little-known text editor, Enki. To broaden its impact, this project presents the creation of a modular plug-in architecture for CodeChat, enabling its use with a Visual Studio Code.
+
+
 .. digraph:: mydiagram
 
     bgcolor="transparent"
@@ -27,8 +31,7 @@ Welcome to template's documentation!
     Webview [label="Webview", shape=circle]
     CodeChat_Extention -> Webview [label="Generates"];
 
-
-.. This is a comment and I am using it to (for table of content)
+This approach bridges the services CodeChat provides, which are provided in the Python programming language, to the variety of programming languages which various text editors require. To accomplish this, this project (1) employs Apache Thrift, which provides scalable cross-language service development; (2) develops a CodeChat server to provide the needed services; and (3) creates a JavaScript plugin client for Visual Studio Code, a free and popular crossplatform text editor.
 
 Contents:
 
@@ -40,6 +43,7 @@ Contents:
     Thrift/Thrift_Readme.rst
     conf.py
     .gitignore
+
 
 
 
