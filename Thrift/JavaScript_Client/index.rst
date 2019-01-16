@@ -19,12 +19,6 @@ Export function is used to export Clientfunc to extension.
 
     exports.myfunc=myfunc
 
-.. toctree::
-
-    Client.js
-
-
-
 
 Contents:
 

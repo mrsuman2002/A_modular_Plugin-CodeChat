@@ -8,7 +8,7 @@ The CodeChat plugin transforms source code into a web page, allowing software de
 
     bgcolor="transparent"
 
-    CodeChat_plugin [label="\nCodehat Plugin for VS Code \n \n",shape=rectangle]
+    CodeChat_plugin [label="\nCodeChat Plugin for VS Code \n \n",shape=rectangle]
 
     Thrift [label="\n\nThrift\n\n", shape=circle]
     CodeChat_plugin -> Thrift [ label="Consists"];
