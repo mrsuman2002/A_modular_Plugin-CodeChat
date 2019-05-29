@@ -4,7 +4,7 @@
 
 import glob
 import sys
-sys.path.append('../gen-py')
+sys.path.append('./gen-py')
 #sys.path.insert(0, glob.glob('../../lib/py/build/lib*')[0])
 from tutorial import CodechatSyc
 from thrift.transport import TSocket
@@ -19,26 +19,73 @@ class CodechatHandler:
     def __init__(self):
         self.log = {}
 
-    def ping(self):
-        print('ping()')
-        print('suman')
-    def render(self,text,path):
-        #print(text)
-        print(path)
-        print("it works")
-        lexer = get_lexer(filename=path, code=text)
-        html = code_to_html_string(text, lexer=lexer)
-        html = html.replace('background-color: #eeeeee', '')
-        print(html)
-        with open('out.html', 'w', encoding='utf-8') as f:
+    
+        
+    def render_client(self):
+        print("render_client works")
+        with open('../../CodeChat_Extension/JavaScript_Client/gen-js/CodechatSyc.js') as f:
+            thrift_js = f.read()
+        html= """<!DOCTYPE html>
+        <html lang="en">
+        <head>
+        <title>RenderClient</title>
+
+        </head>
+        <body>
+        <p id="demo"> Render client is working </p>
+        <iframe id="render"></iframe>
+        <div id="message"></div>
+        <script> 
+        document.getElementById("demo").innerHTML = "Hello world";
+                    %s
+                    
+                    var transport = thrift.TBufferedTransport;
+                    var protocol = thrift.TBinaryProtocol;
+                    var connection = thrift.createConnection("localhost", 9090, {
+                    transport : transport,
+                    protocol : protocol
+                    });
+                    connection.on('error', function(err) {
+                    assert(false, err);
+                    });
+                    var client = thrift.createClient(CodechatSyc, connection);
+
+                    client.get_result(      
+                        function(err, response) {
+                            window.getElementById("render").srcdoc = response;
+                connection.end();
+                });
+                
+                
+        </script>
+
+        </body>
+        </html>
+        """ % thrift_js
+
+        with open('tmp.html', 'w', encoding='utf-8') as f:
             f.write(html)
-        return html
+
+        return "See the file!"
+
+    def get_result(self):
+        return "get_results worked"
+        
+
+
+    def start_render(self, text, path,id):
+        return
+
+
+
+    def stop_render_client(self, id):
+        return
 
 
 
 if __name__ == '__main__':
     handler = CodechatHandler()
-    processor = CodechatSyc.Processor(handler)
+    processor = CodechatSyc.Processor(handler) 
     transport = TSocket.TServerSocket(host='127.0.0.1', port=9090)
     tfactory = TTransport.TBufferedTransportFactory()
     pfactory = TBinaryProtocol.TBinaryProtocolFactory()

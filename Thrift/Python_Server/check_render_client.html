@@ -1,0 +1,41 @@
+
+<!DOCTYPE html>
+        <html lang="en">
+        <head>
+        <title>RenderClient</title>
+		</head>
+		<body>
+		<p id="demo"> Render client is working </p>
+        <iframe id="render"></iframe>
+        <div id="message"></div>
+        <script> 
+		document.getElementById("d").innerHTML = "hello world";
+		            var thrift = require('thrift');
+                    var CodechatSyc = require('../gen-nodejs/CodechatSyc');
+                    const vscode = require('vscode');
+                    const assert = require('assert');
+                
+                    				
+                    var transport = thrift.TBufferedTransport;
+                    var protocol = thrift.TBinaryProtocol;
+                    var connection = thrift.createConnection("localhost", 9090, {
+                    transport : transport,
+                    protocol : protocol
+                    });
+                    connection.on('error', function(err) {
+                    assert(false, err);
+                    });
+                    var client = thrift.createClient(CodechatSyc, connection);
+
+                    client.get_result(      
+                        function(err, response) {
+                            window.getElementById("render").srcdoc = response;
+                connection.end();
+                });
+				
+        </script>
+        
+        
+
+        </body>
+        </html>

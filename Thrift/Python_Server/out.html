@@ -2,6 +2,17 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
+<h1 id="demo" onmouseover="mouseOver()" onmouseout="mouseOut()">Mouse over me</h1>
+<script>
+            function mouseOver() {
+            document.getElementById("demo").style.color = "red";
+            }
+
+            function mouseOut() {
+            document.getElementById("demo").style.color = "black";
+            }
+		</script>
+		
 <meta http-equiv="Content-Type" content="text/html; charset=unicode" />
 <meta name="generator" content="Docutils 0.14: http://docutils.sourceforge.net/" />
 <title>&lt;string&gt;</title>

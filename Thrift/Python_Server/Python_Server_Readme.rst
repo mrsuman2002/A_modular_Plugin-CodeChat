@@ -1,6 +1,12 @@
 Python Server Documentation!
 =============================
 
+
+To generate py files using thrift, firstly, you need to `Download <http://www.apache.org/dyn/closer.cgi?path=/thrift/0.11.0/thrift-0.11.0.exe>`_  a copy of thrift. Secondly, you need to create a thrift file called tutorial.thrift. Then you can generate .py code using following command:
+
+``thrift --gen py tutorial.thrift``
+
+
 After creating the python modules i.e gen-py. You need to build your python server to communicate with CodeChat Library, written in python programming language.
 
 Supported Protocols, Transports and Servers.
