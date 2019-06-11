@@ -23,6 +23,7 @@ function activate(context) {
 // Calling function from Client.js named myfunc
 // ---------------------------------------------
         tools.render_clientfunc(panel.webview);
+        
 
 
 
@@ -36,6 +37,7 @@ function activate(context) {
     var listener = function(event) {
         console.log("It happened", event);
         tools.start_renderfunc(panel.webview);
+
     };
     // Starts listening for the `event <https://code.visualstudio.com/docs/extensionAPI/vscode-api#Event>`_.
     // ---------------------------------------------------------------------------------------------------------

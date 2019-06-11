@@ -25,8 +25,7 @@ function start_renderfunc(webview){
     connection.on('error', function(err) {
       assert(false, err);
     });
-    var client = thrift.createClient(CodechatSyc, connection);
-    
+    var client = thrift.createClient(CodechatSyc, connection);   
   
 
   client.start_render(
@@ -50,8 +49,7 @@ function render_clientfunc(webview){
   connection.on('error', function(err) {
     assert(false, err);
   });
-  var client = thrift.createClient(CodechatSyc, connection);
-  
+  var client = thrift.createClient(CodechatSyc, connection);  
 
   client.render_client(
       function(err, response) {
@@ -64,7 +62,8 @@ function render_clientfunc(webview){
 
 
 
+
 // Exporting myfunc to extension.js
 // ----------------------------------
 exports.render_clientfunc=render_clientfunc;
-exports.start_renderfunc=render_clientfunc;
+exports.start_renderfunc=start_renderfunc;

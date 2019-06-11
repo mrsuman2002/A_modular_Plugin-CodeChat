@@ -33,6 +33,9 @@ The transport layer is responsible for reading from and writing to the wire. Thr
 Here, we have used TSocket transport layer and TBinaryProtocol to communicate with client. Also, we have imported module called
 code_to_html_string that renders source code to webpage.
 
+The webpage communicates to the python flask server using TJSONProtocol and writes the rendered source code to the specific address </skeleton/<int:unique_id>, which later on called in a iframe to load webpage from that specific.
+Here idea is not to serve actual html to the webpage but to call address that contains rendered text(html) 
+
 .. code-block:: Python
     :linenos:
 
