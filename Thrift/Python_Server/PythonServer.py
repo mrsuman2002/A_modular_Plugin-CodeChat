@@ -16,6 +16,7 @@ from CodeChat.SourceClassifier import get_lexer
 import threading
 from threading import Thread
 from flask_cors import CORS
+from queue import Queue
 
 
 class CodechatHandler:
@@ -33,31 +34,34 @@ class CodechatHandler:
               <meta charset="utf-8">
               <title>Hello Thrift</title>
             </head>
-            <body>
-          
-              <iframe src="http://127.0.0.1:5000/skeleton/1">Website</iframe>
+            <body>          
+              <iframe src="http://127.0.0.1:5000/skeleton/1" width="100%" height=1000px>Website</iframe>
             </body>
           </html>"""
-        html = html.replace('background-color: #eeeeee', '')
+        results_dict[1]=Queue()
         return html
 
     def get_result(self,hello):
-        return "get_results worked"
+
+      print("get result is called")
+      return results_dict[1].get() 
         
 
 
-    def start_render(self, text, path,id):
-        return
+    def start_render(self, text, path,id):       
+        print(path)
+        print("Start render works")
+        id=1
+        lexer = get_lexer(filename=path, code=text)
+        html = code_to_html_string(text, lexer=lexer)
+        html = html.replace('background-color: #eeeeee', '')
+        results_dict[id].put(html)
+        print("Html has been added to the queue")
 
 
 
     def stop_render_client(self, id):
         return
-
-
-
-
-
 
 
 def service2():
@@ -87,6 +91,7 @@ from thrift.server import TServer
 from thrift.transport import TTransport
 from tutorial import CodechatSyc
 
+
 handler = CodechatHandler()
 processor = CodechatSyc.Processor(handler)
 protocol = TJSONProtocol.TJSONProtocolFactory()
@@ -104,7 +109,7 @@ def service1():
 
 @app.route('/skeleton/<int:unique_id>')
 def skeleton(unique_id):
-      html="""<!DOCTYPE html>
+  html="""<!DOCTYPE html>
     <html lang="en">
       <head>
           <link rel="icon" href="data:,">
@@ -112,34 +117,34 @@ def skeleton(unique_id):
         <title>Hello Thrift</title>
       </head>
       <body>
-        Name: <input type="text" id="name_in">
-        <input type="button" id="get_msg" value="Get Message" >
-        <div id="output"></div>
+        <div id="output">Edit the Document !!!</div>
 
         <script src="../static/thrift.js"></script>
         <script src="../static/gen-js/CodechatSyc.js"></script>
-        <script>
+        <script >
           (function() {
             var transport = new Thrift.TXHRTransport("../");
             var protocol  = new Thrift.TJSONProtocol(transport);
             var client    = new CodechatSycClient(protocol);
             var nameElement = document.getElementById("name_in");
             var outputElement = document.getElementById("output");
-            document.getElementById("get_msg")
-              .addEventListener("click", function(){
-                client.get_result(nameElement.value, function(result) {
-                  outputElement.innerHTML = result;
-                });
+            function do_get_result() {
+              client.get_result("render", function(result) {
+                outputElement.innerHTML = result;
+                do_get_result();
               });
+            };
+            do_get_result();
           })();
 
         </script>
       </body>
     </html>"""
+
   return html
 
 
-
+results_dict={}
 if __name__ == '__main__':
     t1 = threading.Thread(target=service2)
     t1.start()

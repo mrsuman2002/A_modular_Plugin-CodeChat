@@ -13,32 +13,6 @@ const assert = require('assert');
 // Creating a function name myfunc to import it in `../../CodeChat_Extension/extension.js`
 // -----------------------------------------------------------------------------------------
 
-
-
-function start_renderfunc(webview){
-    var transport = thrift.TBufferedTransport;
-    var protocol = thrift.TBinaryProtocol;
-    var connection = thrift.createConnection("localhost", 9090, {
-      transport : transport,
-      protocol : protocol
-    });
-    connection.on('error', function(err) {
-      assert(false, err);
-    });
-    var client = thrift.createClient(CodechatSyc, connection);   
-  
-
-  client.start_render(
-    vscode.window.activeTextEditor.document.getText(),
-      vscode.window.activeTextEditor.document.fileName, 
-      1,
-      function(err, response) {
-      console.log("start render client even works");
-      console.log(response);
-      connection.end();
-      });
-}
-
 function render_clientfunc(webview){
   var transport = thrift.TBufferedTransport;
   var protocol = thrift.TBinaryProtocol;
@@ -60,7 +34,28 @@ function render_clientfunc(webview){
       });
 }
 
+function start_renderfunc(){
+  var transport = thrift.TBufferedTransport;
+  var protocol = thrift.TBinaryProtocol;
+  var connection = thrift.createConnection("localhost", 9090, {
+    transport : transport,
+    protocol : protocol
+  });
+  connection.on('error', function(err) {
+    assert(false, err);
+  });
+  var client = thrift.createClient(CodechatSyc, connection); 
 
+client.start_render(
+  vscode.window.activeTextEditor.document.getText(),
+    vscode.window.activeTextEditor.document.fileName, 
+    1,
+    function(err, response) {
+    console.log("start render  even works");
+    console.log(response);
+    connection.end();
+    });
+}
 
 
 // Exporting myfunc to extension.js
