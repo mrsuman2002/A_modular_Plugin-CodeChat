@@ -34,15 +34,20 @@ class CodechatHandler:
               <meta charset="utf-8">
               <title>Hello Thrift</title>
             </head>
-            <body>          
+            <body >          
               <iframe src="http://127.0.0.1:5000/skeleton/1" width="100%" height=1000px>Website</iframe>
+              <div>
+              This is for build msg!!!
+              </div>
+              <div>
+              This is  for Status!!!
+              </div>
             </body>
           </html>"""
         results_dict[1]=Queue()
         return html
 
-    def get_result(self,hello):
-
+    def get_result(self,id):
       print("get result is called")
       return results_dict[1].get() 
         
@@ -140,7 +145,6 @@ def skeleton(unique_id):
         </script>
       </body>
     </html>"""
-
   return html
 
 
