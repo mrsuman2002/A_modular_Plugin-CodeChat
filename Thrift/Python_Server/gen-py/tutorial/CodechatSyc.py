@@ -30,10 +30,10 @@ class Iface(object):
         """
         pass
 
-    def get_result(self, text):
+    def get_result(self, id):
         """
         Parameters:
-         - text
+         - id
         """
         pass
 
@@ -121,18 +121,18 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "render failed: unknown result")
 
-    def get_result(self, text):
+    def get_result(self, id):
         """
         Parameters:
-         - text
+         - id
         """
-        self.send_get_result(text)
+        self.send_get_result(id)
         return self.recv_get_result()
 
-    def send_get_result(self, text):
+    def send_get_result(self, id):
         self._oprot.writeMessageBegin('get_result', TMessageType.CALL, self._seqid)
         args = get_result_args()
-        args.text = text
+        args.id = id
         args.write(self._oprot)
         self._oprot.writeMessageEnd()
         self._oprot.trans.flush()
@@ -319,7 +319,7 @@ class Processor(Iface, TProcessor):
         iprot.readMessageEnd()
         result = get_result_result()
         try:
-            result.success = self._handler.get_result(args.text)
+            result.success = self._handler.get_result(args.id)
             msg_type = TMessageType.REPLY
         except TTransport.TTransportException:
             raise
@@ -630,12 +630,12 @@ render_result.thrift_spec = (
 class get_result_args(object):
     """
     Attributes:
-     - text
+     - id
     """
 
 
-    def __init__(self, text=None,):
-        self.text = text
+    def __init__(self, id=None,):
+        self.id = id
 
     def read(self, iprot):
         if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
@@ -647,8 +647,8 @@ class get_result_args(object):
             if ftype == TType.STOP:
                 break
             if fid == 1:
-                if ftype == TType.STRING:
-                    self.text = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                if ftype == TType.I32:
+                    self.id = iprot.readI32()
                 else:
                     iprot.skip(ftype)
             else:
@@ -661,9 +661,9 @@ class get_result_args(object):
             oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
             return
         oprot.writeStructBegin('get_result_args')
-        if self.text is not None:
-            oprot.writeFieldBegin('text', TType.STRING, 1)
-            oprot.writeString(self.text.encode('utf-8') if sys.version_info[0] == 2 else self.text)
+        if self.id is not None:
+            oprot.writeFieldBegin('id', TType.I32, 1)
+            oprot.writeI32(self.id)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
@@ -684,7 +684,7 @@ class get_result_args(object):
 all_structs.append(get_result_args)
 get_result_args.thrift_spec = (
     None,  # 0
-    (1, TType.STRING, 'text', 'UTF8', None, ),  # 1
+    (1, TType.I32, 'id', None, None, ),  # 1
 )
 
 
@@ -708,8 +708,9 @@ class get_result_result(object):
             if ftype == TType.STOP:
                 break
             if fid == 0:
-                if ftype == TType.STRING:
-                    self.success = iprot.readString().decode('utf-8') if sys.version_info[0] == 2 else iprot.readString()
+                if ftype == TType.STRUCT:
+                    self.success = get_result_return()
+                    self.success.read(iprot)
                 else:
                     iprot.skip(ftype)
             else:
@@ -723,8 +724,8 @@ class get_result_result(object):
             return
         oprot.writeStructBegin('get_result_result')
         if self.success is not None:
-            oprot.writeFieldBegin('success', TType.STRING, 0)
-            oprot.writeString(self.success.encode('utf-8') if sys.version_info[0] == 2 else self.success)
+            oprot.writeFieldBegin('success', TType.STRUCT, 0)
+            self.success.write(oprot)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
@@ -744,7 +745,7 @@ class get_result_result(object):
         return not (self == other)
 all_structs.append(get_result_result)
 get_result_result.thrift_spec = (
-    (0, TType.STRING, 'success', 'UTF8', None, ),  # 0
+    (0, TType.STRUCT, 'success', [get_result_return, None], None, ),  # 0
 )
 
 

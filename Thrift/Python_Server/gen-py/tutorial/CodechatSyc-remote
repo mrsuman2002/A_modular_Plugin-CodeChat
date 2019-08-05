@@ -26,7 +26,7 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
     print('Functions:')
     print('  void ping()')
     print('  string render(string text, string path)')
-    print('  string get_result(string text)')
+    print('  get_result_return get_result(i32 id)')
     print('  string render_client()')
     print('  void start_render(string text, string path, i32 id)')
     print('  void stop_render_client(i32 id)')
@@ -125,7 +125,7 @@ elif cmd == 'get_result':
     if len(args) != 1:
         print('get_result requires 1 args')
         sys.exit(1)
-    pp.pprint(client.get_result(args[0],))
+    pp.pprint(client.get_result(eval(args[0]),))
 
 elif cmd == 'render_client':
     if len(args) != 0:

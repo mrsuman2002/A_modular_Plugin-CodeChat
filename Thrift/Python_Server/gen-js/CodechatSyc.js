@@ -183,10 +183,10 @@ CodechatSyc_render_result.prototype.write = function(output) {
 };
 
 CodechatSyc_get_result_args = function(args) {
-  this.text = null;
+  this.id = null;
   if (args) {
-    if (args.text !== undefined && args.text !== null) {
-      this.text = args.text;
+    if (args.id !== undefined && args.id !== null) {
+      this.id = args.id;
     }
   }
 };
@@ -205,8 +205,8 @@ CodechatSyc_get_result_args.prototype.read = function(input) {
     switch (fid)
     {
       case 1:
-      if (ftype == Thrift.Type.STRING) {
-        this.text = input.readString().value;
+      if (ftype == Thrift.Type.I32) {
+        this.id = input.readI32().value;
       } else {
         input.skip(ftype);
       }
@@ -225,9 +225,9 @@ CodechatSyc_get_result_args.prototype.read = function(input) {
 
 CodechatSyc_get_result_args.prototype.write = function(output) {
   output.writeStructBegin('CodechatSyc_get_result_args');
-  if (this.text !== null && this.text !== undefined) {
-    output.writeFieldBegin('text', Thrift.Type.STRING, 1);
-    output.writeString(this.text);
+  if (this.id !== null && this.id !== undefined) {
+    output.writeFieldBegin('id', Thrift.Type.I32, 1);
+    output.writeI32(this.id);
     output.writeFieldEnd();
   }
   output.writeFieldStop();
@@ -239,7 +239,7 @@ CodechatSyc_get_result_result = function(args) {
   this.success = null;
   if (args) {
     if (args.success !== undefined && args.success !== null) {
-      this.success = args.success;
+      this.success = new get_result_return(args.success);
     }
   }
 };
@@ -258,8 +258,9 @@ CodechatSyc_get_result_result.prototype.read = function(input) {
     switch (fid)
     {
       case 0:
-      if (ftype == Thrift.Type.STRING) {
-        this.success = input.readString().value;
+      if (ftype == Thrift.Type.STRUCT) {
+        this.success = new get_result_return();
+        this.success.read(input);
       } else {
         input.skip(ftype);
       }
@@ -279,8 +280,8 @@ CodechatSyc_get_result_result.prototype.read = function(input) {
 CodechatSyc_get_result_result.prototype.write = function(output) {
   output.writeStructBegin('CodechatSyc_get_result_result');
   if (this.success !== null && this.success !== undefined) {
-    output.writeFieldBegin('success', Thrift.Type.STRING, 0);
-    output.writeString(this.success);
+    output.writeFieldBegin('success', Thrift.Type.STRUCT, 0);
+    this.success.write(output);
     output.writeFieldEnd();
   }
   output.writeFieldStop();
@@ -663,17 +664,17 @@ CodechatSycClient.prototype.recv_render = function() {
   }
   throw 'render failed: unknown result';
 };
-CodechatSycClient.prototype.get_result = function(text, callback) {
-  this.send_get_result(text, callback); 
+CodechatSycClient.prototype.get_result = function(id, callback) {
+  this.send_get_result(id, callback); 
   if (!callback) {
     return this.recv_get_result();
   }
 };
 
-CodechatSycClient.prototype.send_get_result = function(text, callback) {
+CodechatSycClient.prototype.send_get_result = function(id, callback) {
   this.output.writeMessageBegin('get_result', Thrift.MessageType.CALL, this.seqid);
   var params = {
-    text: text
+    id: id
   };
   var args = new CodechatSyc_get_result_args(params);
   args.write(this.output);

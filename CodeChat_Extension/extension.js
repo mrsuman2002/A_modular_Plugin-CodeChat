@@ -11,10 +11,8 @@ function activate(context) {
         vscode.window.showInformationMessage('Hello Codechat');
         
 // Creating and showing panel vscode.window.createWebviewPanel('CodeChat', "CodeChat", vscode.ViewColumn.One,{ here we should enable JS});
-// -----------------------------
-
+// -----------------------------------------------------------------------------------------------------------------------------------------
         panel = vscode.window.createWebviewPanel('CodeChat', "CodeChat", vscode.ViewColumn.One, 
-
         {
             //JavaScript is disabled in webviews by default, but it can easily re-enable by passing in the enableScripts: true option.
             // Enable scripts in the webview
@@ -25,11 +23,8 @@ function activate(context) {
         tools.render_clientfunc(panel.webview);
         // tools.start_renderfunc(panel.webview);
 
-
-
 // break client in two one render client and one render
 // render_client will have client require
-
     });
     context.subscriptions.push(disposable);
 // Taking the event from webview so that it can be used in OnDidChangeTextDocument
