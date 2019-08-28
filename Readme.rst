@@ -18,15 +18,17 @@ Prerequisites:
 - Installation of npm
 
 There are two location from where all the installation should be done from
-1. CodeChat_extension location (see the documentation at Codechat_Extension/CodeChat_Extension_Readme.rst )
+
+1. CodeChat_extension location (see the documentation at Codechat_Extension/CodeChat_Extension_Readme.rst)
 
     C:\Users\suman\Desktop\MSU_Spring_2018\Research\A_modular_Plugin-CodeChat\CodeChat_Extension>npm install
     
 2. Python_Server location (see the documentation at thrift/Python_Server/Python_Server_Readme.rst)
+
     C:\Users\suman\Desktop\MSU_Spring_2018\Research\A_modular_Plugin-CodeChat\Thrift\Python_Server>pip install Codechat
 
     C:\Users\suman\Desktop\MSU_Spring_2018\Research\A_modular_Plugin-CodeChat\Thrift\Python_Server>pip install thrift
-    
+
     C:\Users\suman\Desktop\MSU_Spring_2018\Research\A_modular_Plugin-CodeChat\Thrift\Python_Server>pip install -U flask-cors
 
 
