@@ -1,5 +1,21 @@
 Python Server Documentation!
 =============================
+In this directory, we need to install ppackages. To install packages run the following command from the current location
+
+``pip install -U flask-cors``
+``pip install thrift``
+``pip install CodeChat``
+
+
+If you are getting errors like ImportError: No module named queue then check your python version using ``python -v``. If it is version 2 then try to install python 3 and pip 3.
+
+If the system is not taking version 3 as a defeault then try running command as
+``pip3 install -U flask-cors``
+``pip3 install thrift``
+``pip3 install CodeChat``
+
+or 
+``python3 PythonServer.py``
 
 
 To generate py files using thrift, firstly, you need to `Download <http://www.apache.org/dyn/closer.cgi?path=/thrift/0.11.0/thrift-0.11.0.exe>`_  a copy of thrift. Secondly, you need to create a thrift file called tutorial.thrift. Then you can generate .py code using following command:
