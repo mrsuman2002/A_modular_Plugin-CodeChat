@@ -2,6 +2,8 @@ Python Server Documentation!
 =============================
 In this directory, we need to install ppackages. To install packages run the following command from the current location
 
+C:\Users\suman\Desktop\MSU_Spring_2018\Research\A_modular_Plugin-CodeChat\Thrift\Python_Server>pip install Codechat
+
 ``pip install -U flask-cors``
 
 ``pip install thrift``
