@@ -3,7 +3,9 @@ Python Server Documentation!
 In this directory, we need to install ppackages. To install packages run the following command from the current location
 
 ``pip install -U flask-cors``
+
 ``pip install thrift``
+
 ``pip install CodeChat``
 
 
@@ -11,10 +13,13 @@ If you are getting errors like ImportError: No module named queue then check you
 
 If the system is not taking version 3 as a defeault then try running command as
 ``pip3 install -U flask-cors``
+
 ``pip3 install thrift``
+
 ``pip3 install CodeChat``
 
 or 
+
 ``python3 PythonServer.py``
 
 
