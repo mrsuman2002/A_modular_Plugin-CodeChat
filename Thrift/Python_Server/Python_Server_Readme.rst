@@ -55,13 +55,18 @@ Here, we have used TSocket transport layer and TBinaryProtocol to communicate wi
 code_to_html_string that renders source code to webpage.
 
 Coechathandler class was created and different functions like 
+
  render_client() returns address(</skeleton/<int:unique_id>) that has HTML that incorporates a JS client in the resulting HTML and an id for future render requests. The client loads in the result of a render. This can also be passed on to a web browser for rendering there. It also initialize the queue to the unique id.
+
  start_render(string text, string file_path, int id) to render the source code. It also puts the rendered HTML to the dictionary and assigns it to un key.
+ 
  get_result(string text) to gets the html that was assigned to unique id.
 
 
 The webpage communicates to the python flask server using TJSONProtocol and writes the rendered source code to the specific address </skeleton/<int:unique_id>, which later on called in a iframe to load webpage from that specific.
+
 Here idea is not to serve actual html to the webpage but to call address that contains rendered text(html) 
+
 In the browser get_result function is called to get the html that was assigned tot the unique_id(key) from the dictionary.
 
 .. code-block:: Python
