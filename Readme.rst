@@ -13,9 +13,20 @@ The plugin architecture is shown in the `Codechat Plugin Architecture.png <https
 Prerequisites:
 ===============
 - Installation of python
+    make sure you have installed python 3
 - Installation of Node.js
 - Installation of npm
-- Installation of thrift
+
+There are two location from where all the installation should be done from
+1. CodeChat_extension location (see the documentation at Codechat_Extension/CodeChat_Extension_Readme.rst )
+    C:\Users\suman\Desktop\MSU_Spring_2018\Research\A_modular_Plugin-CodeChat\CodeChat_Extension>npm install
+    
+2. Python_Server location (see the documentation at thrift/Python_Server/Python_Server_Readme.rst)
+    C:\Users\suman\Desktop\MSU_Spring_2018\Research\A_modular_Plugin-CodeChat\Thrift\Python_Server>pip install Codechat
+    C:\Users\suman\Desktop\MSU_Spring_2018\Research\A_modular_Plugin-CodeChat\Thrift\Python_Server>pip install thrift
+    C:\Users\suman\Desktop\MSU_Spring_2018\Research\A_modular_Plugin-CodeChat\Thrift\Python_Server>pip install -U flask-cors
+
+
 
 Built with:
 =============
