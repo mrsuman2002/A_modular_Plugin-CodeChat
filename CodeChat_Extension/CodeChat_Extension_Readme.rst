@@ -9,7 +9,13 @@ Requirements:
 *   Installation of `python <https://www.python.org/downloads/>`_.
 *   Installation of the extension manifest: `package.json <https://docs.npmjs.com/files/package.json>`_. can  be done by using following command:
 
+From the current location run following command 
+
+C:\Users\suman\Desktop\MSU_Spring_2018\Research\A_modular_Plugin-CodeChat\CodeChat_Extension>npm install  
+
     ``npm install``
+    
+    ``npm thrift``
 
 The structure of an extension:
 ------------------------------
