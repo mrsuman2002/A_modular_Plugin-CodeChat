@@ -43,9 +43,7 @@ Contents:
     Thrift/Thrift_Readme.rst
     conf.py
     .gitignore
-
-
-
+    sbuild.bat
 
 
 Indices and tables

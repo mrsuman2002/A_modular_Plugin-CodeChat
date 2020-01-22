@@ -26,5 +26,5 @@ We are trying to keep same files together so we will be generating nodejs files(
 .. toctree::
 
     Python_Server/Python_Server_Readme
-    JavaScript_Client/index
+    ../CodeChat_Extension/JavaScript_Client/index
 
