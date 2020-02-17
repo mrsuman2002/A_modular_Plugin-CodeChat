@@ -1,23 +1,24 @@
-# .. Copyright (C) 2012-2018 Bryan A. Jones.
+# .. Copyright (C) 2012-2020 Bryan A. Jones.
 #
-#    This file is part of CodeChat.
+#    This file is part of the CodeChat plugin.
 #
-#    CodeChat is free software: you can redistribute it and/or modify it under
-#    the terms of the GNU General Public License as published by the Free
-#    Software Foundation, either version 3 of the License, or (at your option)
-#    any later version.
+#    The CodeChat plugin is free software: you can redistribute it and/or
+#    modify it under the terms of the GNU General Public License as
+#    published by the Free Software Foundation, either version 3 of the
+#    License, or (at your option) any later version.
 #
-#    CodeChat is distributed in the hope that it will be useful, but WITHOUT ANY
-#    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-#    FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
-#    details.
+#    The CodeChat plugin is distributed in the hope that it will be
+#    useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+#    of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#    General Public License for more details.
 #
-#    You should have received a copy of the GNU General Public License along
-#    with CodeChat.  If not, see <http://www.gnu.org/licenses/>.
+#    You should have received a copy of the GNU General Public License
+#    along with the CodeChat plugin.  If not, see
+#    <http://www.gnu.org/licenses/>.
 #
-# ****************************************************************************
-# Template configuration file for a Sphinx CodeChat project
-# ****************************************************************************
+# ***********************************************************
+# |docname| - The CodeChat plugin documentation configuration
+# ***********************************************************
 # This file configures Sphinx, which transforms restructured text (reST) into
 # html. See Sphinx `build configuration file docs
 # <http://sphinx-doc.org/config.html>`_ for more information on the settings
@@ -45,8 +46,8 @@ import sys, os
 # `project <http://sphinx-doc.org/config.html#confval-project>`_  and
 # `copyright <http://sphinx-doc.org/config.html#confval-copyright>`_:
 # General information about the project. **Change this** for your project.
-project = 'CodeChat Plugin'
-copyright = '2017, Author'
+project = 'The CodeChat Plugin'
+copyright = '2020, Bryan A. Jones'
 
 # The version info for the project you're documenting, acts as replacement for
 # ``|version|`` and ``|release|``, also used in various other places throughout
@@ -141,6 +142,8 @@ CodeChat_lexer_for_glob = {
     '*.css': 'CSS',
     # These` files use # as a comment. So does Perl. Ugly, no?
     '.gitignore': 'Perl',
+    # Treat JavaScript as plain JavaScript; the auto-detect code finds something else.
+    '*.js': "JavaScript",
 }
 
 # **CodeChat note:** _`CodeChat_excludes` is a list of exclude_patterns_ which
@@ -184,10 +187,18 @@ exclude_patterns = [
     # The ``CodeToRestSphinx`` extension creates a file named
     # ``sphinx-enki-info.txt``, which should be ignored by Sphinx.
     'sphinx-enki-info.txt',
-    'CodeChat_Extension/node_modules',
+    #
+    # JavaScript/TypeScript generated files
+    'VSCode_Extension/node_modules',
+    'VSCode_Extension/out',
     '**/gen-*',
-    'Thrift/Python_Server/out.html',
-
+    '**/gen_*',
+    #
+    # Libraries
+    'CodeChat_Server/CodeChat_Server/CodeChat_Client/static/thrift.js',
+    'CodeChat_Server/CodeChat_Server/CodeChat_Client/static/splitter*.*',
+    'CodeChat_Server/CodeChat_Server/rst_templates',
+    'CodeChat_Server/CodeChat_Server/rst_templates',
 ]
 
 
@@ -247,7 +258,7 @@ html_theme = 'alabaster'
 # relative to this directory. They are copied after the builtin static files, so
 # a file named ``default.css`` will overwrite the builtin ``default.css``.
 # **CodeChat note:** This must always include ``CodeChat.css``.
-html_static_path = ['CodeChat.css']
+html_static_path = ['docs/CodeChat.css']
 
 # `html_last_updated_fmt <http://sphinx-doc.org/config.html#confval-html_last_updated_fmt>`_:
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,

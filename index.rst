@@ -1,49 +1,52 @@
-Welcome to CodeChat Plugin Documentation!
-==========================================
+The CodeChat plugin system
+==========================
+The CodeChat plugin system integrates the capabilities of `CodeChat <https://codechat.readthedocs.io/>`_ into popular text editors [#]_. To support multiple editors, this program offloads most of the processing to the CodeChat server and display to the CodeChat client, making the editor plugin code shorter and easier to port. The basic architecture:
 
-The CodeChat plugin transforms source code into a web page, allowing software developers to view their source code as a beautiful and descriptive document by adding headings, formatting, hyperlinks, images, and diagrams. However, this plugin requires use of a little-known text editor, Enki. To broaden its impact, this project presents the creation of a modular plug-in architecture for CodeChat, enabling its use with a Visual Studio Code.
+.. digraph:: architecture
 
+    bgcolor = transparent;
+    compound = true;
+    node [shape = box];
+    subgraph cluster_text_editor {
+        label = "Text editor/IDE";
+        source_code [label = <source<br />code>, style = dashed];
+        CodeChat_plugin [label = <CodeChat<br />plugin>];
+    }
 
-.. digraph:: mydiagram
+    subgraph cluster_server {
+        label = <CodeChat<br />server>;
+        render_engine [label = <CodeChat<br />renderer>];
+    }
 
-    bgcolor="transparent"
+    subgraph cluster_client {
+        label = "CodeChat client";
+        rendered_code [label = "rendered code", style = dashed];
+        JavaScript;
+    }
 
-    CodeChat_plugin [label="\nCodeChat Plugin for VS Code \n \n",shape=rectangle]
+    CodeChat_plugin -> render_engine [label = "Thrift", dir = both, lhead = cluster_server];
+    render_engine -> JavaScript [label = "Thrift", dir = both, lhead = cluster_client, ltail = cluster_server];
 
-    Thrift [label="\n\nThrift\n\n", shape=circle]
-    CodeChat_plugin -> Thrift [ label="Consists"];
+This approach bridges the services CodeChat provides, which are defined in Python, to the variety of programming languages which various text editors require. To accomplish these goals, this project:
 
-    CodeChat_Extention [label="CodeChat\n Extension", shape=circle]
-    CodeChat_plugin -> CodeChat_Extention [label="Consists"];
-
-    PythonServer [label ="\n Python\n Server \n", shape=circle]
-    Thrift  -> PythonServer  [label="Consists"];
-
-    JavaScriptClient [label ="JavaScript\nClient", shape=circle]
-    PythonServer   -> JavaScriptClient [label="Consists"];
-
-    Thrift -> JavaScriptClient [label="Consists"];
-    JavaScriptClient -> CodeChat_Extention [label="Talks to"];
-
-    CodeChatLibrary [label= "CodeChat\nLibrary", shape=square]
-    CodeChatLibrary -> PythonServer  [label="Consists"];
-
-    Webview [label="Webview", shape=circle]
-    CodeChat_Extention -> Webview [label="Generates"];
-
-This approach bridges the services CodeChat provides, which are provided in the Python programming language, to the variety of programming languages which various text editors require. To accomplish this, this project (1) employs Apache Thrift, which provides scalable cross-language service development; (2) develops a CodeChat server to provide the needed services; and (3) creates a JavaScript plugin client for Visual Studio Code, a free and popular crossplatform text editor.
+#.  Develops a `CodeChat server <CodeChat_Server/contents>` to provide the needed services;
+#.  Provides a `CodeChat client <CodeChat_Server/CodeChat_Server/CodeChat_Client/contents>`, hosted in a web browser, to display the rendered source code and provide for user input;
+#.  Introduces a `plugin for Visual Studio Code <VSCode_Extension/contents>`, a free and popular cross-platform text editor; and
+#.  Employs `Apache Thrift <https://thrift.apache.org>`_ to define `CodeChat services <CodeChat_Services/contents>`, which allows the CodeChat server to communicate with plugins developed in a `variety of languagues <https://thrift.apache.org/docs/Languages>`_.
 
 Contents:
 
 .. toctree::
     :maxdepth: 2
 
-    Readme.rst
-    CodeChat_Extension/index.rst
-    Thrift/Thrift_Readme.rst
+    CodeChat_Server/contents
+    CodeChat_Server/CodeChat_Server/CodeChat_Client/contents
+    VSCode_Extension/contents
+    CodeChat_Services/contents
+    docs/CHANGELOG
     conf.py
+    run_sphinx.bat
     .gitignore
-    sbuild.bat
 
 
 Indices and tables
@@ -52,3 +55,21 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
+
+License
+=======
+Copyright (C) 2012-2020 Bryan A. Jones.
+
+This file is part of the CodeChat plugin.
+
+The CodeChat plugin is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+The CodeChat plugin is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a `copy of the GNU General Public License <docs/LICENSE>` along with the CodeChat plugin.  If not, see http://www.gnu.org/licenses/.
+
+
+Footnotes
+=========
+.. [#] At this time, only the Visual Studio Code editor is supported.

@@ -1,0 +1,71 @@
+/* ***********************************************
+   |docname| - Style sheet for the CodeChat client
+   *********************************************** */
+
+/* This is used only to store a reused variable value. See https://drafts.csswg.org/css-variables/. */
+:root {
+    --status-height: 1rem;
+    --body-padding: 8px;
+}
+
+/* See https://css-tricks.com/box-sizing/ for the following technique to use ``border-box`` sizing. */
+html {
+    box-sizing: border-box;
+}
+
+*, *:before, *:after {
+    box-sizing: inherit;
+}
+
+body {
+    /* For box model simplicity, switch the padding and margin. */
+    padding: var(--body-padding);
+    margin: 0px;
+}
+
+#splitter {
+    /* Auto-size the splitter to be the height of the screen except for the status bar and body padding. See `calc <https://developer.mozilla.org/en-US/docs/Web/CSS/calc>`_. */
+    height: calc(100vh - var(--status-height) - 2 * var(--body-padding));
+}
+
+#output {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+#build_heading {
+    margin-top: 0px;
+    margin-bottom: 2px;
+}
+
+#build, #errors {
+    /* Build output is console text. */
+    font-family: monospace;
+    white-space: pre;
+}
+
+#errors {
+    color: red;
+}
+
+#status_div {
+    height: var(--status-height);
+    border-top: 1px solid;
+    padding-top: 2px;
+}
+
+#status_build, #status_errors {
+    /* Allow setting the width on this span. */
+    display: inline-block;
+    /* Don't make a total of 100%, since the div padding needs a few pixels of space. */
+    width: 45%;
+}
+
+.have_errors {
+    background-color: red;
+}
+
+.have_warnings {
+    background-color: sandybrown;
+}

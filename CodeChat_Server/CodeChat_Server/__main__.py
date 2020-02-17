@@ -17,22 +17,29 @@
 #    <http://www.gnu.org/licenses/>.
 #
 # ***********************************
-# |docname| - Files for Git to ignore
+# |docname| - Run the CodeChat server
 # ***********************************
-syntax: glob
+#
+# Imports
+# =======
+# These are listed in the order prescribed by `PEP 8
+# <http://www.python.org/dev/peps/pep-0008/#imports>`_.
+#
+# Standard library
+# ----------------
+# None.
+#
+# Third-party imports
+# -------------------
+# None.
+#
+# Local application imports
+# -------------------------
+from .server import run_servers
 
-# CodeChat-generated files
-_build/
 
-# Npm-generated files
-node_modules/
-
-# TypeScript transpiles.
-VSCode_Extension/out
-
-# Python-generated files
-__pycache__/
-
-# Others
-sphinx-enki-info.txt
-thrift*.exe
+# Main
+# ====
+# Run both servers.
+if __name__ == "__main__":
+    run_servers()
