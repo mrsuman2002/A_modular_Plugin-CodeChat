@@ -5,8 +5,6 @@
 //
 // TODO:
 //
-// #.   If the webview panel is hidden, don't render. When it's revealed, render the current editor.
-// #.   If the current document changes, render.
 // #.   Add sync requests in (required a second client).
 //
 // .. image:: x.png
@@ -110,7 +108,17 @@ export function activate(context: vscode.ExtensionContext) {
                                 id = render_client_return.id;
 
                                 // Render when the text is changed by listening for the correct `event <https://code.visualstudio.com/docs/extensionAPI/vscode-api#Event>`_.
-                                context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(function(event) {
+                                context.subscriptions.push(vscode.workspace.onDidChangeTextDocument( (event) => {
+                                    start_render();
+                                }));
+
+                                // Render when the active editor changes.
+                                context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor( (event) => {
+                                    start_render();
+                                }));
+
+                                // Render when the webveiw panel is shown.
+                                context.subscriptions.push(panel.onDidChangeViewState( (event) => {
                                     start_render();
                                 }));
 
@@ -120,7 +128,8 @@ export function activate(context: vscode.ExtensionContext) {
                         } else {
                             show_startup(`<b>error</b>: ${render_client_return.error}`);
                         }
-                });
+                    }
+                );
             }
         }
 
@@ -181,8 +190,12 @@ export function deactivate() {
 // CodeChat services
 // =================
 function start_render() {
-    // Only render if an editor is active and we have a valid render client.
-    if ( (vscode.window.activeTextEditor !== undefined) && (id !== undefined) ) {
+    // Only render if an editor is active, we have a valid render client, and the webview is visible.
+    if (
+        (vscode.window.activeTextEditor !== undefined) &&
+        (id !== undefined) &&
+        (panel?.visible)
+    ) {
         client.start_render(
             vscode.window.activeTextEditor.document.getText(),
             vscode.window.activeTextEditor.document.fileName,
