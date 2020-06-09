@@ -30,11 +30,9 @@
 #
 # Standard library
 # ----------------
-from pathlib import Path
 from queue import Queue
 import threading
 import webbrowser
-import urllib.parse
 
 # Third-party imports
 # -------------------
@@ -71,13 +69,16 @@ class CodeChatHandler:
         self.client_state = {}
         # The next ID will be 0.
         self.last_id = -1
+        # A lock used when selecting a new ID.
+        self.id_lock = threading.Lock()
 
     # Return the HTML for a web client.
     def get_client(self, codeChat_client_location):
         print("get_client({})".format(codeChat_client_location))
         # Get the next ID.
-        self.last_id += 1
-        id = self.last_id
+        with self.id_lock:
+            self.last_id += 1
+            id = self.last_id
         if id in self.client_state:
             return RenderClientReturn("", -1, "Duplicate id {}".format(id))
 
@@ -126,22 +127,7 @@ class CodeChatHandler:
         if id not in self.client_state:
             return "Unknown client id {}".format(id)
 
-        htmlString, errString = renderer.convert_file(text, path)
-
-        # Update the client's state.
-        cs = self.client_state[id]
-        cs.file_path = path
-        cs.text = text
-        cs.html = htmlString
-
-        # Not all renderers produce errors; external builds produce HTML later. Only send what's available now.
-        if errString is not None:
-            cs.q.put(GetResultReturn(GetResultType.errors, errString))
-        if htmlString is not None:
-            # For Windows, make the path contain forward slashes.
-            uri = path_to_uri(path)
-            # Encode this, for Windows paths which contain a colon (or unusual Linux paths).
-            cs.q.put(GetResultReturn(GetResultType.html, urllib.parse.quote(uri)))
+        renderer.convert_file(text, path, self.client_state[id])
 
         # Indicate success.
         return ""
@@ -151,7 +137,16 @@ class CodeChatHandler:
         print("get_result({})".format(id))
         if id not in self.client_state:
             return GetResultReturn(GetResultType.command, "error: unknown id")
-        return self.client_state[id].q.get()
+        q = self.client_state[id].q
+        ret = q.get()
+        # Delete the client if this was a shutdown command.
+        if (ret.get_result_type == GetResultType.command) and (ret.text == "shutdown"):
+            # Check that the queue is empty
+            if not q.empty():
+                print("CodeChat warning: client id {} shut down with pending commands.".format(id))
+                # Remove the client from the dict of available clients.
+                del self.client_state[id]
+        return ret
 
     # Shut down a client.
     def stop_client(self, id):
@@ -159,23 +154,14 @@ class CodeChatHandler:
         if id not in self.client_state:
             return "unknown client {}.".format(id)
         cs = self.client_state[id]
-        # Send a last message so that ``get_result`` will return
+        # Send the shutdown command to the client.
         cs.q.put(GetResultReturn(GetResultType.command, "shutdown"))
-        # Wait until the queue is empty; since this is single-threaded, no other commands may be enqueued.
-        cs.q.join()
-        # Delete the client.
-        del self.client_state[id]
         # Indicate success.
         return ""
 
 
 # Instantiate this class, which will be used by both servers.
 handler = CodeChatHandler()
-
-
-# Convert a path to a URI component: make it absolute and use forward (POSIX) slashes.
-def path_to_uri(file_path):
-    return Path(file_path).resolve().as_posix()
 
 
 # Servers
@@ -239,8 +225,7 @@ def client_service():
 def client_data(id, url_path):
     cs = handler.client_state
     # See if we rendered this file by comparing the ``url_path`` with the stored file path.
-    # Note that [8:] strips off the ``file:///`` at the beginning of the URI.
-    if (id in cs) and (path_to_uri(cs[id].file_path) == url_path):
+    if (id in cs) and (renderer.path_to_uri(cs[id].file_path) == url_path):
         # Yes, so return the rendered version.
         return cs[id].html
     else:
@@ -255,7 +240,13 @@ def client_data(id, url_path):
 
 # Run both servers. This does not (usually) return.
 def run_servers():
-    # Both servers block when run, so place the plugin server in a thread.
-    t = threading.Thread(target=editor_plugin_server)
-    t.start()
-    client_app.run()
+    # Both servers block when run, so place them in a thread.
+    editor_plugin_thread = threading.Thread(target=editor_plugin_server)
+    editor_plugin_thread.start()
+
+    client_thread = threading.Thread(target=client_app.run)
+    client_thread.start()
+
+    # Wait forever...
+    editor_plugin_thread.join()
+    client_thread.join()
