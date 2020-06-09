@@ -30,6 +30,7 @@
 #
 # Standard library
 # ----------------
+import asyncio
 from queue import Queue
 import threading
 import webbrowser
@@ -71,6 +72,8 @@ class CodeChatHandler:
         self.last_id = -1
         # A lock used when selecting a new ID.
         self.id_lock = threading.Lock()
+        # The event loop for rendering. (This function must be invoked from the main loop).
+        self.loop = asyncio.get_event_loop()
 
     # Return the HTML for a web client.
     def get_client(self, codeChat_client_location):
@@ -123,11 +126,11 @@ class CodeChatHandler:
 
     # Render the provided text to HTML, then enqueue it for the web view.
     def start_render(self, text, path, id):
-        print("start_render(\n{}\n, {}, {})".format(text, path, id))
+        print("start_render(\n{}\n, {}, {})".format(text[:80], path, id))
         if id not in self.client_state:
             return "Unknown client id {}".format(id)
 
-        renderer.convert_file(text, path, self.client_state[id])
+        asyncio.run_coroutine_threadsafe(renderer.convert_file(text, path, self.client_state[id]), self.loop)
 
         # Indicate success.
         return ""
@@ -244,8 +247,14 @@ def run_servers():
     editor_plugin_thread = threading.Thread(target=editor_plugin_server)
     editor_plugin_thread.start()
 
+    # While we can also pass ``kwargs=dict(debug=True)``, this doesn't work since Flask isn't running in the main thread.
     client_thread = threading.Thread(target=client_app.run)
     client_thread.start()
+
+    # Start the render loop in the main thread.
+    # TODO: Remove this for production code.
+    handler.loop.set_debug(True)
+    handler.loop.run_forever()
 
     # Wait forever...
     editor_plugin_thread.join()

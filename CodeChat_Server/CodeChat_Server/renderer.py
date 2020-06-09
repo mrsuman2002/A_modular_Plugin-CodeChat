@@ -25,10 +25,12 @@
 # =======
 # Library imports
 # ---------------
+import asyncio
 import fnmatch
 import io
 import os.path
 from pathlib import Path
+import traceback
 import urllib.parse
 
 # Third-party imports
@@ -66,9 +68,7 @@ class _StrikeThroughExtension(markdown.Extension):
 
 
 # Convert Markdown to HTML
-def _convertMarkdown(text, filePath, project_path):
-    assert project_path is None
-
+def _convertMarkdown(text, filePath):
     return (
         markdown.markdown(
             text,
@@ -84,8 +84,7 @@ def _convertMarkdown(text, filePath, project_path):
 
 
 # Convert reStructuredText (reST) to HTML.
-def _convertReST(text, filePath, project_path):
-    assert project_path is None
+def _convertReST(text, filePath):
 
     errStream = io.StringIO()
     docutilsHtmlWriterPath = os.path.abspath(
@@ -142,9 +141,7 @@ def _convertReST(text, filePath, project_path):
 
 
 # Convert source code to HTML.
-def _convertCodeChat(text, filePath, project_path):
-    assert project_path is None
-
+def _convertCodeChat(text, filePath):
     # Use StringIO to pass CodeChat compilation information back to
     # the client.
     errStream = io.StringIO()
@@ -164,15 +161,13 @@ def _convertCodeChat(text, filePath, project_path):
     return htmlString, errString
 
 
-# "Convert" (pass through) HTML.
-def _pass_through(text, file_path, project_path):
-    assert project_path is None
+# "Convert" (pass through) the provided text.
+def _pass_through(text, file_path):
     return text, ""
 
 
 # The "error converter" when a converter can't be found.
-def _error_converter(text, file_path, project_path):
-    assert project_path is None
+def _error_converter(text, file_path):
     return "", "{}:ERROR: no converter found for this file.".format(file_path)
 
 # Build a map of file names/extensions to the converter to use.
@@ -181,15 +176,15 @@ def _error_converter(text, file_path, project_path):
 #
 # #.    Read this from a JSON file instead.
 # #.    Use Pandoc to offer lots of other format conversions.
-GLOB_TO_CONVERTER = {glob: _convertCodeChat for glob in SUPPORTED_GLOBS}
+GLOB_TO_CONVERTER = {glob: (_convertCodeChat, None) for glob in SUPPORTED_GLOBS}
 GLOB_TO_CONVERTER.update(
     {
         # Leave (X)HTML unchanged.
-        "*.xhtml": _pass_through,
-        "*.html": _pass_through,
-        "*.htm": _pass_through,
-        "*.md": _convertMarkdown,
-        "*.rst": _convertReST,
+        "*.xhtml": (_pass_through, None),
+        "*.html": (_pass_through, None),
+        "*.htm": (_pass_through, None),
+        "*.md": (_convertMarkdown, None),
+        "*.rst": (_convertReST, None),
     }
 )
 
@@ -198,36 +193,39 @@ GLOB_TO_CONVERTER.update(
 def _select_converter(file_path):
     # TODO: search for an external builder configuration file.
     #return _project_builder, path
-    for glob, converter in GLOB_TO_CONVERTER.items():
+    for glob, (converter, tool_or_project_path) in GLOB_TO_CONVERTER.items():
         if fnmatch.fnmatch(file_path, glob):
-            return converter, None
+            return converter, tool_or_project_path
     return _error_converter, None
 
 
 # Run the appropriate converter for the provided file or return an error.
-def convert_file(text, file_path, cs):
-    # TODO: sphinx.
-    converter, project_path = _select_converter(file_path)
-    htmlString, errString = converter(text, file_path, project_path)
+async def convert_file(text, file_path, cs):
+    # The return value / exceptions raised by this coroutine are never checked, so catch everything here.
+    try:
+        asdf
+        converter, tool_or_project_path = _select_converter(file_path)
+        if asyncio.iscoroutine(converter):
+            # Coroutines get the queue, so they can report progress during the build.
+            htmlString, errString = await converter(text, file_path, tool_or_project_path, cs.q)
+        else:
+            assert tool_or_project_path is None
+            htmlString, errString = converter(text, file_path)
 
-    # Idea: do all this in the render thread, instead of here.
-    #
-    # - Enqueue it via ``loop.call_soon(self._start_render, [args])``.
-    #
-    #   -   Each client_state will have a text, path waiting to be rendered. We want a fixed-sized queue like collections.deque that will drop old jobs and enqueue a new one, but probably need to hand-code this. If the task hasn't be enqueued in the master queue, do so.
-    # - Task(s) wait on the master queue to do the actual render.
-    # - After processing, cs.file_path, cs.text, and cs.html should all be assigned at the same time when processing is done.
+        # Update the client's state.
+        cs.file_path = file_path
+        cs.text = text
+        cs.html = htmlString
 
-    # Update the client's state.
-    cs.file_path = file_path
-    cs.text = text
-    cs.html = htmlString
+        # Not all renderers produce errors.
+        if errString is not None:
+            cs.q.put(GetResultReturn(GetResultType.errors, errString))
 
-    # Not all renderers produce errors; external builds produce HTML later. Only send what's available now.
-    if errString is not None:
-        cs.q.put(GetResultReturn(GetResultType.errors, errString))
-    if htmlString is not None:
+        # Sending the HTML signals the end of this build.
+        #
         # For Windows, make the path contain forward slashes.
         uri = path_to_uri(file_path)
         # Encode this, for Windows paths which contain a colon (or unusual Linux paths).
         cs.q.put(GetResultReturn(GetResultType.html, urllib.parse.quote(uri)))
+    except Exception:
+        traceback.print_exc()
