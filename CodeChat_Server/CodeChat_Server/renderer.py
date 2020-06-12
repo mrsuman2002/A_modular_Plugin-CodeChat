@@ -201,31 +201,66 @@ def _select_converter(file_path):
 
 # Run the appropriate converter for the provided file or return an error.
 async def convert_file(text, file_path, cs):
-    # The return value / exceptions raised by this coroutine are never checked, so catch everything here.
-    try:
-        asdf
-        converter, tool_or_project_path = _select_converter(file_path)
-        if asyncio.iscoroutine(converter):
-            # Coroutines get the queue, so they can report progress during the build.
-            htmlString, errString = await converter(text, file_path, tool_or_project_path, cs.q)
-        else:
-            assert tool_or_project_path is None
-            htmlString, errString = converter(text, file_path)
+    converter, tool_or_project_path = _select_converter(file_path)
+    if asyncio.iscoroutine(converter):
+        # Coroutines get the queue, so they can report progress during the build.
+        htmlString, errString = await converter(text, file_path, tool_or_project_path, cs.q)
+    else:
+        assert tool_or_project_path is None
+        htmlString, errString = converter(text, file_path)
 
-        # Update the client's state.
-        cs.file_path = file_path
-        cs.text = text
-        cs.html = htmlString
+    # Update the client's state.
+    cs.file_path = file_path
+    cs.text = text
+    cs.html = htmlString
 
-        # Not all renderers produce errors.
-        if errString is not None:
-            cs.q.put(GetResultReturn(GetResultType.errors, errString))
+    # Not all renderers produce errors.
+    if errString is not None:
+        cs.q.put(GetResultReturn(GetResultType.errors, errString))
 
-        # Sending the HTML signals the end of this build.
-        #
-        # For Windows, make the path contain forward slashes.
-        uri = path_to_uri(file_path)
-        # Encode this, for Windows paths which contain a colon (or unusual Linux paths).
-        cs.q.put(GetResultReturn(GetResultType.html, urllib.parse.quote(uri)))
-    except Exception:
-        traceback.print_exc()
+    # Sending the HTML signals the end of this build.
+    #
+    # For Windows, make the path contain forward slashes.
+    uri = path_to_uri(file_path)
+    # Encode this, for Windows paths which contain a colon (or unusual Linux paths).
+    cs.q.put(GetResultReturn(GetResultType.html, urllib.parse.quote(uri)))
+
+
+class Renderer:
+    # Place the item in the render queue; must be called from another (non-render) thread.
+    def start_render(self, editor_text, file_path, id):
+        self._loop.call_soon_threadsafe(self._start_render, editor_text, file_path, id)
+
+    # Once in the render thread, it's safe to update the client state.
+    def _start_render(self, editor_text, file_path, id):
+        cs = self._client_state_dict[id]
+        if (cs.to_render_editor_text is None) and (cs.to_render_file_path is None):
+            self._render_q.put_nowait(id)
+        cs.to_render_editor_text = editor_text
+        cs.to_render_file_path = file_path
+
+    def run(self, *args, debug=False, **kwargs):
+        asyncio.run(self._run(*args, **kwargs), debug=debug)
+
+    # Run the rendering thread with the given number of workers.
+    async def _run(self, client_state_dict, num_workers=1):
+        # This must be created from within the main loop to avoid ``got Future <Future pending> attached to a different loop`` errors.
+        self._render_q = asyncio.Queue()
+        self._loop = asyncio.get_running_loop()
+        self._client_state_dict = client_state_dict
+
+        await asyncio.gather(*[self._worker(i) for i in range(num_workers)])
+
+    # Process items in the render queue.
+    async def _worker(self, worker_index):
+        while True:
+            # Get an item to process.
+            id = await self._render_q.get()
+            cs = self._client_state_dict[id]
+
+            # Render it.
+            await convert_file(cs.to_render_editor_text, cs.to_render_file_path, cs)
+
+            # Mark it as rendered.
+            cs.to_render_editor_text = None
+            cs.to_render_file_path = None
