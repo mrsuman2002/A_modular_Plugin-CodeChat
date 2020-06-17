@@ -30,8 +30,6 @@
 #
 # Standard library
 # ----------------
-import asyncio
-from queue import Queue
 import threading
 import webbrowser
 
@@ -58,57 +56,18 @@ from .gen_py.CodeChat_Services.ttypes import (
 
 # Service provider
 # ================
-# An empty class used to store data.
-class ClientState:
-    pass
-
-
 # This class implements both the EditorPlugin and CodeChat client services.
 class CodeChatHandler:
     def __init__(self):
         print("__init__()")
-        # Ownership:
-        #
-        # - Each entry is created when an editor plugin thread calls get_client_; see `Initialize the client state.`_. The entry's unique key comes from ``last_id``.
-        # - Thereafter, each entry should only be accessed by the rendering thread.
-        # - An entry will be removed from the dict on shutdown by the web client thread; see `remove the client`_.
-        self.client_state_dict = {}
-        # The next ID will be 0. Use the lock below to establish ownership before writing this.
-        self.last_id = -1
-        # A lock used when selecting a new ID.
-        self.id_lock = threading.Lock()
 
     # _`get_client`: Return the HTML for a web client.
     def get_client(self, codeChat_client_location):
         print("get_client({})".format(codeChat_client_location))
+        id = self.render_manager.create_client()
         # Get the next ID.
-        with self.id_lock:
-            self.last_id += 1
-            id = self.last_id
-        if id in self.client_state_dict:
+        if id is None:
             return RenderClientReturn("", -1, "Duplicate id {}".format(id))
-
-        # _`Initialize the client state.`
-        cs = ClientState()
-        # A queue of messages for the client.
-        cs.q = Queue()
-        # The remaining data should only be accessed by rendering thread.
-        #
-        # A bucket to hold text and the associated file to render.
-        cs.to_render_editor_text = None
-        cs.to_render_file_path = None
-        # A bucket to hold a sync request.
-        #
-        # The index into either the editor text or HTML converted to text.
-        cs.to_sync_index = None
-        cs.to_sync_from_editor = None
-        # The most recent HTML and editor text after rendering the specified file_path.
-        cs.html = None
-        cs.editor_text = None
-        cs.file_path = None
-        # The HTML converted to text.
-        cs.html_as_text = None
-        self.client_state_dict[id] = cs
 
         # Return what's requested.
         url = "http://127.0.0.1:5000/client?id={}".format(id)
@@ -141,38 +100,35 @@ class CodeChatHandler:
     # Render the provided text to HTML, then enqueue it for the web view.
     def start_render(self, text, path, id):
         print("start_render(\n{}\n, {}, {})".format(text[:80], path, id))
-        if id not in self.client_state_dict:
+        if self.render_manager.start_render(text, path, id):
+            # Indicate success.
+            return ""
+        else:
             return "Unknown client id {}".format(id)
-
-        self.renderer.start_render(text, path, id)
-
-        # Indicate success.
-        return ""
 
     # Pass rendered results back to the web view.
     def get_result(self, id):
         print("get_result({})".format(id))
-        if id not in self.client_state_dict:
+        q = self.render_manager.get_queue(id)
+        if not q:
             return GetResultReturn(GetResultType.command, "error: unknown id")
-        q = self.client_state_dict[id].q
         ret = q.get()
         # Delete the client if this was a shutdown command.
         if (ret.get_result_type == GetResultType.command) and (ret.text == "shutdown"):
             # Check that the queue is empty
             if not q.empty():
                 print("CodeChat warning: client id {} shut down with pending commands.".format(id))
-                # _`Remove the client` from the dict of available clients.
-                del self.client_state_dict[id]
+            self.render_manager.delete_client(id)
         return ret
 
     # Shut down a client.
     def stop_client(self, id):
         print("stop_client({})".format(id))
-        if id not in self.client_state_dict:
+        q = self.render_manager.get_queue(id)
+        if not q:
             return "unknown client {}.".format(id)
-        cs = self.client_state_dict[id]
         # Send the shutdown command to the client.
-        cs.q.put(GetResultReturn(GetResultType.command, "shutdown"))
+        q.put(GetResultReturn(GetResultType.command, "shutdown"))
         # Indicate success.
         return ""
 
@@ -240,12 +196,11 @@ def client_service():
 # The endpoint for files requested by a specific client, including rendered source files.
 @client_app.route("/client/<int:id>/<path:url_path>")
 def client_data(id, url_path):
-    csd = handler.client_state_dict
     # See if we rendered this file by comparing the ``url_path`` with the stored file path.
-    # TODO: not thread-safe.
-    if (id in csd) and (renderer.path_to_uri(csd[id].file_path) == url_path):
+    file_path, html = handler.render_manager.get_render_results(id)
+    if renderer.path_to_uri(file_path) == url_path:
         # Yes, so return the rendered version.
-        return csd[id].html
+        return html
     else:
         # No, so assume it's a static file (such an as image).
         # TODO: check for a renderable file.
@@ -267,10 +222,10 @@ def run_servers():
     client_thread.start()
 
     # Start the render loop in the main thread.
-    _renderer = renderer.Renderer()
-    handler.renderer = _renderer
+    render_manager = renderer.RenderManager()
+    handler.render_manager = render_manager
     # TODO: Remove ``debug=True`` for production code.
-    _renderer.run(handler.client_state_dict, debug=True)
+    render_manager.run(debug=True)
 
     # Wait forever...
     editor_plugin_thread.join()

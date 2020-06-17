@@ -30,7 +30,7 @@ import fnmatch
 import io
 import os.path
 from pathlib import Path
-import traceback
+from queue import Queue
 import urllib.parse
 
 # Third-party imports
@@ -51,9 +51,9 @@ from .gen_py.CodeChat_Services.ttypes import (
 
 # Functions and classes
 # =====================
-# Convert a path to a URI component: make it absolute and use forward (POSIX) slashes.
+# Convert a path to a URI component: make it absolute and use forward (POSIX) slashes. If the provided ``file_path`` is falsey, just return it.
 def path_to_uri(file_path):
-    return Path(file_path).resolve().as_posix()
+    return Path(file_path).resolve().as_posix() if file_path else file_path
 
 
 # A handy Markdown extension.
@@ -204,19 +204,18 @@ async def convert_file(text, file_path, cs):
     converter, tool_or_project_path = _select_converter(file_path)
     if asyncio.iscoroutine(converter):
         # Coroutines get the queue, so they can report progress during the build.
-        htmlString, errString = await converter(text, file_path, tool_or_project_path, cs.q)
+        html_string, err_string = await converter(text, file_path, tool_or_project_path, cs.q)
     else:
         assert tool_or_project_path is None
-        htmlString, errString = converter(text, file_path)
+        html_string, err_string = converter(text, file_path)
 
-    # Update the client's state.
-    cs.file_path = file_path
-    cs.text = text
-    cs.html = htmlString
+    # Update the client's state, now that the rendering is complete.
+    cs._file_path = file_path
+    cs._text = text
+    cs._html = html_string
 
-    # Not all renderers produce errors.
-    if errString is not None:
-        cs.q.put(GetResultReturn(GetResultType.errors, errString))
+    # Send any errors. An empty error string will clear any errors from a previous build, and should still be sent.
+    cs.q.put(GetResultReturn(GetResultType.errors, err_string))
 
     # Sending the HTML signals the end of this build.
     #
@@ -226,28 +225,131 @@ async def convert_file(text, file_path, cs):
     cs.q.put(GetResultReturn(GetResultType.html, urllib.parse.quote(uri)))
 
 
-class Renderer:
-    # Place the item in the render queue; must be called from another (non-render) thread.
-    def start_render(self, editor_text, file_path, id):
-        self._loop.call_soon_threadsafe(self._start_render, editor_text, file_path, id)
+# Store data for about each client.
+class ClientState:
+    def __init__(self):
+        # A queue of messages for the client. This can be accessed by any thread.
+        self.q = Queue()
 
-    # Once in the render thread, it's safe to update the client state.
-    def _start_render(self, editor_text, file_path, id):
+        # The remaining data in this class should only be accessed by rendering thread.
+        #
+        # The most recent HTML and editor text after rendering the specified file_path.
+        self._html = None
+        self._editor_text = None
+        self._file_path = None
+
+        # A flag to indicate if this has been placed in the renderer's job queue.
+        self._in_job_q = False
+
+        # A bucket to hold text and the associated file to render.
+        self._to_render_editor_text = None
+        self._to_render_file_path = None
+
+        # A bucket to hold a sync request.
+        #
+        # The index into either the editor text or HTML converted to text.
+        self._to_sync_index = None
+        self._to_sync_from_editor = None
+        # The HTML converted to text.
+        self._html_as_text = None
+
+        # A flag to indicate if this client is in the process of deletion.
+        self._is_deleting = False
+
+
+class RenderManager:
+    # Determine if the provided id exists and is not being deleted. Return the ClientState for the id if so; otherwise, return False.
+    def _get_client_state(self, id):
+        if id not in self._client_state_dict:
+            # Signal an error if the id can't be found.
+            return False
         cs = self._client_state_dict[id]
-        if (cs.to_render_editor_text is None) and (cs.to_render_file_path is None):
-            self._render_q.put_nowait(id)
-        cs.to_render_editor_text = editor_text
-        cs.to_render_file_path = file_path
+        if cs._is_deleting:
+            # Signal an error if this client is being deleted.
+            return False
+        return cs
 
+    # Create a new client. Returns the client id on success or False on failure.
+    def create_client(self):
+        future = asyncio.run_coroutine_threadsafe(self._create_client(), self._loop)
+        return future.result()
+
+    async def _create_client(self):
+        self._last_id += 1
+        id = self._last_id
+        if id in self._client_state_dict:
+            # Indicate failure if this id exists.
+            return False
+        self._client_state_dict[id] = ClientState()
+        return id
+
+    def delete_client(self, id):
+        future = asyncio.run_coroutine_threadsafe(self._delete_client(id), self._loop)
+        return future.result()
+
+    async def _delete_client(self, id):
+        cs = self._get_client_state(id)
+        if cs:
+            del self._client_state_dict[id]
+            return True
+        else:
+            return False
+
+    # Place the item in the render queue; must be called from another (non-render) thread. Returns True on success, or False if the provided id doesn't exist.
+    def start_render(self, editor_text, file_path, id):
+        future = asyncio.run_coroutine_threadsafe(self._start_render(editor_text, file_path, id), self._loop)
+        return future.result()
+
+    async def _start_render(self, editor_text, file_path, id):
+        cs = self._get_client_state(id)
+        if not cs:
+            # Signal an error for an invalid client id.
+            return False
+
+        # Add to the job queue unless it's already there.
+        if not cs._in_job_q:
+            self._job_q.put_nowait(id)
+            cs._in_job_q = True
+
+        # Update the job parameters.
+        cs._to_render_editor_text = editor_text
+        cs._to_render_file_path = file_path
+
+        # Indicate success
+        return True
+
+    # Get a client's queue.
+    def get_queue(self, id):
+        future = asyncio.run_coroutine_threadsafe(self._get_queue(id), self._loop)
+        return future.result()
+
+    async def _get_queue(self, id):
+        cs = self._get_client_state(id)
+        return cs.q if cs else False
+
+    # Return ``(file_path, html)`` if the provided client exists, or False otherwise.
+    def get_render_results(self, id):
+        future = asyncio.run_coroutine_threadsafe(self._get_render_results(id), self._loop)
+        return future.result()
+
+    async def _get_render_results(self, id):
+        cs = self._get_client_state(id)
+        return (cs._file_path, cs._html) if cs else False
+
+    # Start the render manager. This typically never returns.
     def run(self, *args, debug=False, **kwargs):
         asyncio.run(self._run(*args, **kwargs), debug=debug)
 
     # Run the rendering thread with the given number of workers.
-    async def _run(self, client_state_dict, num_workers=1):
-        # This must be created from within the main loop to avoid ``got Future <Future pending> attached to a different loop`` errors.
-        self._render_q = asyncio.Queue()
+    async def _run(self, num_workers=1):
+        # Create a queue of jobs for the renderer to process. This must be created from within the main loop to avoid ``got Future <Future pending> attached to a different loop`` errors.
+        self._job_q = asyncio.Queue()
+        # Keep a dict of id: ClientState for each client.
+        self._client_state_dict = {}
+        # The next ID will be 0. Use the lock below to establish ownership before writing this.
+        self._last_id = -1
         self._loop = asyncio.get_running_loop()
-        self._client_state_dict = client_state_dict
+        self._client_state_dict = {}
 
         await asyncio.gather(*[self._worker(i) for i in range(num_workers)])
 
@@ -255,12 +357,15 @@ class Renderer:
     async def _worker(self, worker_index):
         while True:
             # Get an item to process.
-            id = await self._render_q.get()
+            id = await self._job_q.get()
             cs = self._client_state_dict[id]
 
-            # Render it.
-            await convert_file(cs.to_render_editor_text, cs.to_render_file_path, cs)
+            if cs._is_deleting:
+                del self.client_state_dict[id]
+            else:
+                # TODO: sync.
 
-            # Mark it as rendered.
-            cs.to_render_editor_text = None
-            cs.to_render_file_path = None
+                # Render it.
+                assert cs._in_job_q
+                await convert_file(cs._to_render_editor_text, cs._to_render_file_path, cs)
+                cs._in_job_q = False
