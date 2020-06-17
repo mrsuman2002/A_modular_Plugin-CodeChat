@@ -117,8 +117,13 @@ class CodeChatHandler:
         if (ret.get_result_type == GetResultType.command) and (ret.text == "shutdown"):
             # Check that the queue is empty
             if not q.empty():
-                print("CodeChat warning: client id {} shut down with pending commands.".format(id))
+                print(
+                    "CodeChat warning: client id {} shut down with pending commands.".format(
+                        id
+                    )
+                )
             self.render_manager.delete_client(id)
+        print(ret)
         return ret
 
     # Shut down a client.

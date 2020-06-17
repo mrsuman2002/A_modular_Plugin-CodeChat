@@ -26,11 +26,14 @@
 # Library imports
 # ---------------
 import asyncio
+from contextlib import contextmanager
 import fnmatch
 import io
 import os.path
 from pathlib import Path
 from queue import Queue
+import sys
+from tempfile import NamedTemporaryFile
 import urllib.parse
 
 # Third-party imports
@@ -161,6 +164,101 @@ def _convertCodeChat(text, filePath):
     return htmlString, errString
 
 
+@contextmanager
+def _dummy_context_manager():
+    yield
+
+
+# If need_temp_file is True, provide a NamedTemporaryFile; otherwise, return a dummy context manager.
+def _optional_temp_file(need_temp_file):
+    return (
+        NamedTemporaryFile(mode="w", encoding="utf-8")
+        if need_temp_file
+        else _dummy_context_manager()
+    )
+
+
+async def _convert_external(text, file_path, tool_or_project_path, q):
+    # Split the provided tool path.
+    uses_stdin, uses_stdout, *args = tool_or_project_path
+
+    # Run from the directory containing the file.
+    cwd = str(Path(file_path).parent)
+
+    # Save the text in a temporary file for use with the external tool.
+    with _optional_temp_file(not uses_stdin) as input_file, _optional_temp_file(
+        not uses_stdout
+    ) as output_file:
+        if input_file:
+            # Write the text to the input file then close it, so that it can be opened on all platforms by the external tool. See `NamedTemporaryFile <https://docs.python.org/3/library/tempfile.html#tempfile.NamedTemporaryFile>`_.
+            input_file.write(text)
+            input_file.close()
+
+        if output_file:
+            # Close the output file for the same reason.
+            output_file.close()
+
+        # Do replacements on the args.
+        args = [
+            s.format(
+                input_file=input_file and input_file.name,
+                output_file=output_file and output_file.name,
+            )
+            for s in args
+        ]
+
+        # Explain what's going on.
+        q.put(
+            GetResultReturn(
+                GetResultType.build, "{} > {}".format(cwd, " ".join(args))
+            )
+        )
+
+        # Start the process.
+        try:
+            proc = await asyncio.create_subprocess_exec(
+                *args,
+                cwd=cwd,
+                stdin=None if input_file else asyncio.subprocess.PIPE,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+        except Exception as e:
+            return "", "external command:: ERROR:When starting. {}".format(e)
+
+        # Provide a way to send stdout from the process a line at a time to the web client.
+        async def stream_stdout(stdout_stream):
+            while True:
+                ret = await stdout_stream.read(80)
+                if ret:
+                    # TODO: what if the bytes got split between a UTF-8 multibyte sequence? Oh, fun...
+                    q.put(GetResultReturn(GetResultType.build, ret.decode("utf-8")))
+                else:
+                    break
+
+        # An awaitable sequence to interact with the subprocess.
+        aws = [proc.communicate(None if input_file else text.encode("utf-8"))]
+
+        # If we have an output file, then stream the stdout.
+        if output_file:
+            aws.append(stream_stdout(proc.stdout))
+            # Hack: make it look like there's no stdout, so communicate won't use it.
+            proc.stdout = None
+
+        # Run the subprocess.
+        try:
+            (stdout, stderr), *junk = await asyncio.gather(*aws)
+        except Exception as e:
+            return "", "external command:: ERROR:When running. {}".format(e)
+
+        # Gather the output from the file if necessary.
+        if output_file:
+            with open(output_file.name, "rb") as f:
+                stdout = f.read()
+
+    return stdout.decode("utf-8"), stderr.decode("utf-8")
+
+
 # "Convert" (pass through) the provided text.
 def _pass_through(text, file_path):
     return text, ""
@@ -168,7 +266,8 @@ def _pass_through(text, file_path):
 
 # The "error converter" when a converter can't be found.
 def _error_converter(text, file_path):
-    return "", "{}:ERROR: no converter found for this file.".format(file_path)
+    return "", "{}:: ERROR: no converter found for this file.".format(file_path)
+
 
 # Build a map of file names/extensions to the converter to use.
 #
@@ -183,8 +282,29 @@ GLOB_TO_CONVERTER.update(
         "*.xhtml": (_pass_through, None),
         "*.html": (_pass_through, None),
         "*.htm": (_pass_through, None),
+        # Use the integrated Python libraries for these.
         "*.md": (_convertMarkdown, None),
         "*.rst": (_convertReST, None),
+        # External tools
+        #
+        # `Textile <https://www.promptworks.com/textile>`_:
+        "*.textile": (
+            _convert_external,
+            [
+                # Does this tool read the input file from stdin?
+                True,
+                # Does this tool produce the output on stdout?
+                True,
+                # The remaining elements are the arguments used to invoke the tool.
+                "pandoc",
+                # Specify the input format https://pandoc.org/MANUAL.html#option--to>`_.
+                "--from=textile",
+                # `Output to HTML <https://pandoc.org/MANUAL.html#option--from>`_.
+                "--to=html",
+                # `Produce a complete (standalone) HTML file <https://pandoc.org/MANUAL.html#option--standalone>`_, not a fragment.
+                "--standalone",
+            ],
+        ),
     }
 )
 
@@ -192,7 +312,7 @@ GLOB_TO_CONVERTER.update(
 # Return the converter for the provided file.
 def _select_converter(file_path):
     # TODO: search for an external builder configuration file.
-    #return _project_builder, path
+    # return _project_builder, path
     for glob, (converter, tool_or_project_path) in GLOB_TO_CONVERTER.items():
         if fnmatch.fnmatch(file_path, glob):
             return converter, tool_or_project_path
@@ -202,9 +322,11 @@ def _select_converter(file_path):
 # Run the appropriate converter for the provided file or return an error.
 async def convert_file(text, file_path, cs):
     converter, tool_or_project_path = _select_converter(file_path)
-    if asyncio.iscoroutine(converter):
+    if asyncio.iscoroutinefunction(converter):
         # Coroutines get the queue, so they can report progress during the build.
-        html_string, err_string = await converter(text, file_path, tool_or_project_path, cs.q)
+        html_string, err_string = await converter(
+            text, file_path, tool_or_project_path, cs.q
+        )
     else:
         assert tool_or_project_path is None
         html_string, err_string = converter(text, file_path)
@@ -297,7 +419,9 @@ class RenderManager:
 
     # Place the item in the render queue; must be called from another (non-render) thread. Returns True on success, or False if the provided id doesn't exist.
     def start_render(self, editor_text, file_path, id):
-        future = asyncio.run_coroutine_threadsafe(self._start_render(editor_text, file_path, id), self._loop)
+        future = asyncio.run_coroutine_threadsafe(
+            self._start_render(editor_text, file_path, id), self._loop
+        )
         return future.result()
 
     async def _start_render(self, editor_text, file_path, id):
@@ -329,7 +453,9 @@ class RenderManager:
 
     # Return ``(file_path, html)`` if the provided client exists, or False otherwise.
     def get_render_results(self, id):
-        future = asyncio.run_coroutine_threadsafe(self._get_render_results(id), self._loop)
+        future = asyncio.run_coroutine_threadsafe(
+            self._get_render_results(id), self._loop
+        )
         return future.result()
 
     async def _get_render_results(self, id):
@@ -338,6 +464,11 @@ class RenderManager:
 
     # Start the render manager. This typically never returns.
     def run(self, *args, debug=False, **kwargs):
+        # The default Windows event loop doesn't support asyncio subprocesses.
+        is_win = sys.platform.startswith('win')
+        if is_win:
+            asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+
         asyncio.run(self._run(*args, **kwargs), debug=debug)
 
     # Run the rendering thread with the given number of workers.
@@ -367,5 +498,7 @@ class RenderManager:
 
                 # Render it.
                 assert cs._in_job_q
-                await convert_file(cs._to_render_editor_text, cs._to_render_file_path, cs)
+                await convert_file(
+                    cs._to_render_editor_text, cs._to_render_file_path, cs
+                )
                 cs._in_job_q = False
