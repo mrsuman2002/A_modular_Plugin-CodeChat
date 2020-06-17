@@ -178,6 +178,52 @@ def _optional_temp_file(need_temp_file):
     )
 
 
+# Run a subprocess, optionally streaming the stdout.
+async def _run_subprocess(args, cwd, input_text, stream_stdout, q):
+    # Explain what's going on.
+    q.put(GetResultReturn(GetResultType.build, "{} > {}".format(cwd, " ".join(args))))
+
+    # Start the process.
+    try:
+        proc = await asyncio.create_subprocess_exec(
+            *args,
+            cwd=cwd,
+            stdin=asyncio.subprocess.PIPE,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+    except Exception as e:
+        return "", "external command:: ERROR:When starting. {}".format(e)
+
+    # Provide a way to send stdout from the process a line at a time to the web client.
+    async def stdout_streamer(stdout_stream):
+        while True:
+            ret = await stdout_stream.read(80)
+            if ret:
+                # TODO: what if the bytes got split between a UTF-8 multibyte sequence? Oh, fun...
+                q.put(GetResultReturn(GetResultType.build, ret.decode("utf-8")))
+            else:
+                break
+
+    # An awaitable sequence to interact with the subprocess.
+    aws = [proc.communicate(input_text and input_text.encode("utf-8"))]
+
+    # If we have an output file, then stream the stdout.
+    if stream_stdout:
+        aws.append(stdout_streamer(proc.stdout))
+        # Hack: make it look like there's no stdout, so communicate won't use it.
+        proc.stdout = None
+
+    # Run the subprocess.
+    try:
+        (stdout, stderr), *junk = await asyncio.gather(*aws)
+    except Exception as e:
+        return "", "external command:: ERROR:When running. {}".format(e)
+
+    return stdout and stdout.decode("utf-8"), stderr.decode("utf-8")
+
+
+# Convert a file using an external program.
 async def _convert_external(text, file_path, tool_or_project_path, q):
     # Split the provided tool path.
     uses_stdin, uses_stdout, *args = tool_or_project_path
@@ -207,56 +253,16 @@ async def _convert_external(text, file_path, tool_or_project_path, q):
             for s in args
         ]
 
-        # Explain what's going on.
-        q.put(
-            GetResultReturn(
-                GetResultType.build, "{} > {}".format(cwd, " ".join(args))
-            )
+        stdout, stderr = await _run_subprocess(
+            args, cwd, None if input_file else text, bool(output_file), q
         )
-
-        # Start the process.
-        try:
-            proc = await asyncio.create_subprocess_exec(
-                *args,
-                cwd=cwd,
-                stdin=None if input_file else asyncio.subprocess.PIPE,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-            )
-        except Exception as e:
-            return "", "external command:: ERROR:When starting. {}".format(e)
-
-        # Provide a way to send stdout from the process a line at a time to the web client.
-        async def stream_stdout(stdout_stream):
-            while True:
-                ret = await stdout_stream.read(80)
-                if ret:
-                    # TODO: what if the bytes got split between a UTF-8 multibyte sequence? Oh, fun...
-                    q.put(GetResultReturn(GetResultType.build, ret.decode("utf-8")))
-                else:
-                    break
-
-        # An awaitable sequence to interact with the subprocess.
-        aws = [proc.communicate(None if input_file else text.encode("utf-8"))]
-
-        # If we have an output file, then stream the stdout.
-        if output_file:
-            aws.append(stream_stdout(proc.stdout))
-            # Hack: make it look like there's no stdout, so communicate won't use it.
-            proc.stdout = None
-
-        # Run the subprocess.
-        try:
-            (stdout, stderr), *junk = await asyncio.gather(*aws)
-        except Exception as e:
-            return "", "external command:: ERROR:When running. {}".format(e)
 
         # Gather the output from the file if necessary.
         if output_file:
-            with open(output_file.name, "rb") as f:
+            with open(output_file.name, "r", encoding="utf-8") as f:
                 stdout = f.read()
 
-    return stdout.decode("utf-8"), stderr.decode("utf-8")
+    return stdout, stderr
 
 
 # "Convert" (pass through) the provided text.
@@ -465,7 +471,7 @@ class RenderManager:
     # Start the render manager. This typically never returns.
     def run(self, *args, debug=False, **kwargs):
         # The default Windows event loop doesn't support asyncio subprocesses.
-        is_win = sys.platform.startswith('win')
+        is_win = sys.platform.startswith("win")
         if is_win:
             asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 
