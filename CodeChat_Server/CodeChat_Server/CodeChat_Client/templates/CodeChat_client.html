@@ -21,19 +21,23 @@
 </head>
 <body>
     <div class="horizontally_divided" id="splitter">
-        <!-- The children of the split div must be divs. So, wrap the iframe in a div. -->
         <div>
+            <!-- The children of the splitter div must be divs, which the splitter JS will assign styles to. So, wrap the iframe in a div. -->
             <iframe id="output"></iframe>
         </div>
         <div>
             <h2 id="build_heading">Output</h2>
-            <div id="build"></div>
-            <div id="errors"></div>
+            <!-- Likewise, wrap the ``build_contents`` in a plain div, allowing us to assign styles via the stylesheet; the parent div's styles will be overriden by spliter JS assignments. -->
+            <div id="build_contents">
+                <div id="build"></div>
+                <div id="errors"></div>
+            </div>
         </div>
     </div>
     <div id="status_div">
         <span id="status_build">
-            Waiting for initial render...
+            <span id="status_message">Waiting for initial render...</span>
+            <progress id="build_progress" max="100"></progress>
         </span>
         <span id="status_errors"></span>
     </div>

@@ -10,10 +10,12 @@ function run_client(id)
     let client    = new CodeChatClientClient(protocol);
 
     // Get commonly-used nodes in the DOM.
-    let status_build_div = document.getElementById("status_build");
+    let status_message = document.getElementById("status_message");
+    let build_progress = document.getElementById("build_progress");
     let status_errors_div = document.getElementById("status_errors");
     let outputElement = document.getElementById("output");
     let build_div = document.getElementById("build");
+    let build_contents = document.getElementById("build_contents");
     let errors_div = document.getElementById("errors");
 
     // Set up "globals" for the function below.
@@ -38,7 +40,9 @@ function run_client(id)
                 let scrollY = outputElement.contentWindow.scrollY;
                 // See ideas in https://stackoverflow.com/a/16822995. Works for same-domain only.
                 outputElement.onload = function () {
-                    status_build_div.innerHTML = "Build complete.";
+                    status_message.innerHTML = "Build complete.";
+                    build_progress.style.display = "none";
+                    outputElement.style.opacity = 1;
                     this.contentWindow.scrollBy(scrollX, scrollY);
                     // Get new content only *after* the load finishes. The case to avoid:
                     //
@@ -58,16 +62,24 @@ function run_client(id)
             } else if (result.get_result_type === GetResultType.build) {
                 if (clear_output) {
                     // This is the start of a new build.
-                    status_build_div.innerHTML = "Building...";
+                    status_message.innerHTML = "Building...";
+                    build_progress.style.display = "inline";
                     build_div.textContent = result.text;
                     errors_div.textContent = "";
                     status_errors_div.innerHTML = "";
+
                     // Save the current splitter state.
                     splitter_size[errors_or_warnings] = get_splitter().percent;
+
+                    // Show that the current output HTML is old.
+                    outputElement.style.opacity = 0.5;
+
                     clear_output = false;
                 } else {
                     build_div.textContent += result.text;
                 }
+                // Scroll to the bottom, to show the content just added.
+                scroll_to_bottom(build_contents);
 
             } else if (result.get_result_type === GetResultType.errors) {
                 if (clear_output) {
@@ -80,6 +92,8 @@ function run_client(id)
                 } else {
                     errors_div.textContent += result.text;
                 }
+                // Scroll to the bottom, to show the content just added.
+                scroll_to_bottom(build_contents);
 
                 // Update the errors/warnings and splitter position.
                 [errors_div.innerHTML, status_errors_div.innerHTML, errors_or_warnings] =
@@ -136,6 +150,12 @@ function set_splitter_percent(percent) {
     let splitter = get_splitter();
     splitter.percent = percent;
     splitMe.update(splitter);
+}
+
+
+// Scroll an element to the bottom
+function scroll_to_bottom(element) {
+    element.scrollTop = element.scrollHeight - element.clientHeight;
 }
 
 
