@@ -15,7 +15,7 @@ The CodeChat plugin system integrates the capabilities of `CodeChat <https://cod
 
     subgraph cluster_server {
         label = <CodeChat<br />server>;
-        render_engine [label = <CodeChat<br />renderer>];
+        render_engine [label = <Renderers>];
     }
 
     subgraph cluster_client {
@@ -32,7 +32,7 @@ This approach bridges the services CodeChat provides, which are defined in Pytho
 #.  Develops a `CodeChat server <CodeChat_Server/contents>` to provide the needed services;
 #.  Provides a `CodeChat client <CodeChat_Server/CodeChat_Server/CodeChat_Client/contents>`, hosted in a web browser, to display the rendered source code and provide for user input;
 #.  Introduces a `plugin for Visual Studio Code <VSCode_Extension/contents>`, a free and popular cross-platform text editor; and
-#.  Employs `Apache Thrift <https://thrift.apache.org>`_ to define `CodeChat services <CodeChat_Services/contents>`, which allows the CodeChat server to communicate with plugins developed in a `variety of languagues <https://thrift.apache.org/docs/Languages>`_.
+#.  Employs `Apache Thrift <https://thrift.apache.org>`_ to define `CodeChat services <CodeChat_Services/contents>`, which allows the CodeChat server to communicate with plugins developed in a `variety of languages <https://thrift.apache.org/docs/Languages>`_.
 
 Contents:
 

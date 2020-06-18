@@ -19,6 +19,11 @@
 # ***********************************************************
 # |docname| - The CodeChat plugin documentation configuration
 # ***********************************************************
+# .. toctree::
+#   :maxdepth: 2
+#
+#   codechat_config.json
+#
 # This file configures Sphinx, which transforms restructured text (reST) into
 # html. See Sphinx `build configuration file docs
 # <http://sphinx-doc.org/config.html>`_ for more information on the settings
@@ -145,6 +150,8 @@ CodeChat_lexer_for_glob = {
     '.gitignore': 'Perl',
     # Treat JavaScript as plain JavaScript; the auto-detect code finds something else.
     '*.js': "JavaScript",
+    # The ``codechat_config.json`` file is actually Python.
+    'codechat_config.json': "Python",
 }
 
 # **CodeChat note:** _`CodeChat_excludes` is a list of exclude_patterns_ which
