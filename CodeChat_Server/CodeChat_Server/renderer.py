@@ -25,9 +25,11 @@
 # =======
 # Library imports
 # ---------------
+import ast
 import asyncio
 from contextlib import contextmanager
 import fnmatch
+import html
 import io
 import os.path
 from pathlib import Path
@@ -51,14 +53,18 @@ from .gen_py.CodeChat_Services.ttypes import (
     GetResultReturn,
 )
 
-
-# Functions and classes
-# =====================
+# Utilities
+# =========
 # Convert a path to a URI component: make it absolute and use forward (POSIX) slashes. If the provided ``file_path`` is falsey, just return it.
 def path_to_uri(file_path):
     return Path(file_path).resolve().as_posix() if file_path else file_path
 
 
+# Renderers
+# =========
+#
+# Markdown
+# --------
 # A handy Markdown extension.
 class _StrikeThroughExtension(markdown.Extension):
     DEL_RE = r"(~~)(.*?)~~"
@@ -86,6 +92,8 @@ def _convertMarkdown(text, filePath):
     )
 
 
+# reStructuredText (reST)
+# -----------------------
 # Convert reStructuredText (reST) to HTML.
 def _convertReST(text, filePath):
 
@@ -143,6 +151,8 @@ def _convertReST(text, filePath):
     return htmlString, errString
 
 
+# CodeChat
+# ========
 # Convert source code to HTML.
 def _convertCodeChat(text, filePath):
     # Use StringIO to pass CodeChat compilation information back to
@@ -164,18 +174,189 @@ def _convertCodeChat(text, filePath):
     return htmlString, errString
 
 
-@contextmanager
-def _dummy_context_manager():
-    yield
+# External tools/projects
+# =======================
+# Convert a file using an external program.
+async def _convert_external(text, file_path, tool_or_project_path, q):
+    # Split the provided tool path.
+    uses_stdin, uses_stdout, *args = tool_or_project_path
+
+    # Run from the directory containing the file.
+    cwd = str(Path(file_path).parent)
+
+    # Save the text in a temporary file for use with the external tool.
+    with _optional_temp_file(not uses_stdin) as input_file, _optional_temp_file(
+        not uses_stdout
+    ) as output_file:
+        if input_file:
+            # Write the text to the input file then close it, so that it can be opened on all platforms by the external tool. See `NamedTemporaryFile <https://docs.python.org/3/library/tempfile.html#tempfile.NamedTemporaryFile>`_.
+            input_file.write(text)
+            input_file.close()
+
+        if output_file:
+            # Close the output file for the same reason.
+            output_file.close()
+
+        # Do replacements on the args.
+        args = [
+            s.format(
+                input_file=input_file and input_file.name,
+                output_file=output_file and output_file.name,
+            )
+            for s in args
+        ]
+
+        stdout, stderr = await _run_subprocess(
+            args, cwd, None if input_file else text, bool(output_file), q
+        )
+
+        # Gather the output from the file if necessary.
+        if output_file:
+            with open(output_file.name, "r", encoding="utf-8") as f:
+                stdout = f.read()
+
+    return stdout, stderr
 
 
-# If need_temp_file is True, provide a NamedTemporaryFile; otherwise, return a dummy context manager.
-def _optional_temp_file(need_temp_file):
-    return (
-        NamedTemporaryFile(mode="w", encoding="utf-8")
-        if need_temp_file
-        else _dummy_context_manager()
+# Return False if source_file is newer than output_file; otherwise, return string with an error message.
+def _checkModificationTime(source_file, base_html_file, html_ext):
+
+    # Look for the resulting HTML.
+    possible_html_file = base_html_file.with_suffix(html_ext)
+    html_file = (
+        possible_html_file
+        if possible_html_file.exists()
+        else Path(str(base_html_file) + html_ext)
     )
+
+    # Recall that time is measured in seconds since the epoch,
+    # so that larger = newer.
+    try:
+        if html_file.stat().st_mtime > source_file.stat().st_mtime:
+            return html_file, False
+        else:
+            return (
+                html_file,
+                "The file {} is older than the source file {}.".format(
+                    html_file, source_file
+                ),
+            )
+    except OSError as e:
+        return (
+            html_file,
+            "Error checking modification time of {}: {}".format(html_file, e),
+        )
+
+
+# Convert an external project
+async def _convert_external_project(text, file_path, tool_or_project_path, q):
+    # Run from the directory containing the project file.
+    project_path = str(Path(tool_or_project_path).parent)
+    q.put(
+        GetResultReturn(
+            GetResultType.build,
+            "Loading project file {}.\n".format(tool_or_project_path),
+        )
+    )
+
+    # Read the project configuration.
+    try:
+        with open(tool_or_project_path, encoding="utf-8") as f:
+            data = f.read()
+    except Exception as e:
+        return "", "{}::ERROR: Unable to open. {}".format(tool_or_project_path, e)
+
+    # Parse it and check the format
+    try:
+        d = ast.literal_eval(data)
+    except Exception as e:
+        return "", "{}::ERROR: Unable to parse. {}".format(tool_or_project_path, e)
+    if not isinstance(d, dict):
+        return (
+            "",
+            "{}::ERROR: Unexpected type; file should contain a dict, but saw a {}".format(
+                tool_or_project_path, e, type(d)
+            ),
+        )
+    args = d.get("args")
+    if not isinstance(args, list):
+        return (
+            "",
+            "{}::ERROR: missing args or wrong type; saw {} (type was {}).".format(
+                tool_or_project_path, args, type(args)
+            ),
+        )
+    source_path = d.get("source_path", ".")
+    if not isinstance(source_path, str):
+        return (
+            "",
+            "{}::ERROR: missing source_path or wrong type; saw {} (type was {}).".format(
+                tool_or_project_path, source_path, type(source_path)
+            ),
+        )
+    output_path = d.get("output_path")
+    if not isinstance(output_path, str):
+        return (
+            "",
+            "{}::ERROR: missing output_path or wrong type; saw {} (type was {}).".format(
+                tool_or_project_path, output_path, type(output_path)
+            ),
+        )
+    html_ext = d.get("html_ext", ".html")
+    if not isinstance(html_ext, str):
+        return (
+            "",
+            "{}::ERROR: wrong type for html_ext; saw {} (type was {}).".format(
+                file_path, html_ext, type(html_ext)
+            ),
+        )
+
+    # Make paths absolute.
+    def abs_path(path):
+        path = Path(path)
+        if not path.is_absolute():
+            path = project_path / path
+        return path
+
+    source_path = abs_path(source_path)
+    output_path = abs_path(output_path)
+    file_path = Path(file_path)
+
+    # Determine first guess at the location of the rendered HTML.
+    try:
+        base_html_file = output_path / file_path.relative_to(source_path)
+    except Exception as e:
+        return (
+            "",
+            "{}::ERROR: unable to compute path relative to {}. {}".format(
+                file_path, source_path, e
+            ),
+        )
+
+    # Compare dates to see if the rendered file is current
+    html_file, error = _checkModificationTime(file_path, base_html_file, html_ext)
+
+    # If not, render and try again.
+    if error:
+        # Perform replacement on the args.
+        args = [
+            s.format(
+                project_path=project_path,
+                source_path=source_path,
+                output_path=output_path,
+            )
+            for s in args
+        ]
+        # Render.
+        stdout, stderr = await _run_subprocess(args, project_path, None, True, q)
+        html_file, error = _checkModificationTime(file_path, base_html_file, html_ext)
+    else:
+        stderr = ""
+
+    # Display an error in the main window if one exists.
+    if error:
+        stderr += error
+    return html_file, stderr
 
 
 # Run a subprocess, optionally streaming the stdout.
@@ -223,48 +404,22 @@ async def _run_subprocess(args, cwd, input_text, stream_stdout, q):
     return stdout and stdout.decode("utf-8"), stderr.decode("utf-8")
 
 
-# Convert a file using an external program.
-async def _convert_external(text, file_path, tool_or_project_path, q):
-    # Split the provided tool path.
-    uses_stdin, uses_stdout, *args = tool_or_project_path
-
-    # Run from the directory containing the file.
-    cwd = str(Path(file_path).parent)
-
-    # Save the text in a temporary file for use with the external tool.
-    with _optional_temp_file(not uses_stdin) as input_file, _optional_temp_file(
-        not uses_stdout
-    ) as output_file:
-        if input_file:
-            # Write the text to the input file then close it, so that it can be opened on all platforms by the external tool. See `NamedTemporaryFile <https://docs.python.org/3/library/tempfile.html#tempfile.NamedTemporaryFile>`_.
-            input_file.write(text)
-            input_file.close()
-
-        if output_file:
-            # Close the output file for the same reason.
-            output_file.close()
-
-        # Do replacements on the args.
-        args = [
-            s.format(
-                input_file=input_file and input_file.name,
-                output_file=output_file and output_file.name,
-            )
-            for s in args
-        ]
-
-        stdout, stderr = await _run_subprocess(
-            args, cwd, None if input_file else text, bool(output_file), q
-        )
-
-        # Gather the output from the file if necessary.
-        if output_file:
-            with open(output_file.name, "r", encoding="utf-8") as f:
-                stdout = f.read()
-
-    return stdout, stderr
+@contextmanager
+def _dummy_context_manager():
+    yield
 
 
+# If need_temp_file is True, provide a NamedTemporaryFile; otherwise, return a dummy context manager.
+def _optional_temp_file(need_temp_file):
+    return (
+        NamedTemporaryFile(mode="w", encoding="utf-8")
+        if need_temp_file
+        else _dummy_context_manager()
+    )
+
+
+# Fake renderers
+# ==============
 # "Convert" (pass through) the provided text.
 def _pass_through(text, file_path):
     return text, ""
@@ -275,6 +430,8 @@ def _error_converter(text, file_path):
     return "", "{}:: ERROR: no converter found for this file.".format(file_path)
 
 
+# Select and invoke a renderer
+# ============================
 # Build a map of file names/extensions to the converter to use.
 #
 # TODO:
@@ -317,17 +474,22 @@ GLOB_TO_CONVERTER.update(
 
 # Return the converter for the provided file.
 def _select_converter(file_path):
-    # TODO: search for an external builder configuration file.
-    # return _project_builder, path
+    # Search for an external builder configuration file.
+    for project_path in Path(file_path).parents:
+        project_file = project_path / "codechat_config.json"
+        if project_file.exists():
+            return _convert_external_project, project_file, True
+
+    # Otherwise, look for a single-file converter.
     for glob, (converter, tool_or_project_path) in GLOB_TO_CONVERTER.items():
         if fnmatch.fnmatch(file_path, glob):
-            return converter, tool_or_project_path
-    return _error_converter, None
+            return converter, tool_or_project_path, False
+    return _error_converter, None, False
 
 
 # Run the appropriate converter for the provided file or return an error.
 async def convert_file(text, file_path, cs):
-    converter, tool_or_project_path = _select_converter(file_path)
+    converter, tool_or_project_path, is_project = _select_converter(file_path)
     if asyncio.iscoroutinefunction(converter):
         # Coroutines get the queue, so they can report progress during the build.
         html_string, err_string = await converter(
@@ -338,21 +500,28 @@ async def convert_file(text, file_path, cs):
         html_string, err_string = converter(text, file_path)
 
     # Update the client's state, now that the rendering is complete.
-    cs._file_path = file_path
     cs._text = text
-    cs._html = html_string
+    # For projects, the rendered HTML is already on disk.
+    if is_project:
+        cs._file_path = None
+        cs._html = None
+    else:
+        cs._file_path = file_path
+        cs._html = html_string
 
     # Send any errors. An empty error string will clear any errors from a previous build, and should still be sent.
     cs.q.put(GetResultReturn(GetResultType.errors, err_string))
 
     # Sending the HTML signals the end of this build.
     #
-    # For Windows, make the path contain forward slashes.
-    uri = path_to_uri(file_path)
+    # For Windows, make the path contain forward slashes. For a project build, the ``html_string`` is actually the path to the rendered HTML.
+    uri = path_to_uri(html_string if is_project else file_path)
     # Encode this, for Windows paths which contain a colon (or unusual Linux paths).
     cs.q.put(GetResultReturn(GetResultType.html, urllib.parse.quote(uri)))
 
 
+# RenderManager / render thread
+# ==============================
 # Store data for about each client.
 class ClientState:
     def __init__(self):
