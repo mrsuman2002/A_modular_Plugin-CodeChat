@@ -1,6 +1,6 @@
-The CodeChat plugin system
-==========================
-The CodeChat plugin system integrates the capabilities of `CodeChat <https://codechat.readthedocs.io/>`_ into popular text editors [#]_. To support multiple editors, this program offloads most of the processing to the CodeChat server and display to the CodeChat client, making the editor plugin code shorter and easier to port. The basic architecture:
+CodeChat
+========
+CodeChat integrates the capabilities of `CodeChat renderer <https://codechat.readthedocs.io/>`_ into popular text editors [#]_. To support multiple editors, this program offloads most of the processing to the CodeChat server and display to the CodeChat client, making the editor plugin code shorter and easier to port. The basic architecture:
 
 .. digraph:: architecture
 
