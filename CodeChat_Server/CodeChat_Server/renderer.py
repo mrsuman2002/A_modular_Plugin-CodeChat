@@ -515,7 +515,7 @@ async def convert_file(text, file_path, cs):
     # Sending the HTML signals the end of this build.
     #
     # For Windows, make the path contain forward slashes.
-    uri = path_to_uri(html_string)
+    uri = path_to_uri(cs._file_path)
     # Encode this, for Windows paths which contain a colon (or unusual Linux paths).
     cs.q.put(GetResultReturn(GetResultType.html, urllib.parse.quote(uri)))
 

@@ -123,7 +123,6 @@ class CodeChatHandler:
                     )
                 )
             self.render_manager.delete_client(id)
-        print(ret)
         return ret
 
     # Shut down a client.
