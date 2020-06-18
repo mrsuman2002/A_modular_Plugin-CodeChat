@@ -29,11 +29,11 @@ import ast
 import asyncio
 from contextlib import contextmanager
 import fnmatch
-import html
 import io
 import os.path
 from pathlib import Path
 from queue import Queue
+from random import randrange
 import sys
 from tempfile import NamedTemporaryFile
 import urllib.parse
@@ -503,7 +503,7 @@ async def convert_file(text, file_path, cs):
     cs._text = text
     # For projects, the rendered HTML is already on disk.
     if is_project:
-        cs._file_path = None
+        cs._file_path = html_string
         cs._html = None
     else:
         cs._file_path = file_path
@@ -514,8 +514,8 @@ async def convert_file(text, file_path, cs):
 
     # Sending the HTML signals the end of this build.
     #
-    # For Windows, make the path contain forward slashes. For a project build, the ``html_string`` is actually the path to the rendered HTML.
-    uri = path_to_uri(html_string if is_project else file_path)
+    # For Windows, make the path contain forward slashes.
+    uri = path_to_uri(html_string)
     # Encode this, for Windows paths which contain a colon (or unusual Linux paths).
     cs.q.put(GetResultReturn(GetResultType.html, urllib.parse.quote(uri)))
 

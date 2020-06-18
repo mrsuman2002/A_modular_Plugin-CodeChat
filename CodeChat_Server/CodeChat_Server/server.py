@@ -203,17 +203,22 @@ def client_service():
 def client_data(id, url_path):
     # See if we rendered this file by comparing the ``url_path`` with the stored file path.
     file_path, html = handler.render_manager.get_render_results(id)
+    send_file_kwargs = {}
     if renderer.path_to_uri(file_path) == url_path:
         # Yes, so return the rendered version.
-        return html
-    else:
-        # No, so assume it's a static file (such an as image).
-        # TODO: check for a renderable file.
-        try:
-            # TODO SECURITY: if a web app, need to limit the base directory. This is a security hole.
-            return send_file(url_path)
-        except FileNotFoundError:
-            abort(404)
+        if html is None:
+            # If it's a project, then ``html`` is None. In this case, the rendered HTML is already on disk at ``url_path``; however, don't allow Flask to cache this, since it changes with each edit.
+            send_file_kwargs = dict(cache_timeout=0)
+        else:
+            return html
+
+    # No, so assume it's a static file (such an as image).
+    # TODO: check for a renderable file.
+    try:
+        # TODO SECURITY: if a web app, need to limit the base directory. This is a security hole.
+        return send_file(url_path, **send_file_kwargs)
+    except FileNotFoundError:
+        abort(404)
 
 
 # Run both servers. This does not (usually) return.
