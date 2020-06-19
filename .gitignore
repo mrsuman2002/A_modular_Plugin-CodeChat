@@ -29,9 +29,13 @@ node_modules/
 
 # TypeScript transpiles.
 VSCode_Extension/out
+VSCode_Extension/.vscode
 
 # Python-generated files
 __pycache__/
+build/
+dist/
+*.egg-info/
 
 # Others
 sphinx-enki-info.txt

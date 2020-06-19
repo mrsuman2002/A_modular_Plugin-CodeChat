@@ -112,7 +112,7 @@ pygments_style = 'sphinx'
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones. **CodeChat
 # note:** The ``CodeChat.CodeToRestSphinx`` extension is mandatory; without it,
 # CodeChat will not translate source code to reST and then (via Sphinx) to html.
-extensions = ['CodeChat.CodeToRestSphinx', 'sphinx.ext.graphviz']
+extensions = ['CodeChat.CodeToRestSphinx', 'sphinx.ext.graphviz', 'myst_parser']
 
 # `templates_path <http://sphinx-doc.org/config.html#confval-templates_path>`_:
 # Add any paths that contain templates here, relative to this directory.
@@ -146,8 +146,9 @@ CodeChat_lexer_for_glob = {
     # CSS files are auto-detected as a CSS + Lasso file by Pygments,
     # causing it to display incorrectly. Define them as CSS only.
     '*.css': 'CSS',
-    # These` files use # as a comment. So does Perl. Ugly, no?
+    # These files use # as a comment. So does Perl. Ugly, no?
     '.gitignore': 'Perl',
+    'MANIFEST.in': 'Perl',
     # Treat JavaScript as plain JavaScript; the auto-detect code finds something else.
     '*.js': "JavaScript",
     # The ``codechat_config.json`` file is actually Python.
@@ -199,6 +200,7 @@ exclude_patterns = [
     # JavaScript/TypeScript generated files
     'VSCode_Extension/node_modules',
     'VSCode_Extension/out',
+    'VSCode_Extension/.vscode',
     '**/gen-*',
     '**/gen_*',
     #
