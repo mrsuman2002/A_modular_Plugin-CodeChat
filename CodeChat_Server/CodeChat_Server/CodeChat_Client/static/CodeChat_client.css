@@ -23,28 +23,35 @@ body {
     margin: 0px;
 }
 
+
+/* This div contains the splitter plus both split divs. */
 #splitter {
     /* Auto-size the splitter to be the height of the screen except for the status bar and body padding. See `calc <https://developer.mozilla.org/en-US/docs/Web/CSS/calc>`_. */
     height: calc(100vh - var(--status-height) - 2 * var(--body-padding));
 }
 
+/* An iframe containing the HTML output by the renderer. */
 #output {
     width: 100%;
     height: 100%;
     border: none;
 }
 
-#build_contents {
-    overflow: auto;
-    /* Not setting the height prevents the scroll bars from appearing. */
-    height: 100%;
-}
-
+/* The title for the following div. */
 #build_heading {
     margin-top: 0px;
     margin-bottom: 2px;
 }
 
+/* A div containing the build messages and errors. */
+#build_contents {
+    overflow: auto;
+    /* Not setting the width and height prevents the scroll bars from appearing. */
+    height: 100%;
+    width: 100%;
+}
+
+/* The build messages and error messages divs. */
 #build, #errors {
     /* Build output is console text. */
     font-family: monospace;
@@ -55,12 +62,14 @@ body {
     color: red;
 }
 
+/* The status bar at the bottom of the screen. */
 #status_div {
     height: var(--status-height);
     border-top: 1px solid;
     padding-top: 2px;
 }
 
+/* Status bar contents. */
 #status_build, #status_errors {
     /* Allow setting the width on this span. */
     display: inline-block;
@@ -68,14 +77,22 @@ body {
     width: 45%;
 }
 
+/* The build progress bar. */
 #build_progress {
     display: none;
 }
 
+
+/* Classes for the errors/warning text in the status bar. */
 .have_errors {
     background-color: red;
 }
 
 .have_warnings {
     background-color: sandybrown;
+}
+
+/* TODO: Class to use for the output iframe when a build is in progress. */
+.building {
+    opacity: 0.5;
 }
