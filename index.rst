@@ -49,9 +49,33 @@ Contents:
     .gitignore
 
 
+To do
+=====
+-   Lots of testing.
+-   Make the opacity a class, then apply that in JS.
+-   Scan for percentages in the web client and update the progress bar.
+-   Wait 300 ms before a render.
+-   Only render saved documents for projects.
+-   Handle syntax error line number click from the web client.
+-   Provide way to do a rebuild all.
+-   Find a way not to overload/abuse the ClientState._file_name.
+-   Add the license to all new files.
+-   Add in sync.
+-   Monitor iframe location changes and try to sync by loading another file.
+-   Offer an option for VSCode to render in an external browser.
+-   Package.
+-   Allow user-define JSON of mapping from extensions to renderers.
+-   Provide a nicer style for docutils renders.
+-   Support all the pandoc renderes.
+-   Support rust projects?
+-   Improve docs
+-   Create a new repo for the CodeChat renderer? Or make it a subproject of this repo?
+-   Support at least one more editor.
+-   More things.
+
+
 Indices and tables
 ==================
-
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
