@@ -54,22 +54,24 @@ from os import path
 here = path.abspath(path.dirname(__file__))
 
 # Get the long description from the README file
-with open(path.join(here, 'README.md'), encoding='utf-8') as f:
+with open(path.join(here, "README.md"), encoding="utf-8") as f:
     long_description = f.read()
 
 
 # This code was copied from `version parse code <https://packaging.python.org/guides/single-sourcing-package-version/>`_ then lightly modified. See ``version`` in the call to ``setup`` below.
 def read(rel_path):
-    with open(path.join(here, rel_path), 'r', encoding='utf-8') as fp:
+    with open(path.join(here, rel_path), "r", encoding="utf-8") as fp:
         return fp.read()
+
 
 def get_version(rel_path):
     for line in read(rel_path).splitlines():
-        if line.startswith('__version__'):
+        if line.startswith("__version__"):
             delim = '"' if '"' in line else "'"
             return line.split(delim)[1]
     else:
         raise RuntimeError("Unable to find version string.")
+
 
 # My code
 # -------
@@ -107,14 +109,7 @@ setup(
     # your project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=(
-        [
-            "CodeChat",
-            "Flask",
-            "Thrift",
-            "markdown",
-        ]
-    ),
+    install_requires=(["CodeChat", "Flask", "Thrift", "markdown",]),
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,
     # for example:
