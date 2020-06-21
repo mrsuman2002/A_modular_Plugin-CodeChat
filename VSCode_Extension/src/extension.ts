@@ -28,7 +28,7 @@ let connection: thrift.Connection | undefined = undefined;
 // The Thrift client using this connection.
 let client: EditorPlugin.Client | undefined = undefined;
 // Where the webclient resides: ``html`` for a webview panel embedded in VSCode; ``browser`` to use an external browser.
-const client_location: ttypes.CodeChatClientLocation = ttypes.CodeChatClientLocation.browser;
+const client_location: ttypes.CodeChatClientLocation = ttypes.CodeChatClientLocation.html;
 // A unique instance of these variables is required for each CodeChat panel. However, this code doesn't have a good UI way to deal with multiple panels, so only one is supported at this time.
 let id: number | undefined = undefined;
 let panel: vscode.WebviewPanel | undefined = undefined;
