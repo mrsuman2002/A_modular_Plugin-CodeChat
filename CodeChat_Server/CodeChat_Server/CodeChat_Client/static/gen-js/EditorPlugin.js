@@ -115,6 +115,7 @@ EditorPlugin_start_render_args = function(args) {
   this.text = null;
   this.path = null;
   this.id = null;
+  this.is_dirty = null;
   if (args) {
     if (args.text !== undefined && args.text !== null) {
       this.text = args.text;
@@ -124,6 +125,9 @@ EditorPlugin_start_render_args = function(args) {
     }
     if (args.id !== undefined && args.id !== null) {
       this.id = args.id;
+    }
+    if (args.is_dirty !== undefined && args.is_dirty !== null) {
+      this.is_dirty = args.is_dirty;
     }
   }
 };
@@ -159,6 +163,13 @@ EditorPlugin_start_render_args.prototype.read = function(input) {
         input.skip(ftype);
       }
       break;
+      case 4:
+      if (ftype == Thrift.Type.BOOL) {
+        this.is_dirty = input.readBool().value;
+      } else {
+        input.skip(ftype);
+      }
+      break;
       default:
         input.skip(ftype);
     }
@@ -183,6 +194,11 @@ EditorPlugin_start_render_args.prototype.write = function(output) {
   if (this.id !== null && this.id !== undefined) {
     output.writeFieldBegin('id', Thrift.Type.I32, 3);
     output.writeI32(this.id);
+    output.writeFieldEnd();
+  }
+  if (this.is_dirty !== null && this.is_dirty !== undefined) {
+    output.writeFieldBegin('is_dirty', Thrift.Type.BOOL, 4);
+    output.writeBool(this.is_dirty);
     output.writeFieldEnd();
   }
   output.writeFieldStop();
@@ -405,18 +421,19 @@ EditorPluginClient.prototype.recv_get_client = function() {
   throw 'get_client failed: unknown result';
 };
 
-EditorPluginClient.prototype.start_render = function(text, path, id, callback) {
-  this.send_start_render(text, path, id, callback); 
+EditorPluginClient.prototype.start_render = function(text, path, id, is_dirty, callback) {
+  this.send_start_render(text, path, id, is_dirty, callback); 
   if (!callback) {
     return this.recv_start_render();
   }
 };
 
-EditorPluginClient.prototype.send_start_render = function(text, path, id, callback) {
+EditorPluginClient.prototype.send_start_render = function(text, path, id, is_dirty, callback) {
   var params = {
     text: text,
     path: path,
-    id: id
+    id: id,
+    is_dirty: is_dirty
   };
   var args = new EditorPlugin_start_render_args(params);
   try {

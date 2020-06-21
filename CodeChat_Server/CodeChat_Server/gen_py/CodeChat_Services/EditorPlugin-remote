@@ -25,7 +25,7 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
     print('')
     print('Functions:')
     print('  RenderClientReturn get_client(CodeChatClientLocation codeChat_client_location)')
-    print('  string start_render(string text, string path, i32 id)')
+    print('  string start_render(string text, string path, i32 id, bool is_dirty)')
     print('  string stop_client(i32 id)')
     print('')
     sys.exit(0)
@@ -113,10 +113,10 @@ if cmd == 'get_client':
     pp.pprint(client.get_client(eval(args[0]),))
 
 elif cmd == 'start_render':
-    if len(args) != 3:
-        print('start_render requires 3 args')
+    if len(args) != 4:
+        print('start_render requires 4 args')
         sys.exit(1)
-    pp.pprint(client.start_render(args[0], args[1], eval(args[2]),))
+    pp.pprint(client.start_render(args[0], args[1], eval(args[2]), eval(args[3]),))
 
 elif cmd == 'stop_client':
     if len(args) != 1:

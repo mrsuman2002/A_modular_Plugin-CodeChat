@@ -20,7 +20,7 @@
 # |docname| - Renderers for the CodeChat server
 # *********************************************
 # These functions convert from a text to HTML for a variety of formats.
-
+#
 # Imports
 # =======
 # Library imports
@@ -51,6 +51,7 @@ from .gen_py.CodeChat_Services.ttypes import (
     GetResultType,
     GetResultReturn,
 )
+
 
 # Utilities
 # =========
@@ -489,6 +490,10 @@ def _select_converter(file_path):
 # Run the appropriate converter for the provided file or return an error.
 async def convert_file(text, file_path, cs):
     converter, tool_or_project_path, is_project = _select_converter(file_path)
+    # Projects require a clean file in order to render.
+    if is_project and cs._to_render_is_dirty:
+        return
+
     if asyncio.iscoroutinefunction(converter):
         # Coroutines get the queue, so they can report progress during the build.
         html_string, err_string = await converter(
@@ -540,6 +545,7 @@ class ClientState:
         # A bucket to hold text and the associated file to render.
         self._to_render_editor_text = None
         self._to_render_file_path = None
+        self._to_render_is_dirty = None
 
         # A bucket to hold a sync request.
         #
@@ -592,13 +598,13 @@ class RenderManager:
             return False
 
     # Place the item in the render queue; must be called from another (non-render) thread. Returns True on success, or False if the provided id doesn't exist.
-    def start_render(self, editor_text, file_path, id):
+    def start_render(self, editor_text, file_path, id, is_dirty):
         future = asyncio.run_coroutine_threadsafe(
-            self._start_render(editor_text, file_path, id), self._loop
+            self._start_render(editor_text, file_path, id, is_dirty), self._loop
         )
         return future.result()
 
-    async def _start_render(self, editor_text, file_path, id):
+    async def _start_render(self, editor_text, file_path, id, is_dirty):
         cs = self._get_client_state(id)
         if not cs:
             # Signal an error for an invalid client id.
@@ -612,6 +618,7 @@ class RenderManager:
         # Update the job parameters.
         cs._to_render_editor_text = editor_text
         cs._to_render_file_path = file_path
+        cs._to_render_is_dirty = is_dirty
 
         # Indicate success
         return True

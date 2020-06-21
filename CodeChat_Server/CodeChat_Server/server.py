@@ -98,9 +98,9 @@ class CodeChatHandler:
         return RenderClientReturn(ret, id, "")
 
     # Render the provided text to HTML, then enqueue it for the web view.
-    def start_render(self, text, path, id):
-        print("start_render(\n{}\n, {}, {})".format(text[:80], path, id))
-        if self.render_manager.start_render(text, path, id):
+    def start_render(self, text, path, id, is_dirty):
+        print("start_render(\n{}\n, {}, {})".format(text[:80], path, id, is_dirty))
+        if self.render_manager.start_render(text, path, id, is_dirty):
             # Indicate success.
             return ""
         else:

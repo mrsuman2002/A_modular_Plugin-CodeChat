@@ -26,9 +26,9 @@ declare class Client {
 
   get_client(codeChat_client_location: CodeChatClientLocation, callback?: (error: void, response: RenderClientReturn)=>void): void;
 
-  start_render(text: string, path: string, id: number): string;
+  start_render(text: string, path: string, id: number, is_dirty: boolean): string;
 
-  start_render(text: string, path: string, id: number, callback?: (error: void, response: string)=>void): void;
+  start_render(text: string, path: string, id: number, is_dirty: boolean, callback?: (error: void, response: string)=>void): void;
 
   stop_client(id: number): string;
 

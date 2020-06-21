@@ -27,12 +27,13 @@ class Iface(object):
         """
         pass
 
-    def start_render(self, text, path, id):
+    def start_render(self, text, path, id, is_dirty):
         """
         Parameters:
          - text
          - path
          - id
+         - is_dirty
 
         """
         pass
@@ -85,23 +86,25 @@ class Client(Iface):
             return result.success
         raise TApplicationException(TApplicationException.MISSING_RESULT, "get_client failed: unknown result")
 
-    def start_render(self, text, path, id):
+    def start_render(self, text, path, id, is_dirty):
         """
         Parameters:
          - text
          - path
          - id
+         - is_dirty
 
         """
-        self.send_start_render(text, path, id)
+        self.send_start_render(text, path, id, is_dirty)
         return self.recv_start_render()
 
-    def send_start_render(self, text, path, id):
+    def send_start_render(self, text, path, id, is_dirty):
         self._oprot.writeMessageBegin('start_render', TMessageType.CALL, self._seqid)
         args = start_render_args()
         args.text = text
         args.path = path
         args.id = id
+        args.is_dirty = is_dirty
         args.write(self._oprot)
         self._oprot.writeMessageEnd()
         self._oprot.trans.flush()
@@ -212,7 +215,7 @@ class Processor(Iface, TProcessor):
         iprot.readMessageEnd()
         result = start_render_result()
         try:
-            result.success = self._handler.start_render(args.text, args.path, args.id)
+            result.success = self._handler.start_render(args.text, args.path, args.id, args.is_dirty)
             msg_type = TMessageType.REPLY
         except TTransport.TTransportException:
             raise
@@ -385,14 +388,16 @@ class start_render_args(object):
      - text
      - path
      - id
+     - is_dirty
 
     """
 
 
-    def __init__(self, text=None, path=None, id=None,):
+    def __init__(self, text=None, path=None, id=None, is_dirty=None,):
         self.text = text
         self.path = path
         self.id = id
+        self.is_dirty = is_dirty
 
     def read(self, iprot):
         if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
@@ -418,6 +423,11 @@ class start_render_args(object):
                     self.id = iprot.readI32()
                 else:
                     iprot.skip(ftype)
+            elif fid == 4:
+                if ftype == TType.BOOL:
+                    self.is_dirty = iprot.readBool()
+                else:
+                    iprot.skip(ftype)
             else:
                 iprot.skip(ftype)
             iprot.readFieldEnd()
@@ -439,6 +449,10 @@ class start_render_args(object):
         if self.id is not None:
             oprot.writeFieldBegin('id', TType.I32, 3)
             oprot.writeI32(self.id)
+            oprot.writeFieldEnd()
+        if self.is_dirty is not None:
+            oprot.writeFieldBegin('is_dirty', TType.BOOL, 4)
+            oprot.writeBool(self.is_dirty)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
         oprot.writeStructEnd()
@@ -462,6 +476,7 @@ start_render_args.thrift_spec = (
     (1, TType.STRING, 'text', 'UTF8', None, ),  # 1
     (2, TType.STRING, 'path', 'UTF8', None, ),  # 2
     (3, TType.I32, 'id', None, None, ),  # 3
+    (4, TType.BOOL, 'is_dirty', None, None, ),  # 4
 )
 
 

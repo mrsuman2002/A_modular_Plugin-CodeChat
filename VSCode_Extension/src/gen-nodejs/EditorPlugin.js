@@ -119,6 +119,7 @@ var EditorPlugin_start_render_args = function(args) {
   this.text = null;
   this.path = null;
   this.id = null;
+  this.is_dirty = null;
   if (args) {
     if (args.text !== undefined && args.text !== null) {
       this.text = args.text;
@@ -128,6 +129,9 @@ var EditorPlugin_start_render_args = function(args) {
     }
     if (args.id !== undefined && args.id !== null) {
       this.id = args.id;
+    }
+    if (args.is_dirty !== undefined && args.is_dirty !== null) {
+      this.is_dirty = args.is_dirty;
     }
   }
 };
@@ -163,6 +167,13 @@ EditorPlugin_start_render_args.prototype.read = function(input) {
         input.skip(ftype);
       }
       break;
+      case 4:
+      if (ftype == Thrift.Type.BOOL) {
+        this.is_dirty = input.readBool();
+      } else {
+        input.skip(ftype);
+      }
+      break;
       default:
         input.skip(ftype);
     }
@@ -187,6 +198,11 @@ EditorPlugin_start_render_args.prototype.write = function(output) {
   if (this.id !== null && this.id !== undefined) {
     output.writeFieldBegin('id', Thrift.Type.I32, 3);
     output.writeI32(this.id);
+    output.writeFieldEnd();
+  }
+  if (this.is_dirty !== null && this.is_dirty !== undefined) {
+    output.writeFieldBegin('is_dirty', Thrift.Type.BOOL, 4);
+    output.writeBool(this.is_dirty);
     output.writeFieldEnd();
   }
   output.writeFieldStop();
@@ -413,7 +429,7 @@ EditorPluginClient.prototype.recv_get_client = function(input,mtype,rseqid) {
   return callback('get_client failed: unknown result');
 };
 
-EditorPluginClient.prototype.start_render = function(text, path, id, callback) {
+EditorPluginClient.prototype.start_render = function(text, path, id, is_dirty, callback) {
   this._seqid = this.new_seqid();
   if (callback === undefined) {
     var _defer = Q.defer();
@@ -424,20 +440,21 @@ EditorPluginClient.prototype.start_render = function(text, path, id, callback) {
         _defer.resolve(result);
       }
     };
-    this.send_start_render(text, path, id);
+    this.send_start_render(text, path, id, is_dirty);
     return _defer.promise;
   } else {
     this._reqs[this.seqid()] = callback;
-    this.send_start_render(text, path, id);
+    this.send_start_render(text, path, id, is_dirty);
   }
 };
 
-EditorPluginClient.prototype.send_start_render = function(text, path, id) {
+EditorPluginClient.prototype.send_start_render = function(text, path, id, is_dirty) {
   var output = new this.pClass(this.output);
   var params = {
     text: text,
     path: path,
-    id: id
+    id: id,
+    is_dirty: is_dirty
   };
   var args = new EditorPlugin_start_render_args(params);
   try {
@@ -590,11 +607,12 @@ EditorPluginProcessor.prototype.process_start_render = function(seqid, input, ou
   var args = new EditorPlugin_start_render_args();
   args.read(input);
   input.readMessageEnd();
-  if (this._handler.start_render.length === 3) {
+  if (this._handler.start_render.length === 4) {
     Q.fcall(this._handler.start_render.bind(this._handler),
       args.text,
       args.path,
-      args.id
+      args.id,
+      args.is_dirty
     ).then(function(result) {
       var result_obj = new EditorPlugin_start_render_result({success: result});
       output.writeMessageBegin("start_render", Thrift.MessageType.REPLY, seqid);
@@ -610,7 +628,7 @@ EditorPluginProcessor.prototype.process_start_render = function(seqid, input, ou
       output.flush();
     });
   } else {
-    this._handler.start_render(args.text, args.path, args.id, function (err, result) {
+    this._handler.start_render(args.text, args.path, args.id, args.is_dirty, function (err, result) {
       var result_obj;
       if ((err === null || typeof err === 'undefined')) {
         result_obj = new EditorPlugin_start_render_result((err !== null || typeof err === 'undefined') ? err : {success: result});

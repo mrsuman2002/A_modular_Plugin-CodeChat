@@ -61,8 +61,10 @@ service EditorPlugin  {
         1: string text,
         // The path to this source file; may be blank for an unnamed file.
         2: string path,
-        // _`id`: The ID ofr the client to render in.
-        3: i32 id
+        // _`id`: The ID of the client to render in.
+        3: i32 id,
+        // True if the document is dirty (modified), fale if clean.
+        4: bool is_dirty
     ),
 
     // Release all resources associated with a CodeChat client. Returns an empty string on success, or an error message.
