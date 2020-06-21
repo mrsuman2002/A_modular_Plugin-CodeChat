@@ -7,8 +7,6 @@
 //
 // #.   Add sync requests in (required a second client).
 //
-// .. image:: x.png
-//
 //
 // Requires
 // ========
@@ -32,6 +30,7 @@ const client_location: ttypes.CodeChatClientLocation = ttypes.CodeChatClientLoca
 // A unique instance of these variables is required for each CodeChat panel. However, this code doesn't have a good UI way to deal with multiple panels, so only one is supported at this time.
 let id: number | undefined = undefined;
 let panel: vscode.WebviewPanel | undefined = undefined;
+let idle_timer: NodeJS.Timeout | undefined = undefined;
 
 
 // Activation
@@ -68,9 +67,9 @@ export function activate(context: vscode.ExtensionContext) {
                             id,
                             function(err, stop_client_return) {
                                 if (err !== null) {
-                                    vscode.window.showInformationMessage(`CodeChat communication error when stopping the client: ${err}`)
+                                    vscode.window.showErrorMessage(`Communication error when stopping the client: ${err}`)
                                 } else if (stop_client_return !== "") {
-                                    vscode.window.showInformationMessage(`CodeChat error when stopping the client: ${stop_client_return}`);
+                                    vscode.window.showErrorMessage(`Error when stopping the client: ${stop_client_return}`);
                                 }
                             }
                         );
@@ -102,7 +101,7 @@ export function activate(context: vscode.ExtensionContext) {
                 client_location,
                 function(err, render_client_return) {
                     if (err !== null) {
-                        show_startup(`<b>error</b>: ${err}`)
+                        vscode.window.showErrorMessage(`Communication error getting render client: ${err}`)
                     } else if (render_client_return.error === "") {
                         if (panel === undefined) {
                             assert(client_location === ttypes.CodeChatClientLocation.browser);
@@ -134,7 +133,7 @@ export function activate(context: vscode.ExtensionContext) {
                         // Do an initial render.
                         start_render();
                     } else {
-                        show_startup(`<b>error</b>: ${render_client_return.error}`);
+                        vscode.window.showErrorMessage(`Error getting render client: ${render_client_return.error}`);
                     }
                 }
             );
@@ -154,7 +153,7 @@ export function activate(context: vscode.ExtensionContext) {
             });
 
             connection.on('error', function(err) {
-                show_startup(`<b>error:</b> ${err.message}`);
+                vscode.window.showErrorMessage(`Error connecting: ${err.message}`);
                 // Shut down the connection and client, marking them as undefined so they will be re-created next run.
                 connection?.destroy();
                 connection = undefined;
@@ -201,27 +200,40 @@ export function deactivate() {
 // CodeChat services
 // =================
 function start_render() {
-    // Only render if an editor is active, we have a valid render client, and the webview is visible.
-    if (
-        (vscode.window.activeTextEditor !== undefined) &&
-        // For now, only render saved documents.
-        (!vscode.window.activeTextEditor.document.isDirty) &&
-        (id !== undefined) &&
-        // If rendering in an external browser, the CodeChat panel doesn't need to be visible.
-        ((client_location === ttypes.CodeChatClientLocation.browser) || panel?.visible)
-    ) {
-        assert(client !== undefined);
-        client?.start_render(
-            vscode.window.activeTextEditor.document.getText(),
-            vscode.window.activeTextEditor.document.fileName,
-            id,
-            function(err, start_render_return) {
-                if (err !== null) {
-                    vscode.window.showInformationMessage(`CodeChat communication error when creating a client: ${err}`)
-                } else if (start_render_return !== "") {
-                    vscode.window.showInformationMessage(`CodeChat error when rendering: ${start_render_return}`);
-                }
+    if (can_render()) {
+        // Render after some inactivity: cancel any existing timer, then ...
+        if (idle_timer !== undefined) {
+            clearTimeout(idle_timer);
+        }
+        // ... schedule a render after 300 ms.
+        idle_timer = setTimeout(() => {
+            if (can_render()) {
+                client!.start_render(
+                    vscode.window.activeTextEditor!.document.getText(),
+                    vscode.window.activeTextEditor!.document.fileName,
+                    id!,
+                    vscode.window.activeTextEditor!.document.isDirty,
+                    (err, start_render_return) => {
+                        if (err !== null) {
+                            vscode.window.showErrorMessage(`CodeChat communication error when rendering: ${err}`)
+                        } else if (start_render_return !== "") {
+                            vscode.window.showErrorMessage(`CodeChat error when rendering: ${start_render_return}`);
+                        }
+                    }
+                );
             }
-        );
+        }, 300);
     }
+}
+
+// Only render if an editor is active, we have a valid render client, and the webview is visible.
+function can_render(): boolean {
+    return (
+        (vscode.window.activeTextEditor !== undefined) &&
+        (id !== undefined) &&
+        (client !== undefined) &&
+        // If rendering in an external browser, the CodeChat panel doesn't need to be visible.
+        ((client_location === ttypes.CodeChatClientLocation.browser) ||
+        ((panel !== undefined) && panel.visible))
+    );
 }
