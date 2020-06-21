@@ -112,6 +112,7 @@ setup(
             "CodeChat",
             "Flask",
             "Thrift",
+            "markdown",
         ]
     ),
     # List additional groups of dependencies here (e.g. development
