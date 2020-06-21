@@ -1,0 +1,1 @@
+This Visual Studio Code extension connects to the CodeChat server to provide literate programming tools. See the documentation for more information.

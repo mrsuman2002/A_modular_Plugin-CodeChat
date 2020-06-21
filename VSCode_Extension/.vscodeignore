@@ -1,0 +1,14 @@
+# ********************************
+# |docname| - Files not to package
+# ********************************
+# See  https://code.visualstudio.com/api/working-with-extensions/publishing-extension#.vscodeignore.
+#
+# Omit all TypeScript source.
+src/**
+# Omit VSCode config.
+.vscode/**
+# Misc files not needed in a package.
+tsconfig.json
+contents.rst
+token.txt
+jsconfig.json
