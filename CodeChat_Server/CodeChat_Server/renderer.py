@@ -33,7 +33,6 @@ import io
 import os.path
 from pathlib import Path
 from queue import Queue
-from random import randrange
 import sys
 from tempfile import NamedTemporaryFile
 import urllib.parse
