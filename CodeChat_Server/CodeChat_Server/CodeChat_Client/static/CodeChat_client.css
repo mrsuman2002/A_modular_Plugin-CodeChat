@@ -92,7 +92,7 @@ body {
     background-color: sandybrown;
 }
 
-/* TODO: Class to use for the output iframe when a build is in progress. */
+/* `Class to use <class building>` for the output iframe when a build is in progress. */
 .building {
     opacity: 0.5;
 }

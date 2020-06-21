@@ -22,6 +22,8 @@ function run_client(id)
     //
     // True if the output/errors should be cleared on the next result.
     let clear_output = false;
+    // True if the most recent reload was caused by the user; false if this was a programmatic reload.
+    let is_user_navigation = false;
     // True if there were warnings or errors in the last build.
     let errors_or_warnings = false;
     // The size of the splitter, with a key of ``errors_or_warnings``.
@@ -40,23 +42,30 @@ function run_client(id)
                 let scrollY = outputElement.contentWindow.scrollY;
                 // See ideas in https://stackoverflow.com/a/16822995. Works for same-domain only.
                 outputElement.onload = function () {
-                    status_message.innerHTML = "Build complete.";
-                    build_progress.style.display = "none";
-                    outputElement.style.opacity = 1;
-                    this.contentWindow.scrollBy(scrollX, scrollY);
-                    // Get new content only *after* the load finishes. The case to avoid:
-                    //
-                    // #.   One load stores the x, y coordinates and begins to load a new page. This sets the scroll bars to 0.
-                    // #.   Before the load finishes, another request comes. The x, y coordinates are saved as 0.
-                    // #.   The first load finishes, but scrolls to 0, 0; the second load finish does the same.
-                    do_get_result();
+                    if (is_user_navigation) {
+                        console.log("TODO: User navigation.");
+                    } else {
+                        status_message.innerHTML = "Build complete.";
+                        build_progress.style.display = "none";
+                        outputElement.classList.remove("building");
+                        this.contentWindow.scrollBy(scrollX, scrollY);
+                        // The programmatic reload is done -- anything else that happens now is from the user.
+                        is_user_navigation = true;
+                        // Get new content only *after* the load finishes. The case to avoid:
+                        //
+                        // #.   One load stores the x, y coordinates and begins to load a new page. This sets the scroll bars to 0.
+                        // #.   Before the load finishes, another request comes. The x, y coordinates are saved as 0.
+                        // #.   The first load finishes, but scrolls to 0, 0; the second load finish does the same.
+                        do_get_result();
+                    }
                 };
 
                 // Set the new src to (re)load content.
                 outputElement.src = window.location.protocol + '//' + window.location.host + window.location.pathname + "/" + id + "/" + result.text;
                 // The next build output received will apply to the new build, so set the flag.
                 clear_output = true;
-                // See comments above -- avoid double loads.
+                // See comments above -- avoid double loads and indicate that the is a programmatic reload.
+                is_user_navigation = false;
                 return;
 
             } else if (result.get_result_type === GetResultType.build) {
@@ -71,8 +80,8 @@ function run_client(id)
                     // Save the current splitter state.
                     splitter_size[errors_or_warnings] = get_splitter().percent;
 
-                    // Show that the current output HTML is old.
-                    outputElement.style.opacity = 0.5;
+                    // _`class building`: Show that the current output HTML is old.
+                    outputElement.classList.add("building");
 
                     clear_output = false;
                 } else {
