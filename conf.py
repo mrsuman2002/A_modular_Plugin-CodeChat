@@ -59,7 +59,7 @@ import CodeChat.CodeToRest
 # `project <http://sphinx-doc.org/config.html#confval-project>`_  and
 # `copyright <http://sphinx-doc.org/config.html#confval-copyright>`_:
 # General information about the project. **Change this** for your project.
-project = 'The CodeChat Plugin'
+project = 'The CodeChat System'
 copyright = '2020, Bryan A. Jones'
 
 # The version info for the project you're documenting, acts as replacement for

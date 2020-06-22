@@ -25,4 +25,4 @@ In addition to native support for Markdown and reStructuredText, the CodeChat sy
 -   call `Runestone <https://runestone.academy/>`_ to create interactive textbooks;
 -   employ `Doxygen <https://www.doxygen.nl/>`_ to generate documentation from source code;
 
-... and many more. See the `CodeChat server documentation <https://CodeChat_system.readthedocs.io/en/master/docs/CodeChat_Server/contents.html>`_ to get started.
+... and many more. See the `CodeChat server documentation <https://codechat-system.readthedocs.io/en/latest/CodeChat_Server/contents.html>`_ to get started.
