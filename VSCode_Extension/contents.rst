@@ -70,6 +70,7 @@ TODO: tests are missing.
 Contents
 ========
 .. toctree::
+    :maxdepth: 2
 
     src/extension.ts
     README

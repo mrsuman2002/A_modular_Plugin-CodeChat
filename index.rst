@@ -68,10 +68,8 @@ To do
 -   Support at least one more editor.
 
 
-Indices and tables
-==================
-* :ref:`genindex`
-* :ref:`modindex`
+Search
+======
 * :ref:`search`
 
 

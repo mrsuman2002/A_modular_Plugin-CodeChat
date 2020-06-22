@@ -21,6 +21,7 @@ Use the ``_jsPreviewSync`` in ``preview_sync.py`` for some of the JavaScript cod
 Contents
 ========
 .. toctree::
+    :maxdepth: 2
 
     templates/CodeChat_client.html
     static/CodeChat_client.js

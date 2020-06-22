@@ -16,6 +16,7 @@ CodeChat services
 A Thrift file defines CodeChat services, which are then provided by the `../CodeChat_Server/contents` CodeChat server and used by the `../CodeChat_Server/CodeChat_Server/CodeChat_Client/contents` and by text editor/IDE plugins such as `../VSCode_Extension/contents`.
 
 .. toctree::
+    :maxdepth: 2
 
     CodeChat_Services.thrift
     run_thrift.bat

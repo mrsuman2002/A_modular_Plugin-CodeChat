@@ -35,6 +35,7 @@ TODO.
 Contents
 ========
 .. toctree::
+    :maxdepth: 2
 
     README
     CodeChat_Server/__init__.py
