@@ -11,7 +11,7 @@
 *****************************************
 The Visual Studio Code CodeChat extension
 *****************************************
-This extension provide hosts CodeChat's capabilities within the Visual Studio Code editor.
+This extension provide CodeChat's capabilities within the Visual Studio Code editor.
 
 
 Installation

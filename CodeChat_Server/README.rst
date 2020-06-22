@@ -12,7 +12,7 @@ The CodeChat System
 ===================
 The CodeChat system provides a powerful literate programming authoring system to a variety of text editors and IDEs. Specifically, it provides a GUI to automatically render source code and/or markup documents to HTML, displaying the HTML document produced by the rendering process next to the source. For example:
 
-.. figure:: docs/CodeChat_screenshot_annotated.png
+.. figure:: https://raw.githubusercontent.com/bjones1/CodeChat_system/master/docs/CodeChat_screenshot_annotated.png
 
     This screenshot shows the Visual Studio Code editor with the CodeChat extension.
 

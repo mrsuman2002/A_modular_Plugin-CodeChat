@@ -13,9 +13,12 @@ Change Log
 **********
 -   `Github master <https://github.com/bjones1/CodeChat_system.git>`_:
 
-    -   Documentation improvements.
-    -   Added license to all files.
+    -   No changes yet.
 
--   v 0.0.5, released 20-Jun-2020:
+-   0.0.7, released 22-Jun-2020:
+
+    -   Documentation improvements.
+
+-   0.0.5, released 20-Jun-2020:
 
     -   First fully functioning public release.
