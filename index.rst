@@ -1,6 +1,6 @@
-CodeChat
-========
-CodeChat integrates the capabilities of `CodeChat renderer <https://codechat.readthedocs.io/>`_ into popular text editors [#]_. To support multiple editors, this program offloads most of the processing to the CodeChat server and display to the CodeChat client, making the editor plugin code shorter and easier to port. The basic architecture:
+The CodeChat System
+===================
+The CodeChat system integrates the capabilities of `CodeChat renderer <https://codechat.readthedocs.io/>`_ into popular text editors [#]_. To support multiple editors, this program offloads most of the processing to the CodeChat server and display to the CodeChat client, making the editor plugin/extension code shorter and easier to port. The basic architecture:
 
 .. digraph:: architecture
 
@@ -39,6 +39,7 @@ Contents:
 .. toctree::
     :maxdepth: 2
 
+    README
     CodeChat_Server/contents
     CodeChat_Server/CodeChat_Server/CodeChat_Client/contents
     VSCode_Extension/contents
@@ -52,10 +53,7 @@ Contents:
 To do
 =====
 -   Lots of testing.
--   Make the opacity a class, then apply that in JS.
 -   Scan for percentages in the web client and update the progress bar.
--   Wait 300 ms before a render.
--   Only render saved documents for projects.
 -   Handle syntax error line number click from the web client.
 -   Provide way to do a rebuild all.
 -   Find a way not to overload/abuse the ClientState._file_name.
@@ -63,15 +61,11 @@ To do
 -   Add in sync.
 -   Monitor iframe location changes and try to sync by loading another file.
 -   Offer an option for VSCode to render in an external browser.
--   Package.
--   Allow user-define JSON of mapping from extensions to renderers.
+-   Allow user-defined JSON of mapping from extensions to renderers.
 -   Provide a nicer style for docutils renders.
--   Support all the pandoc renderes.
--   Support rust projects?
+-   Support all the pandoc renderers.
 -   Improve docs
--   Create a new repo for the CodeChat renderer? Or make it a subproject of this repo?
 -   Support at least one more editor.
--   More things.
 
 
 Indices and tables
@@ -85,15 +79,15 @@ License
 =======
 Copyright (C) 2012-2020 Bryan A. Jones.
 
-This file is part of the CodeChat plugin.
+This file is part of the CodeChat system.
 
-The CodeChat plugin is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+The CodeChat system is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
-The CodeChat plugin is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+The CodeChat system is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-You should have received a `copy of the GNU General Public License <docs/LICENSE>` along with the CodeChat plugin.  If not, see http://www.gnu.org/licenses/.
+You should have received a `copy of the GNU General Public License <docs/LICENSE>` along with the CodeChat system.  If not, see http://www.gnu.org/licenses/.
 
 
 Footnotes
 =========
-.. [#] At this time, only the Visual Studio Code editor is supported.
+.. [#] At this time, only the Visual Studio Code editor is supported.f

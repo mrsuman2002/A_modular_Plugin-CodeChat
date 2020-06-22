@@ -1,20 +1,20 @@
 # .. Copyright (C) 2012-2020 Bryan A. Jones.
 #
-#    This file is part of the CodeChat plugin.
+#   This file is part of the CodeChat system.
 #
-#    The CodeChat plugin is free software: you can redistribute it and/or
-#    modify it under the terms of the GNU General Public License as
-#    published by the Free Software Foundation, either version 3 of the
-#    License, or (at your option) any later version.
+#   The CodeChat system is free software: you can redistribute it and/or
+#   modify it under the terms of the GNU General Public License as
+#   published by the Free Software Foundation, either version 3 of the
+#   License, or (at your option) any later version.
 #
-#    The CodeChat plugin is distributed in the hope that it will be
-#    useful, but WITHOUT ANY WARRANTY; without even the implied warranty
-#    of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-#    General Public License for more details.
+#   The CodeChat system is distributed in the hope that it will be
+#   useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+#   of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#   General Public License for more details.
 #
-#    You should have received a copy of the GNU General Public License
-#    along with the CodeChat plugin.  If not, see
-#    <http://www.gnu.org/licenses/>.
+#   You should have received a copy of the GNU General Public License
+#   along with the CodeChat system.  If not, see
+#   <http://www.gnu.org/licenses/>.
 #
 # *********************************************
 # |docname| - Renderers for the CodeChat server
@@ -42,7 +42,7 @@ import urllib.parse
 import markdown
 import docutils.core
 import docutils.writers.html4css1
-from CodeChat.CodeToRest import code_to_html_string
+from CodeChat.CodeToRest import code_to_html_string, html_static_path
 from CodeChat.CommentDelimiterInfo import SUPPORTED_GLOBS
 
 # Local imports
@@ -132,14 +132,8 @@ def _convertReST(text, filePath):
                 docutils.writers.html4css1.Writer.default_template,
             )
         ),
-        "stylesheet_dirs": (
-            docutilsHtmlWriterPath,
-            os.path.join(
-                os.path.abspath(os.path.dirname(os.path.realpath(__file__))),
-                "rst_templates",
-            ),
-        ),
-        "stylesheet_path": "default.css",
+        "stylesheet_dirs": (docutilsHtmlWriterPath, html_static_path(),),
+        "stylesheet_path": "docutils.css",
     }
     htmlString = docutils.core.publish_string(
         bytes(text, encoding="utf-8"),

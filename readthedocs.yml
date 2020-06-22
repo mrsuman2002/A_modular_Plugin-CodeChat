@@ -17,29 +17,18 @@
 #   <http://www.gnu.org/licenses/>.
 #
 # ***********************************
-# |docname| - Run the CodeChat server
+# |docname| - ReadTheDocs config file
 # ***********************************
+# See the `docs <https://docs.readthedocs.io/en/stable/config-file/index.html>`_ for details.
 #
-# Imports
-# =======
-# These are listed in the order prescribed by `PEP 8
-# <http://www.python.org/dev/peps/pep-0008/#imports>`_.
-#
-# Standard library
-# ----------------
-# None.
-#
-# Third-party imports
-# -------------------
-# None.
-#
-# Local application imports
-# -------------------------
-from .server import run_servers
+# See `version <https://docs.readthedocs.io/en/stable/config-file/v2.html#version>`_.
+version: 2
 
-
-# Main
-# ====
-# Run both servers.
-if __name__ == "__main__":
-    run_servers()
+# See `python <https://docs.readthedocs.io/en/stable/config-file/v2.html#python>`_.
+python:
+    install:
+        # Install CodeChat with the ``sphinx`` extra requirement.
+        -   method: pip
+            path: .
+            extra_requirements:
+            -   sphinx
