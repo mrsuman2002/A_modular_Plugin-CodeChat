@@ -1,0 +1,9 @@
+# *******************************************************************
+# |docname| - Python requirements file for building the documentation
+# *******************************************************************
+CodeChat
+sphinx >= 3
+# Myst 0.9.0 requires an older version of Sphinx, so stay with an older myst-parser.
+myst-parser < 0.9.0
+# A missing myst-parser requirement as of 0.8.2.
+pyaml

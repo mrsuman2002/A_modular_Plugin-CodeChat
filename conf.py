@@ -43,6 +43,7 @@
 #
 #   codechat_config.json
 #   readthedocs.yml
+#   docs/docs-requirements.txt
 
 
 import sys, os
@@ -155,6 +156,7 @@ CodeChat_lexer_for_glob = {
     # These files use # as a comment. So does Perl. Ugly, no?
     '.gitignore': 'Perl',
     'MANIFEST.in': 'Perl',
+    'docs-requirements.txt': 'Perl',
     # Treat JavaScript as plain JavaScript; the auto-detect code finds something else.
     '*.js': "JavaScript",
     # The ``codechat_config.json`` file is actually Python.

@@ -19,16 +19,10 @@
 # ***********************************
 # |docname| - ReadTheDocs config file
 # ***********************************
-# See the `docs <https://docs.readthedocs.io/en/stable/config-file/index.html>`_ for details.
-#
-# See `version <https://docs.readthedocs.io/en/stable/config-file/v2.html#version>`_.
+# ReadTheDocs config file
 version: 2
 
-# See `python <https://docs.readthedocs.io/en/stable/config-file/v2.html#python>`_.
 python:
-    install:
-        # Install CodeChat with the ``sphinx`` extra requirement.
-        -   method: pip
-            path: .
-            extra_requirements:
-            -   sphinx
+  install:
+    # To build this documentation, install the required packages. See `requirements <https://docs.readthedocs.io/en/stable/config-file/v2.html#requirements-file>`_.
+    - requirements: docs/docs-requirements.txt
