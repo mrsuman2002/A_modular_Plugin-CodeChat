@@ -13,7 +13,9 @@ Change Log
 **********
 -   `Github master <https://github.com/bjones1/CodeChat_system.git>`_:
 
-    -   No changes yet.
+    -   Horizontal scroll bars now appear when necessary.
+    -   Shutdown sequence corrected.
+    -   Avoid missed renders.
 
 -   0.0.7, released 22-Jun-2020:
 
