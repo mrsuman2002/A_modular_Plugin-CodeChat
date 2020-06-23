@@ -82,12 +82,9 @@ body {
     padding-top: 2px;
 }
 
-/* Status bar contents. */
-#status_build, #status_errors {
-    /* Allow setting the width on this span. */
-    display: inline-block;
-    /* Don't make a total of 100%, since the div padding needs a few pixels of space. */
-    width: 45%;
+/* Make the status right aligned to the right. */
+#status_right {
+    float: right;
 }
 
 /* The build progress bar. */
