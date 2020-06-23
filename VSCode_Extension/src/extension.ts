@@ -21,10 +21,6 @@
 // *****************************************************
 // This extension creates a webview, then uses CodeChat services to render editor text in that webview.
 //
-// TODO:
-//
-// #.   Add sync requests in (required a second client).
-//
 //
 // Requires
 // ========
