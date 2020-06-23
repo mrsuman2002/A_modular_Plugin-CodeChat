@@ -14,8 +14,10 @@ Change Log
 -   `Github master <https://github.com/bjones1/CodeChat_system.git>`_:
 
     -   Horizontal scroll bars now appear when necessary.
+    -   Newlines correctly display in the web client's build messages panel.
     -   Shutdown sequence corrected.
     -   Avoid missed renders.
+    -   Allow multiple editor clients.
 
 -   0.0.7, released 22-Jun-2020:
 
