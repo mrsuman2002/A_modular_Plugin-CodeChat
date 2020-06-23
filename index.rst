@@ -8,24 +8,30 @@ The CodeChat system integrates the capabilities of the `CodeChat renderer <https
     compound = true;
     node [shape = box];
     subgraph cluster_text_editor {
-        label = "Text editor/IDE";
-        source_code [label = <source<br />code>, style = dashed];
+        label = <Text editor/IDE>;
+        source_code [label = <Source<br />code>, style = dashed];
         CodeChat_plugin [label = <CodeChat<br />plugin>];
     }
 
     subgraph cluster_server {
-        label = <CodeChat<br />server>;
-        render_engine [label = <Renderers>];
+        label = <CodeChat server>;
+        thrift_server [label = <Thrift<br />server>];
+        web_server [label = <Web <br />server>];
+        renderers [label = <Built-in<br />Renderers>];
     }
+
+    external_renderers [label = <External <br />renderers>];
 
     subgraph cluster_client {
         label = "CodeChat client";
-        rendered_code [label = "rendered code", style = dashed];
+        rendered_code [label = <Rendered code>, style = dashed];
         JavaScript;
     }
 
-    CodeChat_plugin -> render_engine [label = "Thrift", dir = both, lhead = cluster_server];
-    render_engine -> JavaScript [label = "Thrift", dir = both, lhead = cluster_client, ltail = cluster_server];
+    CodeChat_plugin -> thrift_server [label = <Thrift>, dir = both, lhead = cluster_server];
+    thrift_server -> JavaScript [label = <Thrift>, dir = both, lhead = cluster_client, ltail = cluster_server];
+    web_server -> JavaScript [label = <Thrift/web>, dir = both, lhead = cluster_client, ltail = cluster_server];
+    renderers -> external_renderers [label = <subprocess>, ltail = cluster_server, dir = both];
 
 This approach bridges the services CodeChat provides, which are defined in Python, to the variety of programming languages which various text editors require. To accomplish these goals, this project:
 
@@ -57,7 +63,6 @@ To do
 -   Handle syntax error line number click from the web client.
 -   Provide way to do a rebuild all.
 -   Find a way not to overload/abuse the ClientState._file_name.
--   Add the license to all new files.
 -   Add in sync.
 -   Monitor iframe location changes and try to sync by loading another file.
 -   Offer an option for VSCode to render in an external browser.
