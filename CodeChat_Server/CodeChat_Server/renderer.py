@@ -356,7 +356,7 @@ async def _convert_external_project(text, file_path, tool_or_project_path, q):
 # Run a subprocess, optionally streaming the stdout.
 async def _run_subprocess(args, cwd, input_text, stream_stdout, q):
     # Explain what's going on.
-    q.put(GetResultReturn(GetResultType.build, "{} > {}".format(cwd, " ".join(args))))
+    q.put(GetResultReturn(GetResultType.build, "{} > {}\n".format(cwd, " ".join(args))))
 
     # Start the process.
     try:
@@ -370,13 +370,32 @@ async def _run_subprocess(args, cwd, input_text, stream_stdout, q):
     except Exception as e:
         return "", "external command:: ERROR:When starting. {}".format(e)
 
-    # Provide a way to send stdout from the process a line at a time to the web client.
+    # Provide a way to send stdout from the process a line at a time to the web client. TODO: implement a wait of (say) 250 ms and gather all data we can in that time period, then enqueue this.
     async def stdout_streamer(stdout_stream):
         while True:
+            ##ret = []
+            ##pending = set()
+            ##while True:
+            ##    if not pending:
+            ##        pending = {asyncio.create_task(stdout_stream.read(80))}
+            ##    done, pending = await asyncio.wait(pending, timeout=0.250)
+            ##    for task in done:
+            ##        ret.append("\n".join(task.result().decode("utf-8").splitlines()))
+            ##    if pending:
+            ##        break
+            ##q.put(GetResultReturn(GetResultType.build, "".join(ret)))
+
             ret = await stdout_stream.read(80)
             if ret:
                 # TODO: what if the bytes got split between a UTF-8 multibyte sequence? Oh, fun...
-                q.put(GetResultReturn(GetResultType.build, ret.decode("utf-8")))
+                # Use universal newlines for this stream. Unfortunately, `splitlines <https://docs.python.org/3/library/stdtypes.html#str.splitlines>`_ discards a terminal line break, which we must preserve. To fix this, append a character to ensure there's no terminal newline, then drop it after the split.
+                sl = (ret.decode("utf-8") + " ").splitlines()
+                # Remove the last character of the last split.
+                assert sl[-1][-1] == " "
+                sl[-1] = sl[-1][:-1]
+                # Rejoin the split string with universal newlines.
+                ret = "\n".join(sl)
+                q.put(GetResultReturn(GetResultType.build, ret))
             else:
                 break
 
@@ -535,6 +554,8 @@ class ClientState:
 
         # A flag to indicate if this has been placed in the renderer's job queue.
         self._in_job_q = False
+        # A flag to indicate that this client has work to perform.
+        self._needs_processing = True
 
         # A bucket to hold text and the associated file to render.
         self._to_render_editor_text = None
@@ -549,21 +570,27 @@ class ClientState:
         # The HTML converted to text.
         self._html_as_text = None
 
-        # A flag to indicate if this client is in the process of deletion.
+        # Shutdown is tricky; see `this discussion <shut down an editor client>`_.
+        #
+        # A flag to request the worker to delete this client.
         self._is_deleting = False
 
 
 class RenderManager:
     # Determine if the provided id exists and is not being deleted. Return the ClientState for the id if so; otherwise, return False.
     def _get_client_state(self, id):
-        if id not in self._client_state_dict:
-            # Signal an error if the id can't be found.
-            return False
+        cs = self._client_state_dict.get(id)
+        # Signal an error if this client doesn't exist or is being deleted; otherwise, return it.
+        return cs if cs and not cs._is_deleting else False
+
+    # Add the provided client to the job queue.
+    def _enqueue(self, id):
+        # Add to the job queue unless it's already there.
         cs = self._client_state_dict[id]
-        if cs._is_deleting:
-            # Signal an error if this client is being deleted.
-            return False
-        return cs
+        cs._needs_processing = True
+        if not cs._in_job_q:
+            self._job_q.put_nowait(id)
+            cs._in_job_q = True
 
     # Create a new client. Returns the client id on success or False on failure.
     def create_client(self):
@@ -584,9 +611,11 @@ class RenderManager:
         return future.result()
 
     async def _delete_client(self, id):
-        cs = self._get_client_state(id)
+        cs = self._client_state_dict.get(id)
         if cs:
-            del self._client_state_dict[id]
+            # Tell the worker to delete this.
+            self._enqueue(id)
+            cs._is_deleting = True
             return True
         else:
             return False
@@ -604,10 +633,8 @@ class RenderManager:
             # Signal an error for an invalid client id.
             return False
 
-        # Add to the job queue unless it's already there.
-        if not cs._in_job_q:
-            self._job_q.put_nowait(id)
-            cs._in_job_q = True
+        # Add to the job queue.
+        self._enqueue(id)
 
         # Update the job parameters.
         cs._to_render_editor_text = editor_text
@@ -626,16 +653,16 @@ class RenderManager:
         cs = self._get_client_state(id)
         return cs.q if cs else False
 
-    # Return ``(file_path, html)`` if the provided client exists, or False otherwise.
-    def get_render_results(self, id):
+    # Given a URL, see if it matches with the latest render; if so, return the resulting HTML. If there's no match to the URL or the ID doesn't exist, return False. Note that the "HTML" can be None, meaning the render was stored to disk and the URL is a path to the rendered file.
+    def get_render_results(self, id, url_path):
         future = asyncio.run_coroutine_threadsafe(
-            self._get_render_results(id), self._loop
+            self._get_render_results(id, url_path), self._loop
         )
         return future.result()
 
-    async def _get_render_results(self, id):
+    async def _get_render_results(self, id, url_path):
         cs = self._get_client_state(id)
-        return (cs._file_path, cs._html) if cs else False
+        return cs._html if cs and path_to_uri(cs._file_path) == url_path else False
 
     # Start the render manager. This typically never returns.
     def run(self, *args, debug=False, **kwargs):
@@ -665,15 +692,27 @@ class RenderManager:
             # Get an item to process.
             id = await self._job_q.get()
             cs = self._client_state_dict[id]
+            assert cs._in_job_q
+            # Every item in the queue should have some work to do.
+            assert cs._needs_processing
+            # Indicate that the current jobs in this ClientState will all be completed.
+            cs._needs_processing = False
 
+            # If the client should be deleted, ignore all other requests.
             if cs._is_deleting:
-                del self.client_state_dict[id]
+                del self._client_state_dict[id]
             else:
+                # Sync first.
                 # TODO: sync.
 
-                # Render it.
-                assert cs._in_job_q
+                # Render next.
+                #
                 await convert_file(
                     cs._to_render_editor_text, cs._to_render_file_path, cs
                 )
-                cs._in_job_q = False
+
+                # If this client received more work to do while working on the current job, add it back to the queue -- it can't safely be added to the queue while in the job is in process. Otherwise, we would potentially allow two workers to render the same job in parallel, which would confuse the renderer.
+                if cs._needs_processing:
+                    self._job_q.put_nowait(id)
+                else:
+                    cs._in_job_q = False

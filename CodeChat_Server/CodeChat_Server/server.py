@@ -63,11 +63,13 @@ class CodeChatHandler:
 
     # _`get_client`: Return the HTML for a web client.
     def get_client(self, codeChat_client_location):
-        print("get_client({})".format(codeChat_client_location))
+        print("get_client({})".format(CodeChatClientLocation._VALUES_TO_NAMES[codeChat_client_location]))
         id = self.render_manager.create_client()
         # Get the next ID.
         if id is None:
-            return RenderClientReturn("", -1, "Duplicate id {}".format(id))
+            ret = RenderClientReturn("", -1, "Duplicate id {}".format(id))
+            print("  => {}".format(ret))
+            return ret
 
         # Return what's requested.
         url = "http://127.0.0.1:5000/client?id={}".format(id)
@@ -91,27 +93,36 @@ class CodeChatHandler:
             webbrowser.open(url, 1)
             ret = ""
         else:
-            return RenderClientReturn(
+            ret = RenderClientReturn(
                 "", -1, "Unknown command {}".format(codeChat_client_location)
             )
+            print("  => {}".format(ret))
+            return ret
 
-        return RenderClientReturn(ret, id, "")
+        ret = RenderClientReturn(ret, id, "")
+        print("  => {}".format(ret))
+        return ret
 
     # Render the provided text to HTML, then enqueue it for the web view.
     def start_render(self, text, path, id, is_dirty):
-        print("start_render(\n{}\n, {}, {})".format(text[:80], path, id, is_dirty))
+        print("start_render(path={}, id={}, is_dirty={}, html=\n{}...)\n".format(path, id, is_dirty, text[:80]))
         if self.render_manager.start_render(text, path, id, is_dirty):
             # Indicate success.
+            print(" => (empty string)")
             return ""
         else:
-            return "Unknown client id {}".format(id)
+            ret = "Unknown client id {}".format(id)
+            print(" => {}".format(ret))
+            return ret
 
     # Pass rendered results back to the web view.
     def get_result(self, id):
-        print("get_result({})".format(id))
+        print("get_result(id={})".format(id))
         q = self.render_manager.get_queue(id)
         if not q:
-            return GetResultReturn(GetResultType.command, "error: unknown id")
+            ret = GetResultReturn(GetResultType.command, "error: unknown client id {}".format(id))
+            print("  => {}".format(ret))
+            return ret
         ret = q.get()
         # Delete the client if this was a shutdown command.
         if (ret.get_result_type == GetResultType.command) and (ret.text == "shutdown"):
@@ -122,18 +133,28 @@ class CodeChatHandler:
                         id
                     )
                 )
+            # Request a `client deletion`_.
             self.render_manager.delete_client(id)
+        print("  => {}".format(ret))
         return ret
 
-    # Shut down a client.
+    # _`Shut down an editor client`. The sequence is:
+    #
+    # #.    _`Client stop`: send a message to the web client, informing it of the shutdown. While the editor shouldn't make any more ``start_render`` or ``stop_client`` calls, doing so won't cause the server to misbehave.
+    # #.    _`Client deletion`: when the web client receives the shutdown message, tell the renderer to delete its ClientState. Since the ClientState contains the queue with the shutdown message, it shouldn't be deleted until the message is sent.
+    #
+    # This method performs the first step; ``get_result`` performs the second.
     def stop_client(self, id):
-        print("stop_client({})".format(id))
+        print("stop_client(id={})".format(id))
         q = self.render_manager.get_queue(id)
         if not q:
-            return "unknown client {}.".format(id)
+            ret = "unknown client {}.".format(id)
+            print("  => {}".format(ret))
+            return ret
         # Send the shutdown command to the client.
         q.put(GetResultReturn(GetResultType.command, "shutdown"))
         # Indicate success.
+        print("  => (empty string)")
         return ""
 
 
@@ -152,12 +173,12 @@ def editor_plugin_server():
     pfactory = TBinaryProtocol.TBinaryProtocolFactory()
     processor = EditorPlugin.Processor(handler)
 
-    # You could do one of these for a multithreaded server
-    ## server = TServer.TThreadedServer(
-    ##     processor, transport, tfactory, pfactory)
-    ## server = TServer.TThreadPoolServer(
-    ##     processor, transport, tfactory, pfactory)
-    server = TServer.TSimpleServer(processor, transport, tfactory, pfactory)
+    # This server spawns a thread per connection.
+    ## server = TServer.TThreadedServer(processor, transport, tfactory, pfactory)
+    # Spawns up to 10 threads by default, then uses those.
+    server = TServer.TThreadPoolServer(processor, transport, tfactory, pfactory)
+    # For simplicity, we can use:
+    # server = TServer.TSimpleServer(processor, transport, tfactory, pfactory)
     print("Starting the plugin server...")
     server.serve()
 
@@ -200,21 +221,18 @@ def client_service():
 # The endpoint for files requested by a specific client, including rendered source files.
 @client_app.route("/client/<int:id>/<path:url_path>")
 def client_data(id, url_path):
-    # See if we rendered this file by comparing the ``url_path`` with the stored file path.
-    file_path, html = handler.render_manager.get_render_results(id)
-    send_file_kwargs = {}
-    if renderer.path_to_uri(file_path) == url_path:
-        # Yes, so return the rendered version.
-        if html is None:
-            # If it's a project, then ``html`` is None. In this case, the rendered HTML is already on disk at ``url_path``; however, don't allow Flask to cache this, since it changes with each edit.
-            send_file_kwargs = dict(cache_timeout=0)
-        else:
-            return html
+    # See if we rendered this file.
+    html = handler.render_manager.get_render_results(id, url_path)
+    # If we have rendered HTML, return it.
+    if html:
+        return html
 
-    # No, so assume it's a static file (such an as image).
-    # TODO: check for a renderable file.
+    # If this render was a project, then ``html`` is None. In this case, the rendered HTML is already on disk at ``url_path``; however, don't allow Flask to cache this, since it changes with each edit.
+    send_file_kwargs = dict(cache_timeout=0) if html is None else {}
+
+    # Send a static file or a 404 if nothing was found.
     try:
-        # TODO SECURITY: if a web app, need to limit the base directory. This is a security hole.
+        # TODO SECURITY: if a web app, need to limit the base directory to wherever projects are placed on disk.
         return send_file(url_path, **send_file_kwargs)
     except FileNotFoundError:
         abort(404)
