@@ -49,7 +49,7 @@ body {
     border: none;
 }
 
-/* The title for the following div. */
+/* The title for the at the top of the following div. */
 #build_heading {
     margin-top: 0px;
     margin-bottom: 2px;
@@ -58,9 +58,8 @@ body {
 /* A div containing the build messages and errors. */
 #build_contents {
     overflow: auto;
-    /* Not setting the height prevents the vertical scroll bar from appearing. */
+    /* Not setting the width and height prevents the scroll bars from appearing. */
     height: 100%;
-    /* I would like a horizontal scroll bar to appear when needed, but this doesn't help. */
     width: 100%;
 }
 
@@ -68,7 +67,7 @@ body {
 #build, #errors {
     /* Build output is console text. */
     font-family: monospace;
-    /* I can't get the horizontal scroll bars to appear when using ``pre``. Sigh. */
+    /* Wrap long lines for convenience. */
     white-space: pre-wrap;
 }
 
