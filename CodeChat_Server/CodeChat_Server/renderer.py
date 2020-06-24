@@ -42,7 +42,7 @@ import urllib.parse
 import markdown
 import docutils.core
 import docutils.writers.html4css1
-from CodeChat.CodeToRest import code_to_html_string, html_static_path
+from CodeChat.CodeToRest import code_to_rest_string, html_static_path
 from CodeChat.CommentDelimiterInfo import SUPPORTED_GLOBS
 
 # Local imports
@@ -95,12 +95,9 @@ def _convertMarkdown(text, filePath):
 # reStructuredText (reST)
 # -----------------------
 # Convert reStructuredText (reST) to HTML.
-def _convertReST(text, filePath):
+def _convertReST(text, filePath, use_codechat=False):
 
     errStream = io.StringIO()
-    docutilsHtmlWriterPath = os.path.abspath(
-        os.path.dirname(docutils.writers.html4css1.__file__)
-    )
     settingsDict = {
         # Make sure to use Unicode everywhere. This name comes from
         # ``docutils.core.publish_string`` version 0.12, lines 392 and following.
@@ -123,17 +120,8 @@ def _convertReST(text, filePath):
         "halt_level": 5,
         # Capture errors to a string and return it.
         "warning_stream": errStream,
-        # On some Windows PC, docutils will complain that it can't find its
-        # template or stylesheet. On other Windows PCs with the same setup, it
-        # works fine. ??? So, specify a path to both here.
-        "template": (
-            os.path.join(
-                docutilsHtmlWriterPath,
-                docutils.writers.html4css1.Writer.default_template,
-            )
-        ),
-        "stylesheet_dirs": (docutilsHtmlWriterPath, html_static_path(),),
-        "stylesheet_path": "docutils.css",
+        "stylesheet_dirs": html_static_path(),
+        "stylesheet_path": ["docutils.css"] + (["CodeChat.css"] if use_codechat else []),
     }
     htmlString = docutils.core.publish_string(
         bytes(text, encoding="utf-8"),
@@ -149,23 +137,15 @@ def _convertReST(text, filePath):
 # ========
 # Convert source code to HTML.
 def _convertCodeChat(text, filePath):
-    # Use StringIO to pass CodeChat compilation information back to
-    # the client.
-    errStream = io.StringIO()
     try:
-        htmlString = code_to_html_string(text, errStream, filename=filePath)
+        rest_string = code_to_rest_string(text, filename=filePath)
     except KeyError:
         # Although the file extension may be in the list of supported
         # extensions, CodeChat may not support the lexer chosen by Pygments.
         # For example, a ``.v`` file may be Verilog (supported by CodeChat)
         # or Coq (not supported). In this case, provide an error message
-        errStream.write(
-            "{}:ERROR: this file is not supported by CodeChat.".format(filePath)
-        )
-        htmlString = ""
-    errString = errStream.getvalue()
-    errStream.close()
-    return htmlString, errString
+        return "", "{}:ERROR: this file is not supported by CodeChat.".format(filePath)
+    return _convertReST(rest_string, filePath, True)
 
 
 # External tools/projects
