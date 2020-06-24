@@ -56,6 +56,16 @@ Contents:
     .gitignore
 
 
+Contributors
+================
+The following developers provided valuable help in creating the CodeChat system.
+
+-   `Bryan A. Jones <https://github.com/bjones1/>`_
+-   Suman Adhikari
+-   Christian Bush
+-   Jack Betbeze
+
+
 To do
 =====
 -   Lots of testing.
@@ -71,6 +81,7 @@ To do
 -   Support all the pandoc renderers.
 -   Improve docs
 -   Support at least one more editor.
+-   Save and restore scroll position on a per-file basis.
 
 
 Search
@@ -93,4 +104,4 @@ You should have received a `copy of the GNU General Public License <docs/LICENSE
 
 Footnotes
 =========
-.. [#] At this time, only the Visual Studio Code editor is supported.f
+.. [#] At this time, only the Visual Studio Code editor is supported.
