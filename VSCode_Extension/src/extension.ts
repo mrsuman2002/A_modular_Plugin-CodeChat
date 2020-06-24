@@ -76,20 +76,7 @@ export function activate(context: vscode.ExtensionContext) {
                 );
                 context.subscriptions.push(panel.onDidDispose( (event) => {
                     // Shut down the render client when the webview panel closes.
-                    if (id !== undefined) {
-                        client?.stop_client(
-                            id,
-                            function(err, stop_client_return) {
-                                if (err !== null) {
-                                    vscode.window.showErrorMessage(`Communication error when stopping the client: ${err}`)
-                                } else if (stop_client_return !== "") {
-                                    vscode.window.showErrorMessage(`Error when stopping the client: ${stop_client_return}`);
-                                }
-                            }
-                        );
-                        id = undefined;
-                    }
-                    panel = undefined;
+                    stop_client();
                 }));
             }
         }
@@ -104,54 +91,9 @@ export function activate(context: vscode.ExtensionContext) {
             if (panel !== undefined) {
                 panel.webview.html = `<html><h1>CodeChat</h1><p>${startup_text}<p></html>`;
             } else {
-                vscode.window.showInformationMessage(msg);
+                vscode.window.showInformationMessage(`CodeChat: ${msg}`);
             }
         };
-
-        // Get the render client from the CodeChat server and place it in the web view.
-        function get_render_client() {
-            assert(client !== undefined);
-            client?.get_client(
-                client_location,
-                function(err, render_client_return) {
-                    if (err !== null) {
-                        vscode.window.showErrorMessage(`Communication error getting render client: ${err}`)
-                    } else if (render_client_return.error === "") {
-                        if (panel === undefined) {
-                            assert(client_location === ttypes.CodeChatClientLocation.browser);
-                            assert(render_client_return.html === "");
-                        } else {
-                            panel.webview.html = render_client_return.html;
-                        }
-
-                        assert(id === undefined);
-                        id = render_client_return.id;
-
-                        // Render when the text is changed by listening for the correct `event <https://code.visualstudio.com/docs/extensionAPI/vscode-api#Event>`_.
-                        context.subscriptions.push(vscode.workspace.onDidChangeTextDocument( (event) => {
-                            start_render();
-                        }));
-
-                        // Render when the active editor changes.
-                        context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor( (event) => {
-                            start_render();
-                        }));
-
-                        // Render when the webveiw panel is shown (if we have it -- we might be using an external browser).
-                        if (panel !== undefined) {
-                            context.subscriptions.push(panel.onDidChangeViewState( (event) => {
-                                start_render();
-                            }));
-                        }
-
-                        // Do an initial render.
-                        start_render();
-                    } else {
-                        vscode.window.showErrorMessage(`Error getting render client: ${render_client_return.error}`);
-                    }
-                }
-            );
-        }
 
         if (connection === undefined) {
             // The client should never exist if there's no connection.
@@ -167,15 +109,16 @@ export function activate(context: vscode.ExtensionContext) {
             });
 
             connection.on('error', function(err) {
-                vscode.window.showErrorMessage(`Error connecting: ${err.message}`);
-                // Shut down the connection and client, marking them as undefined so they will be re-created next run.
+                vscode.window.showErrorMessage(`CodeChat: error connecting: ${err.message}`);
                 connection?.destroy();
                 connection = undefined;
+                // Since there's a connection error, we can't gracefully shut down the client. Simply mark it as undefined so it will be re-created.
                 client = undefined;
+                id = undefined;
             });
 
             connection.on('connect', () => {
-                show_startup("ok<br/>Requesting client...");
+                show_startup("Requesting client...");
 
                 // Use this to create an editor plugin client for the CodeChat server.
                 if (connection !== undefined) {
@@ -184,7 +127,7 @@ export function activate(context: vscode.ExtensionContext) {
                     assert(false);
                 }
 
-                get_render_client();
+                get_render_client(context);
             });
         } else {
             // If this was invoked while a connection is still pending, let that connection run its course.
@@ -194,7 +137,7 @@ export function activate(context: vscode.ExtensionContext) {
 
                 // Get a render client if we don't have one.
                 if (id === undefined) {
-                    get_render_client();
+                    get_render_client(context);
                 }
             }
         }
@@ -205,7 +148,7 @@ export function activate(context: vscode.ExtensionContext) {
 export function deactivate() {
     panel?.dispose();
     panel = undefined;
-
+    stop_client();
     connection?.end();
     connection = undefined;
 }
@@ -213,6 +156,54 @@ export function deactivate() {
 
 // CodeChat services
 // =================
+// Get the render client from the CodeChat server and place it in the web view.
+function get_render_client(context: vscode.ExtensionContext) {
+    assert(client !== undefined);
+    client?.get_client(
+        client_location,
+        function(err, render_client_return) {
+            if (err !== null) {
+                vscode.window.showErrorMessage(`CodeChat: communication error getting render client: ${err}`);
+                stop_client();
+            } else if (render_client_return.error === "") {
+                if (panel === undefined) {
+                    assert(client_location === ttypes.CodeChatClientLocation.browser);
+                    assert(render_client_return.html === "");
+                } else {
+                    panel.webview.html = render_client_return.html;
+                }
+
+                assert(id === undefined);
+                id = render_client_return.id;
+
+                // Render when the text is changed by listening for the correct `event <https://code.visualstudio.com/docs/extensionAPI/vscode-api#Event>`_.
+                context.subscriptions.push(vscode.workspace.onDidChangeTextDocument( (event) => {
+                    start_render();
+                }));
+
+                // Render when the active editor changes.
+                context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor( (event) => {
+                    start_render();
+                }));
+
+                // Render when the webveiw panel is shown (if we have it -- we might be using an external browser).
+                if (panel !== undefined) {
+                    context.subscriptions.push(panel.onDidChangeViewState( (event) => {
+                        start_render();
+                    }));
+                }
+
+                // Do an initial render.
+                start_render();
+            } else {
+                vscode.window.showErrorMessage(`CodeChat: error getting render client: ${render_client_return.error}`);
+                stop_client();
+            }
+        }
+    );
+}
+
+
 function start_render() {
     if (can_render()) {
         // Render after some inactivity: cancel any existing timer, then ...
@@ -229,9 +220,9 @@ function start_render() {
                     vscode.window.activeTextEditor!.document.isDirty,
                     (err, start_render_return) => {
                         if (err !== null) {
-                            vscode.window.showErrorMessage(`CodeChat communication error when rendering: ${err}`)
+                            vscode.window.showErrorMessage(`CodeChat: communication error when rendering: ${err}`)
                         } else if (start_render_return !== "") {
-                            vscode.window.showErrorMessage(`CodeChat error when rendering: ${start_render_return}`);
+                            vscode.window.showErrorMessage(`CodeChat: error when rendering: ${start_render_return}`);
                         }
                     }
                 );
@@ -250,4 +241,23 @@ function can_render(): boolean {
         ((client_location === ttypes.CodeChatClientLocation.browser) ||
         ((panel !== undefined) && panel.visible))
     );
+}
+
+
+function stop_client() {
+    if ((client !== undefined) && (id !== undefined)) {
+        client.stop_client(
+            id,
+            function(err, stop_client_return) {
+                if (err !== null) {
+                    vscode.window.showErrorMessage(`CodeChat: communication error when stopping the client: ${err}`)
+                } else if (stop_client_return !== "") {
+                    vscode.window.showErrorMessage(`CodeChat: error when stopping the client: ${stop_client_return}`);
+                }
+            }
+        );
+    }
+
+    client = undefined;
+    id = undefined;
 }
