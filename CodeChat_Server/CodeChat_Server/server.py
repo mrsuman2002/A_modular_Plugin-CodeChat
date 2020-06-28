@@ -234,7 +234,7 @@ def client_data(id, url_path):
     try:
         # TODO SECURITY: if a web app, need to limit the base directory to wherever projects are placed on disk.
         return send_file(url_path, **send_file_kwargs)
-    except FileNotFoundError:
+    except (FileNotFoundError, PermissionError):
         abort(404)
 
 
