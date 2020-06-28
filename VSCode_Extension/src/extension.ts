@@ -77,8 +77,12 @@ export function activate(context: vscode.ExtensionContext) {
                 context.subscriptions.push(panel.onDidDispose( (event) => {
                     // Shut down the render client when the webview panel closes.
                     stop_client();
+                    panel = undefined;
                 }));
             }
+        } else {
+            // Provide a way to restart the client.
+            stop_client();
         }
 
         // Provide a simple status display while the CodeChat system is starting up.
