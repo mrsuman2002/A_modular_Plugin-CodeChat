@@ -61,7 +61,7 @@ Contributors
 The following developers provided valuable help in creating the CodeChat system.
 
 -   `Bryan A. Jones <https://github.com/bjones1/>`_
--   Suman Adhikari
+-   `Suman Adhikari <https://github.com/mrsuman2002>`_
 -   Christian Bush
 -   Jack Betbeze
 
@@ -82,6 +82,20 @@ To do
 -   Improve docs
 -   Support at least one more editor.
 -   Save and restore scroll position on a per-file basis.
+
+Idea: what about multiple clients accessing the same project?
+
+-   To deal with asyncio's subprocess binary output, I can use the same approach as the standard subprocess module: use an io.TextIOWrapper.
+
+    decoder = codecs.getincrementaldecoder('utf-8')
+    string_io = StringIO(newline=None)
+    string_io.write(decoder.decode(subprocess.read(80)))
+    # When there's no more data, do a decoder.decode(bytes, True)
+
+-   At the core of the design is a wrapped StringIO class that allows reads/writes from/to (dest, str) [e.g. (build_output, "...rendered x as JavaScript...")]. Opening this stream for reading returns an object that does blocking reads and remembers its location in the stream. It also offers a close_open method that, given an existing stream to close and a new stream to open, switches the blocking read being performed from the old to the new stream. StringIO also implements universal newlines
+-   The editor requests a render. The render manager either finds an existing render or creates a new render. For new renders, the render is enqueued. The render manager close_opens the web client's current render stream, replacing it with the new, resulting render stream; as a result, the web client then beings to read from this stream.
+-   The render manager worker eventually dequeues the render then starts writing to it. The renderer writes output, then errors, then html.
+-   The web client blocks on read until data is ready, then returns as much data as it can for each read.
 
 
 Search
