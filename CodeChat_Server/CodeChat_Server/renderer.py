@@ -27,6 +27,7 @@
 # ---------------
 import ast
 import asyncio
+import codecs
 from contextlib import contextmanager
 import fnmatch
 import io
@@ -350,33 +351,26 @@ async def _run_subprocess(args, cwd, input_text, stream_stdout, q):
     except Exception as e:
         return "", "external command:: ERROR:When starting. {}".format(e)
 
-    # Provide a way to send stdout from the process a line at a time to the web client. TODO: implement a wait of (say) 250 ms and gather all data we can in that time period, then enqueue this.
+    # Provide a way to send stdout from the process a line at a time to the web client.
     async def stdout_streamer(stdout_stream):
+        # Use an `incremental decoder <https://docs.python.org/3/library/codecs.html#codecs.getincrementaldecoder>`_ to decode a stream.
+        decoder = codecs.getincrementaldecoder('utf-8')(errors='backslashreplace')
+        # Wrap than with an incremental decoder for universal newlines. The `docs <https://docs.python.org/3/library/io.html#io.IncrementalNewlineDecoder>`_ are very sparse. From the Visual Studio Code help that pops up (likely from https://github.com/python/cpython/blob/master/Modules/_io/textio.c#L237):
+        #
+        #   IncrementalNewlineDecoder(decoder: Optional[codecs.IncrementalDecoder], translate: bool, errors: str=...)
+        #
+        #   Codec used when reading a file in universal newlines mode.
+        #   It wraps another incremental decoder, translating \r\n and \r into \n. It also records the types of newlines encountered.  When used with translate=False, it ensures that the newline sequence is returned in one piece. When used with decoder=None, it expects unicode strings as decode input and translates newlines without first invoking an external decoder.
+        decoder = io.IncrementalNewlineDecoder(decoder, True, None)
         while True:
-            ##ret = []
-            ##pending = set()
-            ##while True:
-            ##    if not pending:
-            ##        pending = {asyncio.create_task(stdout_stream.read(80))}
-            ##    done, pending = await asyncio.wait(pending, timeout=0.250)
-            ##    for task in done:
-            ##        ret.append("\n".join(task.result().decode("utf-8").splitlines()))
-            ##    if pending:
-            ##        break
-            ##q.put(GetResultReturn(GetResultType.build, "".join(ret)))
-
             ret = await stdout_stream.read(80)
             if ret:
-                # TODO: what if the bytes got split between a UTF-8 multibyte sequence? Oh, fun...
-                # Use universal newlines for this stream. Unfortunately, `splitlines <https://docs.python.org/3/library/stdtypes.html#str.splitlines>`_ discards a terminal line break, which we must preserve. To fix this, append a character to ensure there's no terminal newline, then drop it after the split.
-                sl = (ret.decode("utf-8") + " ").splitlines()
-                # Remove the last character of the last split.
-                assert sl[-1][-1] == " "
-                sl[-1] = sl[-1][:-1]
-                # Rejoin the split string with universal newlines.
-                ret = "\n".join(sl)
-                q.put(GetResultReturn(GetResultType.build, ret))
+                q.put(GetResultReturn(GetResultType.build, decoder.decode(ret)))
             else:
+                # Tell the decoder the stream is done and collect any last output.
+                s = decoder.decode(b'', True)
+                if s:
+                    q.put(GetResultReturn(GetResultType.build, s))
                 break
 
     # An awaitable sequence to interact with the subprocess.
@@ -394,7 +388,7 @@ async def _run_subprocess(args, cwd, input_text, stream_stdout, q):
     except Exception as e:
         return "", "external command:: ERROR:When running. {}".format(e)
 
-    return stdout and stdout.decode("utf-8"), stderr.decode("utf-8")
+    return stdout and stdout.decode("utf-8", errors='backslashreplace'), stderr.decode("utf-8", errors='backslashreplace')
 
 
 @contextmanager
