@@ -18,6 +18,10 @@ Installation
 ============
 First, `install the CodeChat extension for Visual Studio Code <https://code.visualstudio.com/docs/introvideos/extend>`_. Then, `install the CodeChat server <../CodeChat_Server/contents>`, which performs all the back-end work and is required for the extension to work. Optionally, install additional external renderers such as Pandoc, Doxygen, etc.
 
+See `use CodeChat`.
+
+
+.. _use CodeChat:
 
 Use
 ===
