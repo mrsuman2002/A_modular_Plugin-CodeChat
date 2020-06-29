@@ -15,6 +15,12 @@ Change Log
 
     -   No changes yet.
 
+-   0.0.9, 29-Jun-2020:
+
+    -   Correctly shut down/restart VSCode client.
+    -   Return a 404 on a permission error.
+    -   Correct subprocess decoding approach.
+
 -   0.0.8, 24-Jun-2020:
 
     -   Horizontal scroll bars now appear when necessary.
