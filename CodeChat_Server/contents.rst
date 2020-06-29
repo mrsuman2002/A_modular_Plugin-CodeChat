@@ -21,7 +21,8 @@ To install the CodeChat server, first `install a recent version of Python <https
 
 Execution
 =========
-To run the server, enter ``python -m CodeChat_Server`` or ``python3 -m CodeChat_Server``, depending on your OS.
+To run the server, enter ``CodeChat_Server`` on the terminal/command line.
+
 
 Use
 ===
@@ -32,6 +33,7 @@ Server architecture
 ===================
 TODO.
 
+
 Contents
 ========
 .. toctree::
@@ -39,5 +41,4 @@ Contents
 
     README
     CodeChat_Server/__init__.py
-    run_server.bat
     setup.py

@@ -100,14 +100,14 @@ setup(
     # These are taken from the `full list
     # <https://pypi.python.org/pypi?%3Aaction=list_classifiers>`_.
     classifiers=[
-        "Development Status :: 5 - Production/Stable",
+        "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
         "Operating System :: OS Independent",
         "Natural Language :: English",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Topic :: Software Development :: Documentation",
         "Topic :: Text Processing :: Markup",
@@ -130,4 +130,8 @@ setup(
     # files <http://pythonhosted.org/setuptools/setuptools.html#including-data-files>`_.
     include_package_data=True,
     python_requires=">=3.6",
+    # Make it easy to run the server.
+    entry_points={
+        "console_scripts": ["CodeChat_Server = CodeChat_Server.server:run_servers"]
+    },
 )
