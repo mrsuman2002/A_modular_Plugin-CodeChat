@@ -8,10 +8,10 @@ In ❶, the left panel shows a the Visual Studio Code text editor with Python so
 
 In addition to native support for Markdown and reStructuredText, the CodeChat system supports almost any external renderer via user-provided JSON configuration files. For example, CodeChat can:
 
--   invoke `Pandoc <https://pandoc.org/>`_ to render a wide variety of markup formats;
--   use `Sphinx <https://www.sphinx-doc.org/>`_ to build project documentation;
--   call `Runestone <https://runestone.academy/>`_ to create interactive textbooks;
--   employ `Doxygen <https://www.doxygen.nl/>`_ to generate documentation from source code;
+-   invoke [Pandoc](https://pandoc.org/) to render a wide variety of markup formats;
+-   use [Sphinx](https://www.sphinx-doc.org) to build project documentation;
+-   call [Runestone](https://runestone.academy/) to create interactive textbooks;
+-   employ [Doxygen](https://www.doxygen.nl/) to generate documentation from source code;
 
 ... and many more.
 
