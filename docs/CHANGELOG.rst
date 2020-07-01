@@ -13,6 +13,10 @@ Change Log
 **********
 -   `Github master <https://github.com/bjones1/CodeChat_system.git>`_:
 
+    -   No changes yet.
+
+-   0.0.10, 1-Jul-2020:
+
     -   Enable running the server via ``CodeChat_Server`` from the terminal/command line.
 
 -   0.0.9, 29-Jun-2020:
