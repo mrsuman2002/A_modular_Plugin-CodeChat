@@ -13,7 +13,7 @@ Change Log
 **********
 -   `Github master <https://github.com/bjones1/CodeChat_system.git>`_:
 
-    -   No changes yet.
+    -   Add type hints.
 
 -   0.0.10, 1-Jul-2020:
 

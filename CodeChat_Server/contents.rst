@@ -42,3 +42,4 @@ Contents
     README
     CodeChat_Server/__init__.py
     setup.py
+    mypy.ini

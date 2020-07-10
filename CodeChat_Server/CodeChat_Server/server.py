@@ -31,14 +31,23 @@
 # Standard library
 # ----------------
 import threading
+from typing import Union
 import webbrowser
 
 # Third-party imports
 # -------------------
-from flask import Flask, request, make_response, render_template, send_file, abort
-from thrift.protocol import TJSONProtocol
-from thrift.server import TServer
-from thrift.transport import TTransport
+from flask import (
+    Flask,
+    request,
+    Response,
+    make_response,
+    render_template,
+    send_file,
+    abort,
+)
+from thrift.protocol import TJSONProtocol  # type: ignore
+from thrift.server import TServer  # type: ignore
+from thrift.transport import TTransport  # type: ignore
 from thrift.transport import TSocket
 from thrift.protocol import TBinaryProtocol
 
@@ -56,14 +65,23 @@ from .gen_py.CodeChat_Services.ttypes import (
 
 # Service provider
 # ================
+# This file takes a long time to load and run. Print a status message as it starts.
+print("Loading...")
+
+
 # This class implements both the EditorPlugin and CodeChat client services.
 class CodeChatHandler:
     def __init__(self):
         print("__init__()")
+        self.render_manager: renderer.RenderManager
 
     # _`get_client`: Return the HTML for a web client.
-    def get_client(self, codeChat_client_location):
-        print("get_client({})".format(CodeChatClientLocation._VALUES_TO_NAMES[codeChat_client_location]))
+    def get_client(self, codeChat_client_location: int) -> RenderClientReturn:
+        print(
+            "get_client({})".format(
+                CodeChatClientLocation._VALUES_TO_NAMES[codeChat_client_location]
+            )
+        )
         id = self.render_manager.create_client()
         # Get the next ID.
         if id is None:
@@ -75,10 +93,10 @@ class CodeChatHandler:
         url = "http://127.0.0.1:5000/client?id={}".format(id)
         if codeChat_client_location == CodeChatClientLocation.url:
             # Just return the URL.
-            ret = url
+            ret_str = url
         elif codeChat_client_location == CodeChatClientLocation.html:
             # Redirect to the webserver.
-            ret = """
+            ret_str = """
 <!DOCTYPE html>
 <html>
     <head>
@@ -91,7 +109,7 @@ class CodeChatHandler:
         elif codeChat_client_location == CodeChatClientLocation.browser:
             # Open in an external browser.
             webbrowser.open(url, 1)
-            ret = ""
+            ret_str = ""
         else:
             ret = RenderClientReturn(
                 "", -1, "Unknown command {}".format(codeChat_client_location)
@@ -99,13 +117,17 @@ class CodeChatHandler:
             print("  => {}".format(ret))
             return ret
 
-        ret = RenderClientReturn(ret, id, "")
+        ret = RenderClientReturn(ret_str, id, "")
         print("  => {}".format(ret))
         return ret
 
     # Render the provided text to HTML, then enqueue it for the web view.
-    def start_render(self, text, path, id, is_dirty):
-        print("start_render(path={}, id={}, is_dirty={}, html=\n{}...)\n".format(path, id, is_dirty, text[:80]))
+    def start_render(self, text: str, path: str, id: int, is_dirty: bool) -> str:
+        print(
+            "start_render(path={}, id={}, is_dirty={}, html=\n{}...)\n".format(
+                path, id, is_dirty, text[:80]
+            )
+        )
         if self.render_manager.start_render(text, path, id, is_dirty):
             # Indicate success.
             print(" => (empty string)")
@@ -116,11 +138,13 @@ class CodeChatHandler:
             return ret
 
     # Pass rendered results back to the web view.
-    def get_result(self, id):
+    def get_result(self, id: int) -> GetResultReturn:
         print("get_result(id={})".format(id))
         q = self.render_manager.get_queue(id)
         if not q:
-            ret = GetResultReturn(GetResultType.command, "error: unknown client id {}".format(id))
+            ret = GetResultReturn(
+                GetResultType.command, "error: unknown client id {}".format(id)
+            )
             print("  => {}".format(ret))
             return ret
         ret = q.get()
@@ -144,7 +168,7 @@ class CodeChatHandler:
     # #.    _`Client deletion`: when the web client receives the shutdown message, tell the renderer to delete its ClientState. Since the ClientState contains the queue with the shutdown message, it shouldn't be deleted until the message is sent.
     #
     # This method performs the first step; ``get_result`` performs the second.
-    def stop_client(self, id):
+    def stop_client(self, id: int) -> str:
         print("stop_client(id={})".format(id))
         q = self.render_manager.get_queue(id)
         if not q:
@@ -167,7 +191,7 @@ handler = CodeChatHandler()
 #
 # Server for the CodeChat editor plugin
 # -------------------------------------
-def editor_plugin_server():
+def editor_plugin_server() -> None:
     transport = TSocket.TServerSocket(host="127.0.0.1", port=9090)
     tfactory = TTransport.TBufferedTransportFactory()
     pfactory = TBinaryProtocol.TBinaryProtocolFactory()
@@ -203,13 +227,13 @@ client_app = Flask(
 
 # The endpoint to get the HTML for the CodeChat client.
 @client_app.route("/client")
-def client_html():
+def client_html() -> str:
     return render_template("CodeChat_client.html")
 
 
 # The endpoint for the CodeChat client service.
 @client_app.route("/client", methods=["POST"])
-def client_service():
+def client_service() -> Response:
     itrans = TTransport.TMemoryBuffer(request.data)
     otrans = TTransport.TMemoryBuffer()
     iprot = client_server.inputProtocolFactory.getProtocol(itrans)
@@ -220,11 +244,12 @@ def client_service():
 
 # The endpoint for files requested by a specific client, including rendered source files.
 @client_app.route("/client/<int:id>/<path:url_path>")
-def client_data(id, url_path):
+def client_data(id: int, url_path: str) -> Union[str, Response]:
     # See if we rendered this file.
     html = handler.render_manager.get_render_results(id, url_path)
     # If we have rendered HTML, return it.
     if html:
+        assert isinstance(html, str)
         return html
 
     # If this render was a project, then ``html`` is None. In this case, the rendered HTML is already on disk at ``url_path``; however, don't allow Flask to cache this, since it changes with each edit.
@@ -233,13 +258,13 @@ def client_data(id, url_path):
     # Send a static file or a 404 if nothing was found.
     try:
         # TODO SECURITY: if a web app, need to limit the base directory to wherever projects are placed on disk.
-        return send_file(url_path, **send_file_kwargs)
+        return send_file(url_path, **send_file_kwargs)  # type: ignore
     except (FileNotFoundError, PermissionError):
         abort(404)
 
 
 # Run both servers. This does not (usually) return.
-def run_servers():
+def run_servers() -> None:
     # Both servers block when run, so place them in a thread.
     editor_plugin_thread = threading.Thread(target=editor_plugin_server)
     editor_plugin_thread.start()

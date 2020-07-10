@@ -31,20 +31,20 @@ import codecs
 from contextlib import contextmanager
 import fnmatch
 import io
-import os.path
 from pathlib import Path
 from queue import Queue
 import sys
 from tempfile import NamedTemporaryFile
+from typing import Any, cast, Callable, Dict, Generator, List, Optional, Tuple, Union
 import urllib.parse
 
 # Third-party imports
 # -------------------
-import markdown
+import markdown  # type: ignore
 import docutils.core
 import docutils.writers.html4css1
-from CodeChat.CodeToRest import code_to_rest_string, html_static_path
-from CodeChat.CommentDelimiterInfo import SUPPORTED_GLOBS
+from CodeChat.CodeToRest import code_to_rest_string, html_static_path  # type: ignore
+from CodeChat.CommentDelimiterInfo import SUPPORTED_GLOBS  # type: ignore
 
 # Local imports
 # -------------
@@ -57,7 +57,7 @@ from .gen_py.CodeChat_Services.ttypes import (
 # Utilities
 # =========
 # Convert a path to a URI component: make it absolute and use forward (POSIX) slashes. If the provided ``file_path`` is falsey, just return it.
-def path_to_uri(file_path):
+def path_to_uri(file_path: str):
     return Path(file_path).resolve().as_posix() if file_path else file_path
 
 
@@ -78,7 +78,7 @@ class _StrikeThroughExtension(markdown.Extension):
 
 
 # Convert Markdown to HTML
-def _convertMarkdown(text, filePath):
+def _convertMarkdown(text: str, filePath: str) -> Tuple[str, str]:
     return (
         markdown.markdown(
             text,
@@ -96,7 +96,9 @@ def _convertMarkdown(text, filePath):
 # reStructuredText (reST)
 # -----------------------
 # Convert reStructuredText (reST) to HTML.
-def _convertReST(text, filePath, use_codechat=False):
+def _convertReST(
+    text: str, filePath: str, use_codechat: bool = False
+) -> Tuple[str, str]:
 
     errStream = io.StringIO()
     settingsDict = {
@@ -122,7 +124,8 @@ def _convertReST(text, filePath, use_codechat=False):
         # Capture errors to a string and return it.
         "warning_stream": errStream,
         "stylesheet_dirs": html_static_path(),
-        "stylesheet_path": ["docutils.css"] + (["CodeChat.css"] if use_codechat else []),
+        "stylesheet_path": ["docutils.css"]
+        + (["CodeChat.css"] if use_codechat else []),
     }
     htmlString = docutils.core.publish_string(
         bytes(text, encoding="utf-8"),
@@ -137,7 +140,7 @@ def _convertReST(text, filePath, use_codechat=False):
 # CodeChat
 # ========
 # Convert source code to HTML.
-def _convertCodeChat(text, filePath):
+def _convertCodeChat(text: str, filePath: str) -> Tuple[str, str]:
     try:
         rest_string = code_to_rest_string(text, filename=filePath)
     except KeyError:
@@ -152,9 +155,15 @@ def _convertCodeChat(text, filePath):
 # External tools/projects
 # =======================
 # Convert a file using an external program.
-async def _convert_external(text, file_path, tool_or_project_path, q):
+async def _convert_external(
+    text: str,
+    file_path: str,
+    tool_or_project_path: List[Union[bool, str]],
+    q: asyncio.Queue,
+) -> Tuple[str, str]:
     # Split the provided tool path.
-    uses_stdin, uses_stdout, *args = tool_or_project_path
+    uses_stdin, uses_stdout, *args_ = tool_or_project_path
+    args = cast(List[str], args_)
 
     # Run from the directory containing the file.
     cwd = str(Path(file_path).parent)
@@ -194,7 +203,9 @@ async def _convert_external(text, file_path, tool_or_project_path, q):
 
 
 # Return False if source_file is newer than output_file; otherwise, return string with an error message.
-def _checkModificationTime(source_file, base_html_file, html_ext):
+def _checkModificationTime(
+    source_file: Path, base_html_file: Path, html_ext: str
+) -> Tuple[str, str]:
 
     # Look for the resulting HTML.
     possible_html_file = base_html_file.with_suffix(html_ext)
@@ -208,23 +219,25 @@ def _checkModificationTime(source_file, base_html_file, html_ext):
     # so that larger = newer.
     try:
         if html_file.stat().st_mtime > source_file.stat().st_mtime:
-            return html_file, False
+            return str(html_file), ""
         else:
             return (
-                html_file,
+                str(html_file),
                 "The file {} is older than the source file {}.".format(
                     html_file, source_file
                 ),
             )
     except OSError as e:
         return (
-            html_file,
+            str(html_file),
             "Error checking modification time of {}: {}".format(html_file, e),
         )
 
 
 # Convert an external project
-async def _convert_external_project(text, file_path, tool_or_project_path, q):
+async def _convert_external_project(
+    text: str, file_path_: str, tool_or_project_path: str, q: asyncio.Queue
+) -> Tuple[str, str]:
     # Run from the directory containing the project file.
     project_path = str(Path(tool_or_project_path).parent)
     q.put(
@@ -250,7 +263,7 @@ async def _convert_external_project(text, file_path, tool_or_project_path, q):
         return (
             "",
             "{}::ERROR: Unexpected type; file should contain a dict, but saw a {}".format(
-                tool_or_project_path, e, type(d)
+                tool_or_project_path, type(d)
             ),
         )
     args = d.get("args")
@@ -282,20 +295,20 @@ async def _convert_external_project(text, file_path, tool_or_project_path, q):
         return (
             "",
             "{}::ERROR: wrong type for html_ext; saw {} (type was {}).".format(
-                file_path, html_ext, type(html_ext)
+                file_path_, html_ext, type(html_ext)
             ),
         )
 
     # Make paths absolute.
-    def abs_path(path):
-        path = Path(path)
-        if not path.is_absolute():
-            path = project_path / path
-        return path
+    def abs_path(path: str) -> Path:
+        path_ = Path(path)
+        if not path_.is_absolute():
+            path_ = project_path / path_
+        return path_
 
     source_path = abs_path(source_path)
     output_path = abs_path(output_path)
-    file_path = Path(file_path)
+    file_path = Path(file_path_)
 
     # Determine first guess at the location of the rendered HTML.
     try:
@@ -335,7 +348,13 @@ async def _convert_external_project(text, file_path, tool_or_project_path, q):
 
 
 # Run a subprocess, optionally streaming the stdout.
-async def _run_subprocess(args, cwd, input_text, stream_stdout, q):
+async def _run_subprocess(
+    args: List[str],
+    cwd: str,
+    input_text: Optional[str],
+    stream_stdout: bool,
+    q: asyncio.Queue,
+) -> Tuple[str, str]:
     # Explain what's going on.
     q.put(GetResultReturn(GetResultType.build, "{} > {}\n".format(cwd, " ".join(args))))
 
@@ -352,32 +371,33 @@ async def _run_subprocess(args, cwd, input_text, stream_stdout, q):
         return "", "external command:: ERROR:When starting. {}".format(e)
 
     # Provide a way to send stdout from the process a line at a time to the web client.
-    async def stdout_streamer(stdout_stream):
+    async def stdout_streamer(stdout_stream: asyncio.StreamReader):
         # Use an `incremental decoder <https://docs.python.org/3/library/codecs.html#codecs.getincrementaldecoder>`_ to decode a stream.
-        decoder = codecs.getincrementaldecoder('utf-8')(errors='backslashreplace')
+        decoder_ = codecs.getincrementaldecoder("utf-8")(errors="backslashreplace")
         # Wrap than with an incremental decoder for universal newlines. The `docs <https://docs.python.org/3/library/io.html#io.IncrementalNewlineDecoder>`_ are very sparse. From the Visual Studio Code help that pops up (likely from https://github.com/python/cpython/blob/master/Modules/_io/textio.c#L237):
         #
         #   IncrementalNewlineDecoder(decoder: Optional[codecs.IncrementalDecoder], translate: bool, errors: str=...)
         #
         #   Codec used when reading a file in universal newlines mode.
         #   It wraps another incremental decoder, translating \r\n and \r into \n. It also records the types of newlines encountered.  When used with translate=False, it ensures that the newline sequence is returned in one piece. When used with decoder=None, it expects unicode strings as decode input and translates newlines without first invoking an external decoder.
-        decoder = io.IncrementalNewlineDecoder(decoder, True, None)
+        decoder = io.IncrementalNewlineDecoder(decoder_, True, "")
         while True:
             ret = await stdout_stream.read(80)
             if ret:
                 q.put(GetResultReturn(GetResultType.build, decoder.decode(ret)))
             else:
                 # Tell the decoder the stream is done and collect any last output.
-                s = decoder.decode(b'', True)
+                s = decoder.decode(b"", True)
                 if s:
                     q.put(GetResultReturn(GetResultType.build, s))
                 break
 
     # An awaitable sequence to interact with the subprocess.
-    aws = [proc.communicate(input_text and input_text.encode("utf-8"))]
+    aws = [proc.communicate(None if input_text is None else input_text.encode("utf-8"))]
 
     # If we have an output file, then stream the stdout.
     if stream_stdout:
+        assert proc.stdout
         aws.append(stdout_streamer(proc.stdout))
         # Hack: make it look like there's no stdout, so communicate won't use it.
         proc.stdout = None
@@ -388,16 +408,19 @@ async def _run_subprocess(args, cwd, input_text, stream_stdout, q):
     except Exception as e:
         return "", "external command:: ERROR:When running. {}".format(e)
 
-    return stdout and stdout.decode("utf-8", errors='backslashreplace'), stderr.decode("utf-8", errors='backslashreplace')
+    return (
+        stdout and stdout.decode("utf-8", errors="backslashreplace"),
+        stderr.decode("utf-8", errors="backslashreplace"),
+    )
 
 
 @contextmanager
-def _dummy_context_manager():
+def _dummy_context_manager() -> Generator:
     yield
 
 
 # If need_temp_file is True, provide a NamedTemporaryFile; otherwise, return a dummy context manager.
-def _optional_temp_file(need_temp_file):
+def _optional_temp_file(need_temp_file: bool) -> Any:
     return (
         NamedTemporaryFile(mode="w", encoding="utf-8")
         if need_temp_file
@@ -408,111 +431,17 @@ def _optional_temp_file(need_temp_file):
 # Fake renderers
 # ==============
 # "Convert" (pass through) the provided text.
-def _pass_through(text, file_path):
+def _pass_through(text: str, file_path: str) -> Tuple[str, str]:
     return text, ""
 
 
 # The "error converter" when a converter can't be found.
-def _error_converter(text, file_path):
+def _error_converter(text: str, file_path: str) -> Tuple[str, str]:
     return "", "{}:: ERROR: no converter found for this file.".format(file_path)
 
 
-# Select and invoke a renderer
-# ============================
-# Build a map of file names/extensions to the converter to use.
-#
-# TODO:
-#
-# #.    Read this from a JSON file instead.
-# #.    Use Pandoc to offer lots of other format conversions.
-GLOB_TO_CONVERTER = {glob: (_convertCodeChat, None) for glob in SUPPORTED_GLOBS}
-GLOB_TO_CONVERTER.update(
-    {
-        # Leave (X)HTML unchanged.
-        "*.xhtml": (_pass_through, None),
-        "*.html": (_pass_through, None),
-        "*.htm": (_pass_through, None),
-        # Use the integrated Python libraries for these.
-        "*.md": (_convertMarkdown, None),
-        "*.rst": (_convertReST, None),
-        # External tools
-        #
-        # `Textile <https://www.promptworks.com/textile>`_:
-        "*.textile": (
-            _convert_external,
-            [
-                # Does this tool read the input file from stdin?
-                True,
-                # Does this tool produce the output on stdout?
-                True,
-                # The remaining elements are the arguments used to invoke the tool.
-                "pandoc",
-                # Specify the input format https://pandoc.org/MANUAL.html#option--to>`_.
-                "--from=textile",
-                # `Output to HTML <https://pandoc.org/MANUAL.html#option--from>`_.
-                "--to=html",
-                # `Produce a complete (standalone) HTML file <https://pandoc.org/MANUAL.html#option--standalone>`_, not a fragment.
-                "--standalone",
-            ],
-        ),
-    }
-)
-
-
-# Return the converter for the provided file.
-def _select_converter(file_path):
-    # Search for an external builder configuration file.
-    for project_path in Path(file_path).parents:
-        project_file = project_path / "codechat_config.json"
-        if project_file.exists():
-            return _convert_external_project, project_file, True
-
-    # Otherwise, look for a single-file converter.
-    for glob, (converter, tool_or_project_path) in GLOB_TO_CONVERTER.items():
-        if fnmatch.fnmatch(file_path, glob):
-            return converter, tool_or_project_path, False
-    return _error_converter, None, False
-
-
-# Run the appropriate converter for the provided file or return an error.
-async def convert_file(text, file_path, cs):
-    converter, tool_or_project_path, is_project = _select_converter(file_path)
-    # Projects require a clean file in order to render.
-    if is_project and cs._to_render_is_dirty:
-        return
-
-    if asyncio.iscoroutinefunction(converter):
-        # Coroutines get the queue, so they can report progress during the build.
-        html_string, err_string = await converter(
-            text, file_path, tool_or_project_path, cs.q
-        )
-    else:
-        assert tool_or_project_path is None
-        html_string, err_string = converter(text, file_path)
-
-    # Update the client's state, now that the rendering is complete.
-    cs._text = text
-    # For projects, the rendered HTML is already on disk.
-    if is_project:
-        cs._file_path = html_string
-        cs._html = None
-    else:
-        cs._file_path = file_path
-        cs._html = html_string
-
-    # Send any errors. An empty error string will clear any errors from a previous build, and should still be sent.
-    cs.q.put(GetResultReturn(GetResultType.errors, err_string))
-
-    # Sending the HTML signals the end of this build.
-    #
-    # For Windows, make the path contain forward slashes.
-    uri = path_to_uri(cs._file_path)
-    # Encode this, for Windows paths which contain a colon (or unusual Linux paths).
-    cs.q.put(GetResultReturn(GetResultType.html, urllib.parse.quote(uri)))
-
-
-# RenderManager / render thread
-# ==============================
+# ClientState
+# ===========
 # Store data for about each client.
 class ClientState:
     def __init__(self):
@@ -550,15 +479,115 @@ class ClientState:
         self._is_deleting = False
 
 
+# Select and invoke a renderer
+# ============================
+# Build a map of file names/extensions to the converter to use.
+#
+# TODO:
+#
+# #.    Read this from a JSON file instead.
+# #.    Use Pandoc to offer lots of other format conversions.
+GLOB_TO_CONVERTER: Dict[str, Tuple[Callable, Optional[List[Union[bool, str]]]]] = {
+    glob: (_convertCodeChat, None) for glob in SUPPORTED_GLOBS
+}
+GLOB_TO_CONVERTER.update(
+    {
+        # Leave (X)HTML unchanged.
+        "*.xhtml": (_pass_through, None),
+        "*.html": (_pass_through, None),
+        "*.htm": (_pass_through, None),
+        # Use the integrated Python libraries for these.
+        "*.md": (_convertMarkdown, None),
+        "*.rst": (_convertReST, None),
+        # External tools
+        #
+        # `Textile <https://www.promptworks.com/textile>`_:
+        "*.textile": (
+            _convert_external,
+            [
+                # Does this tool read the input file from stdin?
+                True,
+                # Does this tool produce the output on stdout?
+                True,
+                # The remaining elements are the arguments used to invoke the tool.
+                "pandoc",
+                # Specify the input format https://pandoc.org/MANUAL.html#option--to>`_.
+                "--from=textile",
+                # `Output to HTML <https://pandoc.org/MANUAL.html#option--from>`_.
+                "--to=html",
+                # `Produce a complete (standalone) HTML file <https://pandoc.org/MANUAL.html#option--standalone>`_, not a fragment.
+                "--standalone",
+            ],
+        ),
+    }
+)
+
+
+# Return the converter for the provided file.
+def _select_converter(
+    file_path: str,
+) -> Tuple[Callable, Union[None, str, List[Union[bool, str]]], bool]:
+    # Search for an external builder configuration file.
+    for project_path in Path(file_path).parents:
+        project_file = project_path / "codechat_config.json"
+        if project_file.exists():
+            return _convert_external_project, str(project_file), True
+
+    # Otherwise, look for a single-file converter.
+    for glob, (converter, tool_or_project_path) in GLOB_TO_CONVERTER.items():
+        if fnmatch.fnmatch(file_path, glob):
+            return converter, tool_or_project_path, False
+    return _error_converter, None, False
+
+
+# Run the appropriate converter for the provided file or return an error.
+async def convert_file(text: str, file_path: str, cs: ClientState) -> None:
+    converter, tool_or_project_path, is_project = _select_converter(file_path)
+    # Projects require a clean file in order to render.
+    if is_project and cs._to_render_is_dirty:
+        return
+
+    if asyncio.iscoroutinefunction(converter):
+        # Coroutines get the queue, so they can report progress during the build.
+        html_string, err_string = await converter(
+            text, file_path, tool_or_project_path, cs.q
+        )
+    else:
+        assert tool_or_project_path is None
+        html_string, err_string = converter(text, file_path)
+
+    # Update the client's state, now that the rendering is complete.
+    cs._editor_text = text
+    # For projects, the rendered HTML is already on disk.
+    if is_project:
+        cs._file_path = html_string
+        cs._html = None
+    else:
+        cs._file_path = file_path
+        cs._html = html_string
+
+    # Send any errors. An empty error string will clear any errors from a previous build, and should still be sent.
+    cs.q.put(GetResultReturn(GetResultType.errors, err_string))
+
+    # Sending the HTML signals the end of this build.
+    #
+    # For Windows, make the path contain forward slashes.
+    uri = path_to_uri(cs._file_path)
+    # Encode this, for Windows paths which contain a colon (or unusual Linux paths).
+    cs.q.put(GetResultReturn(GetResultType.html, urllib.parse.quote(uri)))
+
+
+# RenderManager / render thread
+# ==============================
 class RenderManager:
     # Determine if the provided id exists and is not being deleted. Return the ClientState for the id if so; otherwise, return False.
-    def _get_client_state(self, id):
+    def _get_client_state(self, id: int) -> Union[bool, ClientState]:
         cs = self._client_state_dict.get(id)
         # Signal an error if this client doesn't exist or is being deleted; otherwise, return it.
         return cs if cs and not cs._is_deleting else False
 
     # Add the provided client to the job queue.
-    def _enqueue(self, id):
+    def _enqueue(self, id: int) -> None:
         # Add to the job queue unless it's already there.
         cs = self._client_state_dict[id]
         cs._needs_processing = True
@@ -567,11 +596,11 @@ class RenderManager:
             cs._in_job_q = True
 
     # Create a new client. Returns the client id on success or False on failure.
-    def create_client(self):
+    def create_client(self) -> int:
         future = asyncio.run_coroutine_threadsafe(self._create_client(), self._loop)
         return future.result()
 
-    async def _create_client(self):
+    async def _create_client(self) -> int:
         self._last_id += 1
         id = self._last_id
         if id in self._client_state_dict:
@@ -580,11 +609,11 @@ class RenderManager:
         self._client_state_dict[id] = ClientState()
         return id
 
-    def delete_client(self, id):
+    def delete_client(self, id: int) -> bool:
         future = asyncio.run_coroutine_threadsafe(self._delete_client(id), self._loop)
         return future.result()
 
-    async def _delete_client(self, id):
+    async def _delete_client(self, id: int) -> bool:
         cs = self._client_state_dict.get(id)
         if cs:
             # Tell the worker to delete this.
@@ -595,17 +624,22 @@ class RenderManager:
             return False
 
     # Place the item in the render queue; must be called from another (non-render) thread. Returns True on success, or False if the provided id doesn't exist.
-    def start_render(self, editor_text, file_path, id, is_dirty):
+    def start_render(
+        self, editor_text: str, file_path: str, id: int, is_dirty: bool
+    ) -> bool:
         future = asyncio.run_coroutine_threadsafe(
             self._start_render(editor_text, file_path, id, is_dirty), self._loop
         )
         return future.result()
 
-    async def _start_render(self, editor_text, file_path, id, is_dirty):
+    async def _start_render(
+        self, editor_text: str, file_path: str, id: int, is_dirty: bool
+    ) -> bool:
         cs = self._get_client_state(id)
         if not cs:
             # Signal an error for an invalid client id.
             return False
+        assert isinstance(cs, ClientState)
 
         # Add to the job queue.
         self._enqueue(id)
@@ -619,49 +653,54 @@ class RenderManager:
         return True
 
     # Get a client's queue.
-    def get_queue(self, id):
+    def get_queue(self, id: int) -> Optional[Queue]:
         future = asyncio.run_coroutine_threadsafe(self._get_queue(id), self._loop)
         return future.result()
 
-    async def _get_queue(self, id):
+    async def _get_queue(self, id: int) -> Optional[Queue]:
         cs = self._get_client_state(id)
-        return cs.q if cs else False
+        return cast(ClientState, cs).q if cs else None
 
     # Given a URL, see if it matches with the latest render; if so, return the resulting HTML. If there's no match to the URL or the ID doesn't exist, return False. Note that the "HTML" can be None, meaning the render was stored to disk and the URL is a path to the rendered file.
-    def get_render_results(self, id, url_path):
+    def get_render_results(self, id: int, url_path: str) -> Union[None, str, bool]:
         future = asyncio.run_coroutine_threadsafe(
             self._get_render_results(id, url_path), self._loop
         )
         return future.result()
 
-    async def _get_render_results(self, id, url_path):
+    async def _get_render_results(
+        self, id: int, url_path: str
+    ) -> Union[None, str, bool]:
         cs = self._get_client_state(id)
-        return cs._html if cs and path_to_uri(cs._file_path) == url_path else False
+        return (
+            cast(ClientState, cs)._html
+            if cs and path_to_uri(cast(ClientState, cs)._file_path) == url_path
+            else False
+        )
 
     # Start the render manager. This typically never returns.
-    def run(self, *args, debug=False, **kwargs):
+    def run(self, *args, debug: bool = False) -> None:
         # The default Windows event loop doesn't support asyncio subprocesses.
         is_win = sys.platform.startswith("win")
         if is_win:
             asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 
-        asyncio.run(self._run(*args, **kwargs), debug=debug)
+        asyncio.run(self._run(*args), debug=debug)
 
     # Run the rendering thread with the given number of workers.
-    async def _run(self, num_workers=1):
+    async def _run(self, num_workers: int = 1) -> None:
         # Create a queue of jobs for the renderer to process. This must be created from within the main loop to avoid ``got Future <Future pending> attached to a different loop`` errors.
-        self._job_q = asyncio.Queue()
+        self._job_q: asyncio.Queue = asyncio.Queue()
         # Keep a dict of id: ClientState for each client.
-        self._client_state_dict = {}
+        self._client_state_dict: Dict[int, ClientState] = {}
         # The next ID will be 0. Use the lock below to establish ownership before writing this.
         self._last_id = -1
         self._loop = asyncio.get_running_loop()
-        self._client_state_dict = {}
 
-        await asyncio.gather(*[self._worker(i) for i in range(num_workers)])
+        await asyncio.gather(*[self._worker() for i in range(num_workers)])
 
     # Process items in the render queue.
-    async def _worker(self, worker_index):
+    async def _worker(self) -> None:
         while True:
             # Get an item to process.
             id = await self._job_q.get()
