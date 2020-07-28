@@ -3,7 +3,7 @@
     "version": "0.0.10",
     "publisher": "CodeChat",
     "engines": {
-        "vscode": "^1.41.0"
+        "vscode": "<1.47"
     },
     "license": "SEE LICENSE IN LICENSE.rst",
     "displayName": "CodeChat",
@@ -34,9 +34,9 @@
     },
     "devDependencies": {
         "@types/thrift": "^0.10.9",
-        "@types/vscode": "^1.46.0",
+        "@types/vscode": "<1.47",
         "tslint": "^5.16.0",
-        "typescript": "^3.9.6",
+        "typescript": "^3.9.7",
         "vscode-test": "^1.4.0"
     },
     "scripts": {
