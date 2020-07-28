@@ -123,26 +123,12 @@ export function activate(context: vscode.ExtensionContext) {
 
             connection.on('connect', () => {
                 show_startup("Requesting client...");
-
-                // Use this to create an editor plugin client for the CodeChat server.
-                if (connection !== undefined) {
-                    client = thrift.createClient(EditorPlugin, connection);
-                } else {
-                    assert(false);
-                }
-
-                get_render_client(context);
+                get_render_client(context, connection);
             });
         } else {
             // If this was invoked while a connection is still pending, let that connection run its course.
             if (!connection.connection.connecting) {
-                // If a connection exists, the client should have been created.
-                assert(client !== undefined);
-
-                // Get a render client if we don't have one.
-                if (id === undefined) {
-                    get_render_client(context);
-                }
+                get_render_client(context, connection);
             }
         }
     }));
@@ -161,50 +147,60 @@ export function deactivate() {
 // CodeChat services
 // =================
 // Get the render client from the CodeChat server and place it in the web view.
-function get_render_client(context: vscode.ExtensionContext) {
-    assert(client !== undefined);
-    client?.get_client(
-        client_location,
-        function(err, render_client_return) {
-            if (err !== null) {
-                vscode.window.showErrorMessage(`CodeChat: communication error getting render client: ${err}`);
-                stop_client();
-            } else if (render_client_return.error === "") {
-                if (panel === undefined) {
-                    assert(client_location === ttypes.CodeChatClientLocation.browser);
-                    assert(render_client_return.html === "");
-                } else {
-                    panel.webview.html = render_client_return.html;
-                }
+function get_render_client(context: vscode.ExtensionContext, connection: thrift.Connection | undefined) {
+    // There must already be a connection before this is called.
+    assert(connection !== undefined);
+    // Get a client if needed.
+    if (client === undefined) {
+        client = thrift.createClient(EditorPlugin, connection);
+    }
+    // Get a render client if needed.
+    if (id === undefined) {
+        client.get_client(
+            client_location,
+            function(err, render_client_return) {
+                if (err !== null) {
+                    vscode.window.showErrorMessage(`CodeChat: communication error getting render client: ${err}`);
+                    stop_client();
+                } else if (render_client_return.error === "") {
+                    // For a browser location, the panel shouldn't exist and the HTML should be empty. Otherwise, assign the HTML to the panel.
+                    if (panel === undefined) {
+                        assert(client_location === ttypes.CodeChatClientLocation.browser);
+                        assert(render_client_return.html === "");
+                    } else {
+                        panel.webview.html = render_client_return.html;
+                    }
 
-                assert(id === undefined);
-                id = render_client_return.id;
+                    // Save the ID just provided.
+                    assert(id === undefined);
+                    id = render_client_return.id;
 
-                // Render when the text is changed by listening for the correct `event <https://code.visualstudio.com/docs/extensionAPI/vscode-api#Event>`_.
-                context.subscriptions.push(vscode.workspace.onDidChangeTextDocument( (event) => {
-                    start_render();
-                }));
-
-                // Render when the active editor changes.
-                context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor( (event) => {
-                    start_render();
-                }));
-
-                // Render when the webveiw panel is shown (if we have it -- we might be using an external browser).
-                if (panel !== undefined) {
-                    context.subscriptions.push(panel.onDidChangeViewState( (event) => {
+                    // Render when the text is changed by listening for the correct `event <https://code.visualstudio.com/docs/extensionAPI/vscode-api#Event>`_.
+                    context.subscriptions.push(vscode.workspace.onDidChangeTextDocument( (event) => {
                         start_render();
                     }));
-                }
 
-                // Do an initial render.
-                start_render();
-            } else {
-                vscode.window.showErrorMessage(`CodeChat: error getting render client: ${render_client_return.error}`);
-                stop_client();
+                    // Render when the active editor changes.
+                    context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor( (event) => {
+                        start_render();
+                    }));
+
+                    // Render when the webveiw panel is shown (if we have it -- we might be using an external browser).
+                    if (panel !== undefined) {
+                        context.subscriptions.push(panel.onDidChangeViewState( (event) => {
+                            start_render();
+                        }));
+                    }
+
+                    // Do an initial render.
+                    start_render();
+                } else {
+                    vscode.window.showErrorMessage(`CodeChat: error getting render client: ${render_client_return.error}`);
+                    stop_client();
+                }
             }
-        }
-    );
+        );
+    }
 }
 
 
@@ -248,6 +244,7 @@ function can_render(): boolean {
 }
 
 
+// Gracefully shut down the render client if possible. Shut down the client as well.
 function stop_client() {
     if ((client !== undefined) && (id !== undefined)) {
         client.stop_client(
