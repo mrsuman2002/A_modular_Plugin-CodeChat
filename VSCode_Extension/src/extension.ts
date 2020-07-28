@@ -86,25 +86,17 @@ export function activate(context: vscode.ExtensionContext) {
         }
 
         // Provide a simple status display while the CodeChat system is starting up.
-        //
-        // Accumulate text in this variable.
-        let startup_text = "";
-        // Append and display it using this function.
-        function show_startup(msg: string) {
-            startup_text += msg;
-            if (panel !== undefined) {
-                panel.webview.html = `<html><h1>CodeChat</h1><p>${startup_text}<p></html>`;
-            } else {
-                vscode.window.showInformationMessage(`CodeChat: ${msg}`);
-            }
-        };
+        if (panel !== undefined) {
+            panel.webview.html = "`<html><h1>CodeChat</h1><p>Loading...</p></html>";
+        } else {
+            vscode.window.showInformationMessage("CodeChat is loading in an external browser...");
+        }
 
         if (connection === undefined) {
             // The client should never exist if there's no connection.
             assert(client === undefined);
 
             // Try to connect to the CodeChat server. The `createConnection function <https://github.com/apache/thrift/blob/master/lib/nodejs/lib/thrift/connection.js#L258>`_ wraps `net.createConnection <https://nodejs.org/api/net.html#net_net_createconnection_options_connectlistener>`_ then returns a `Connection object <https://github.com/apache/thrift/blob/master/lib/nodejs/lib/thrift/connection.js#L35>`_.
-            show_startup("Connecting to the CodeChat engine...");
             connection = thrift.createConnection("localhost", 9090, {
                 transport: thrift.TBufferedTransport,
                 protocol:  thrift.TBinaryProtocol,
@@ -122,7 +114,6 @@ export function activate(context: vscode.ExtensionContext) {
             });
 
             connection.on('connect', () => {
-                show_startup("Requesting client...");
                 get_render_client(context, connection);
             });
         } else {
