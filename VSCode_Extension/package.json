@@ -1,6 +1,6 @@
 {
     "name": "codechat",
-    "version": "0.0.10",
+    "version": "0.0.11",
     "publisher": "CodeChat",
     "engines": {
         "vscode": "^1.41.0"

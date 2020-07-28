@@ -13,7 +13,13 @@ Change Log
 **********
 -   `Github master <https://github.com/bjones1/CodeChat_system.git>`_:
 
+    -   No changes yet.
+
+-   0.0.11, 28-Jul-2020:
+
     -   Add type hints.
+    -   Make VSCode client more robust after a shutdown/restart.
+    -   Disable support for VSCode 1.47, where the webview doesn't work at all.
 
 -   0.0.10, 1-Jul-2020:
 
