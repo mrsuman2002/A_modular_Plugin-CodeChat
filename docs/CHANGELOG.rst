@@ -19,7 +19,7 @@ Change Log
 
     -   Add type hints.
     -   Make VSCode client more robust after a shutdown/restart.
-    -   Disable support for VSCode 1.47, where the webview doesn't work at all.
+    -   Add note that VSCode 1.47, where the webview doesn't work at all, isn't supported.
 
 -   0.0.10, 1-Jul-2020:
 

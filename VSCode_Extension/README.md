@@ -16,3 +16,5 @@ In addition to native support for Markdown and reStructuredText, the CodeChat sy
 ... and many more.
 
 See the [getting started guide](https://codechat-system.readthedocs.io/en/latest/VSCode_Extension/contents.html) to use the CodeChat system.
+
+**Important**: Visual Studio Code v1.47.x does not work with this extension. Please use v1.46.1 or earlier.
