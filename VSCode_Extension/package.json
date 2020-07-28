@@ -34,7 +34,7 @@
     },
     "devDependencies": {
         "@types/thrift": "^0.10.9",
-        "@types/vscode": "^1.46.0",
+        "@types/vscode": "^1.41.0",
         "tslint": "^5.16.0",
         "typescript": "^3.9.6",
         "vscode-test": "^1.4.0"
