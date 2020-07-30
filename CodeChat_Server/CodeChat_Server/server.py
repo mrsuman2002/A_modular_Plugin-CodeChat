@@ -100,9 +100,10 @@ class CodeChatHandler:
 <!DOCTYPE html>
 <html>
     <head>
-        <script>window.location = "{}";</script>
     </head>
-    <body></body>
+    <body style="margin: 0px; padding: 0px; overflow: hidden">
+        <iframe src="{}" style="width: 100%; height: 100vh; border: none"></iframe>
+    </body>
 </html>""".format(
                 url
             )
