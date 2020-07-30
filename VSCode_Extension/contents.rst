@@ -18,8 +18,6 @@ Installation
 ============
 First, `install the CodeChat extension for Visual Studio Code <https://code.visualstudio.com/docs/introvideos/extend>`_. Then, `install the CodeChat server <../CodeChat_Server/contents>`, which performs all the back-end work and is required for the extension to work. Optionally, install additional external renderers such as Pandoc, Doxygen, etc.
 
-See `use CodeChat`.
-
 
 .. _use CodeChat:
 
@@ -55,20 +53,10 @@ Debugging the extension
 Notes
 =====
 *   The NPM Thrift 0.13.0 release is `broken <https://github.com/apache/thrift/pull/1947>`_. Don't install it.
-*   You can also reload (``Ctrl+R`` or ``Cmd+R`` on Mac) the VS Code window with your extension to load your changes.
-*   You can open the full set of our API when you open the file ``node_modules/vscode/vscode.d.ts``.
 
 Tests
 -----
 TODO: tests are missing.
-
-*   Open the debug viewlet (``Ctrl+Shift+D`` or ``Cmd+Shift+D`` on Mac) and from the launch configuration dropdown pick ``Launch Tests``.
-*   Press ``F5`` to run the tests in a new window with your extension loaded.
-*   See the output of the test result in the debug console.
-*   Make changes to ``test/extension.test.js`` or create new test files inside the ``test`` folder.
-
-    *   By convention, the test runner will only consider files matching the name pattern ``**.test.js``.
-    *   You can create folders inside the ``test`` folder to structure your tests any way you want.
 
 
 Contents
