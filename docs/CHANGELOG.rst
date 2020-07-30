@@ -15,6 +15,10 @@ Change Log
 
     -   No changes yet.
 
+-   0.0.12, 29-Jul-2020:
+
+    -   Change method used to load the CodeChat client to work with VSCode 1.47.
+
 -   0.0.11, 28-Jul-2020:
 
     -   Add type hints.
