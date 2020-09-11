@@ -40,7 +40,6 @@ To install from source:
 *   Install this extension's manifest (`package.json <https://code.visualstudio.com/api/references/extension-manifest>`_): from this directory, open a command prompt/terminal then execute::
 
         npm install
-        npm install -g typescript
         npm build
 
 Debugging the extension
