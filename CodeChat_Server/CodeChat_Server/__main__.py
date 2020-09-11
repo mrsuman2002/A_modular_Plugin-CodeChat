@@ -35,11 +35,14 @@
 #
 # Local application imports
 # -------------------------
-from .server import run_servers
-
-
+# None. Delay the import below until after print runs, since the import takes a while to complete.
+#
+#
 # Main
 # ====
 # Run both servers.
 if __name__ == "__main__":
+    # This file takes a long time to load and run. Print a status message as it starts.
+    print("Loading...")
+    from .server import run_servers
     run_servers()
