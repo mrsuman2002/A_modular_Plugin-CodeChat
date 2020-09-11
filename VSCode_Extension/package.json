@@ -1,6 +1,6 @@
 {
     "name": "codechat",
-    "version": "0.0.12",
+    "version": "0.0.13",
     "publisher": "CodeChat",
     "engines": {
         "vscode": "^1.41.0"
@@ -33,10 +33,10 @@
         "node-int64": "^0.4.0"
     },
     "devDependencies": {
-        "@types/thrift": "^0.10.9",
+        "@types/thrift": "^0.10.10",
         "@types/vscode": "^1.41.0",
         "tslint": "^5.16.0",
-        "typescript": "^3.9.6",
+        "typescript": "^3.9.7",
         "vscode-test": "^1.4.0"
     },
     "scripts": {
