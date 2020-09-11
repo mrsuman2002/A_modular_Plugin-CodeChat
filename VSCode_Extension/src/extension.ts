@@ -104,11 +104,34 @@ export function activate(context: vscode.ExtensionContext) {
                 timeout: 5,
             });
 
+            var was_error: boolean = false;
+
             connection.on('error', function(err) {
-                vscode.window.showErrorMessage(`CodeChat: error connecting: ${err.message}`);
-                connection?.destroy();
+                was_error = true;
+                // TODO: quote the error message.
+                var msg = `Error communicating with the CodeChat server: ${err.message}</p><p>Re-run the CodeChat extension to restart it.`;
+                if (panel !== undefined) {
+                    // TODO: Escape the error message.
+                    panel.webview.html = `<html><h1>CodeChat</h1><p>${msg}</p></html>`;
+                } else {
+                    vscode.window.showErrorMessage(msg);
+                }
+                // The close event will be `emitted next <https://nodejs.org/api/net.html#net_event_error_1>`_; that will handle cleanup.
+            });
+
+            connection.on('close', (hadError) => {
+                // If there was an error, the event handler above already provided the message. Note: the `parameter hadError <https://nodejs.org/api/net.html#net_event_close_1>`_ doesn't seem to work here, so I'm using the ``was_error`` flag instead.
+                if (!was_error) {
+                    was_error = false;
+                    var msg = "The connection to the CodeChat server was closed. Re-run the CodeChat extension to restart it.";
+                    if (panel !== undefined) {
+                        panel.webview.html = `<html><h1>CodeChat</h1><p>${msg}</p></html>`;
+                    } else {
+                        vscode.window.showInformationMessage(msg);
+                    }
+                }
                 connection = undefined;
-                // Since there's a connection error, we can't gracefully shut down the client. Simply mark it as undefined so it will be re-created.
+                // Since the connection is closed, we can't gracefully shut down the client. Simply mark it as undefined so it will be re-created.
                 client = undefined;
                 id = undefined;
             });
@@ -132,6 +155,8 @@ export function deactivate() {
     stop_client();
     connection?.end();
     connection = undefined;
+    client = undefined;
+    id = undefined;
 }
 
 
