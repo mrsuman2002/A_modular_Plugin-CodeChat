@@ -686,10 +686,15 @@ class RenderManager:
         return future.result()
 
     async def _shutdown(self):
+        print("Render manager shutting down...")
         self._is_shutdown = True
         # Stop each client. This will tell the web client to shut down and also delete the render client.
         for id, cs in self._client_state_dict.items():
             cs.q.put(GetResultReturn(GetResultType.command, "shutdown"))
+        # A special case: there are no clients currently. Then, the code above did nothing, so shut the workers down now.
+        if len(self._client_state_dict) == 0:
+            for i in range(self._num_workers):
+                await self._job_q.put(None)
 
     # Start the render manager. This typically never returns.
     def run(self, *args, debug: bool = True) -> None:
@@ -701,6 +706,7 @@ class RenderManager:
         # Let the user know that the server is now ready -- this is the last piece of it to start.
         print("Ready.")
         asyncio.run(self._run(*args), debug=debug)
+        print("Render manager is shut down.")
 
     # Run the rendering thread with the given number of workers.
     async def _run(self, num_workers: int = 1) -> None:
@@ -714,15 +720,16 @@ class RenderManager:
         self._loop = asyncio.get_running_loop()
         self._is_shutdown = False
 
-        await asyncio.gather(*[self._worker() for i in range(num_workers)])
+        await asyncio.gather(*[self._worker(i) for i in range(num_workers)])
 
     # Process items in the render queue.
-    async def _worker(self) -> None:
+    async def _worker(self, worker_index: int) -> None:
         while True:
             # Get an item to process.
             id = await self._job_q.get()
             # Check for shutdown.
             if id is None:
+                print(f"Render worker {worker_index} is shut down.")
                 break
             cs = self._client_state_dict[id]
             assert cs._in_job_q

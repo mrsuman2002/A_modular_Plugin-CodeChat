@@ -13,7 +13,8 @@ Change Log
 **********
 -   `Github master <https://github.com/bjones1/CodeChat_system.git>`_:
 
-    -   No changes yet.
+    -   Additional shutdown fixes.
+    -   Server instructs web client to never cache files.
 
 -   0.0.13, 11-Aug-2020:
 

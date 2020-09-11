@@ -254,15 +254,24 @@ def client_data(id: int, url_path: str) -> Union[str, Response]:
     # If we have rendered HTML, return it.
     if html:
         assert isinstance(html, str)
-        return html
+        response = make_response(html)
+        # Don't allow the browser to cache files. See the `Flask docs <https://flask.palletsprojects.com/en/1.1.x/api/#flask.Request.cache_control>`_ and `MDN docs <https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#Directives>`_. TODO: allow caching of static files (but how do we know which files are static?)
+        response.cache_control.no_store = True
+        return response
 
     # If this render was a project, then ``html`` is None. In this case, the rendered HTML is already on disk at ``url_path``; however, don't allow Flask to cache this, since it changes with each edit.
-    send_file_kwargs = dict(cache_timeout=0) if html is None else {}
+    if html is None:
+        send_file_kwargs = dict(cache_timeout=0)
+    else:
+        send_file_kwargs = {}
 
     # Send a static file or a 404 if nothing was found.
     try:
         # TODO SECURITY: if a web app, need to limit the base directory to wherever projects are placed on disk.
-        return send_file(url_path, **send_file_kwargs)  # type: ignore
+        response = make_response(send_file(url_path, **send_file_kwargs))  # type: ignore
+        # See same code above.
+        response.cache_control.no_store = True
+        return response
     except (FileNotFoundError, PermissionError):
         abort(404)
 
