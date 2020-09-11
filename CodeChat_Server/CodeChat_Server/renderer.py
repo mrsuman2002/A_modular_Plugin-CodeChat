@@ -682,9 +682,7 @@ class RenderManager:
 
     # Shut down the render manager.
     def shutdown(self):
-        future = asyncio.run_coroutine_threadsafe(
-            self._shutdown(), self._loop
-        )
+        future = asyncio.run_coroutine_threadsafe(self._shutdown(), self._loop)
         return future.result()
 
     async def _shutdown(self):
@@ -694,7 +692,7 @@ class RenderManager:
             cs.q.put(GetResultReturn(GetResultType.command, "shutdown"))
 
     # Start the render manager. This typically never returns.
-    def run(self, *args, debug: bool=True) -> None:
+    def run(self, *args, debug: bool = True) -> None:
         # The default Windows event loop doesn't support asyncio subprocesses.
         is_win = sys.platform.startswith("win")
         if is_win:

@@ -87,7 +87,7 @@ class CodeChatHandler:
             print("  => {}".format(ret))
             return ret
         if id < 0:
-            ret = RenderClientReturn("", -1, "Server is shutting down.".format(id))
+            ret = RenderClientReturn("", -1, "Server is shutting down.")
             print("  => {}".format(ret))
             return ret
 
@@ -203,7 +203,9 @@ def editor_plugin_server() -> None:
     # This server spawns a thread per connection.
     ## server = TServer.TThreadedServer(processor, transport, tfactory, pfactory)
     # Spawns up to 10 threads by default, then uses those. Mark these threads as daemon, so they will be terminated on program exit.
-    server = TServer.TThreadPoolServer(processor, transport, tfactory, pfactory, daemon=True)
+    server = TServer.TThreadPoolServer(
+        processor, transport, tfactory, pfactory, daemon=True
+    )
     # For simplicity, we can use:
     # server = TServer.TSimpleServer(processor, transport, tfactory, pfactory)
     server.serve()
