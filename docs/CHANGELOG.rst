@@ -15,6 +15,11 @@ Change Log
 
     -   No changes yet.
 
+-   0.0.13, 11-Aug-2020:
+
+    -   Improved VSClient error handling.
+    -   CodeChat server can now shut down gracefully.
+
 -   0.0.12, 29-Jul-2020:
 
     -   Change method used to load the CodeChat client to work with VSCode 1.47.
