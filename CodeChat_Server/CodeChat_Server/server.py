@@ -31,6 +31,7 @@
 # Standard library
 # ----------------
 import threading
+import time
 from typing import Union
 import webbrowser
 
@@ -50,6 +51,8 @@ from thrift.server import TServer  # type: ignore
 from thrift.transport import TTransport  # type: ignore
 from thrift.transport import TSocket
 from thrift.protocol import TBinaryProtocol
+from werkzeug.serving import make_server
+
 
 # Local application imports
 # -------------------------
@@ -65,14 +68,9 @@ from .gen_py.CodeChat_Services.ttypes import (
 
 # Service provider
 # ================
-# This file takes a long time to load and run. Print a status message as it starts.
-print("Loading...")
-
-
 # This class implements both the EditorPlugin and CodeChat client services.
 class CodeChatHandler:
     def __init__(self):
-        print("__init__()")
         self.render_manager: renderer.RenderManager
 
     # _`get_client`: Return the HTML for a web client.
@@ -86,6 +84,10 @@ class CodeChatHandler:
         # Get the next ID.
         if id is None:
             ret = RenderClientReturn("", -1, "Duplicate id {}".format(id))
+            print("  => {}".format(ret))
+            return ret
+        if id < 0:
+            ret = RenderClientReturn("", -1, "Server is shutting down.".format(id))
             print("  => {}".format(ret))
             return ret
 
@@ -200,11 +202,10 @@ def editor_plugin_server() -> None:
 
     # This server spawns a thread per connection.
     ## server = TServer.TThreadedServer(processor, transport, tfactory, pfactory)
-    # Spawns up to 10 threads by default, then uses those.
-    server = TServer.TThreadPoolServer(processor, transport, tfactory, pfactory)
+    # Spawns up to 10 threads by default, then uses those. Mark these threads as daemon, so they will be terminated on program exit.
+    server = TServer.TThreadPoolServer(processor, transport, tfactory, pfactory, daemon=True)
     # For simplicity, we can use:
     # server = TServer.TSimpleServer(processor, transport, tfactory, pfactory)
-    print("Starting the plugin server...")
     server.serve()
 
 
@@ -264,22 +265,33 @@ def client_data(id: int, url_path: str) -> Union[str, Response]:
         abort(404)
 
 
+# Main code
+# =========
 # Run both servers. This does not (usually) return.
 def run_servers() -> None:
-    # Both servers block when run, so place them in a thread.
-    editor_plugin_thread = threading.Thread(target=editor_plugin_server)
+    # Both servers block when run, so place them in a thread. Mark the Thrift server as a daemon, so it will be killed when the program shuts down.
+    editor_plugin_thread = threading.Thread(target=editor_plugin_server, daemon=True)
     editor_plugin_thread.start()
 
-    # While we can also pass ``kwargs=dict(debug=True)``, this doesn't work since Flask isn't running in the main thread.
-    client_thread = threading.Thread(target=client_app.run)
-    client_thread.start()
+    # Taken from https://stackoverflow.com/a/45017691.
+    flask_server_thread = threading.Thread(target=client_app.run, daemon=True)
+    flask_server_thread.start()
 
-    # Start the render loop in the main thread.
+    # Start the render loop in another thread.
     render_manager = renderer.RenderManager()
     handler.render_manager = render_manager
-    # TODO: Remove ``debug=True`` for production code.
-    render_manager.run(debug=True)
+    render_manager_thread = threading.Thread(target=render_manager.run)
+    render_manager_thread.start()
 
-    # Wait forever...
-    editor_plugin_thread.join()
-    client_thread.join()
+    # Run the servers in threads until a user-requested shutdown occurs.
+    try:
+        while True:
+            time.sleep(100)
+    except KeyboardInterrupt:
+        pass
+
+    print("Shutting down...")
+    # This will prevent future editor or web requests from being serviced.
+    render_manager.shutdown()
+    # When this is done, the Flask server and editor plugin sever can be shut down, since they're idle. Since they're daemons, they'll be shut down by exiting main.
+    render_manager_thread.join()

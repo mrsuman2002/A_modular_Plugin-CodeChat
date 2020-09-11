@@ -601,6 +601,8 @@ class RenderManager:
         return future.result()
 
     async def _create_client(self) -> int:
+        if self._is_shutdown:
+            return -1
         self._last_id += 1
         id = self._last_id
         if id in self._client_state_dict:
@@ -678,17 +680,33 @@ class RenderManager:
             else False
         )
 
+    # Shut down the render manager.
+    def shutdown(self):
+        future = asyncio.run_coroutine_threadsafe(
+            self._shutdown(), self._loop
+        )
+        return future.result()
+
+    async def _shutdown(self):
+        self._is_shutdown = True
+        # Stop each client. This will tell the web client to shut down and also delete the render client.
+        for id, cs in self._client_state_dict.items():
+            cs.q.put(GetResultReturn(GetResultType.command, "shutdown"))
+
     # Start the render manager. This typically never returns.
-    def run(self, *args, debug: bool = False) -> None:
+    def run(self, *args, debug: bool=True) -> None:
         # The default Windows event loop doesn't support asyncio subprocesses.
         is_win = sys.platform.startswith("win")
         if is_win:
             asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 
+        # Let the user know that the server is now ready -- this is the last piece of it to start.
+        print("Ready.")
         asyncio.run(self._run(*args), debug=debug)
 
     # Run the rendering thread with the given number of workers.
     async def _run(self, num_workers: int = 1) -> None:
+        self._num_workers = num_workers
         # Create a queue of jobs for the renderer to process. This must be created from within the main loop to avoid ``got Future <Future pending> attached to a different loop`` errors.
         self._job_q: asyncio.Queue = asyncio.Queue()
         # Keep a dict of id: ClientState for each client.
@@ -696,6 +714,7 @@ class RenderManager:
         # The next ID will be 0. Use the lock below to establish ownership before writing this.
         self._last_id = -1
         self._loop = asyncio.get_running_loop()
+        self._is_shutdown = False
 
         await asyncio.gather(*[self._worker() for i in range(num_workers)])
 
@@ -704,6 +723,9 @@ class RenderManager:
         while True:
             # Get an item to process.
             id = await self._job_q.get()
+            # Check for shutdown.
+            if id is None:
+                break
             cs = self._client_state_dict[id]
             assert cs._in_job_q
             # Every item in the queue should have some work to do.
@@ -714,12 +736,15 @@ class RenderManager:
             # If the client should be deleted, ignore all other requests.
             if cs._is_deleting:
                 del self._client_state_dict[id]
+                # When shutdown is complete, end all the workers.
+                if self._is_shutdown and len(self._client_state_dict) == 0:
+                    for i in range(self._num_workers):
+                        await self._job_q.put(None)
             else:
                 # Sync first.
                 # TODO: sync.
 
                 # Render next.
-                #
                 await convert_file(
                     cs._to_render_editor_text, cs._to_render_file_path, cs
                 )
