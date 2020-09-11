@@ -37,6 +37,9 @@ build/
 dist/
 *.egg-info/
 
+# Mypy-generated files
+.mypy_cache/
+
 # Others
 sphinx-enki-info.txt
 thrift*.exe
