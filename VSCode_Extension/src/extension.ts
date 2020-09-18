@@ -109,13 +109,7 @@ export function activate(context: vscode.ExtensionContext) {
             connection.on('error', function(err) {
                 was_error = true;
                 // TODO: quote the error message.
-                var msg = `Error communicating with the CodeChat server: ${err.message}</p><p>Re-run the CodeChat extension to restart it.`;
-                if (panel !== undefined) {
-                    // TODO: Escape the error message.
-                    panel.webview.html = `<html><h1>CodeChat</h1><p>${msg}</p></html>`;
-                } else {
-                    vscode.window.showErrorMessage(msg);
-                }
+                show_error(`Error communicating with the CodeChat server: ${err.message}</p><p>Re-run the CodeChat extension to restart it.`);
                 // The close event will be `emitted next <https://nodejs.org/api/net.html#net_event_error_1>`_; that will handle cleanup.
             });
 
@@ -123,12 +117,7 @@ export function activate(context: vscode.ExtensionContext) {
                 // If there was an error, the event handler above already provided the message. Note: the `parameter hadError <https://nodejs.org/api/net.html#net_event_close_1>`_ doesn't seem to work here, so I'm using the ``was_error`` flag instead.
                 if (!was_error) {
                     was_error = false;
-                    var msg = "The connection to the CodeChat server was closed. Re-run the CodeChat extension to restart it.";
-                    if (panel !== undefined) {
-                        panel.webview.html = `<html><h1>CodeChat</h1><p>${msg}</p></html>`;
-                    } else {
-                        vscode.window.showInformationMessage(msg);
-                    }
+                    show_error("The connection to the CodeChat server was closed. Re-run the CodeChat extension to restart it.");
                 }
                 connection = undefined;
                 // Since the connection is closed, we can't gracefully shut down the client. Simply mark it as undefined so it will be re-created.
@@ -146,6 +135,17 @@ export function activate(context: vscode.ExtensionContext) {
             }
         }
     }));
+}
+
+
+// Provide an error message in the panel if possible.
+function show_error(message: string) : void {
+    if (panel !== undefined) {
+        // TODO: Escape the error message.
+        panel.webview.html = `<html><h1>CodeChat</h1><p>${message}</p></html>`;
+    } else {
+        vscode.window.showErrorMessage(message);
+    }
 }
 
 
@@ -176,7 +176,7 @@ function get_render_client(context: vscode.ExtensionContext, connection: thrift.
             client_location,
             function(err, render_client_return) {
                 if (err !== null) {
-                    vscode.window.showErrorMessage(`CodeChat: communication error getting render client: ${err}`);
+                    show_error(`Communication error getting render client: ${err}`);
                     stop_client();
                 } else if (render_client_return.error === "") {
                     // For a browser location, the panel shouldn't exist and the HTML should be empty. Otherwise, assign the HTML to the panel.
@@ -211,7 +211,7 @@ function get_render_client(context: vscode.ExtensionContext, connection: thrift.
                     // Do an initial render.
                     start_render();
                 } else {
-                    vscode.window.showErrorMessage(`CodeChat: error getting render client: ${render_client_return.error}`);
+                    show_error(`Error getting render client: ${render_client_return.error}`);
                     stop_client();
                 }
             }
@@ -236,9 +236,9 @@ function start_render() {
                     vscode.window.activeTextEditor!.document.isDirty,
                     (err, start_render_return) => {
                         if (err !== null) {
-                            vscode.window.showErrorMessage(`CodeChat: communication error when rendering: ${err}`)
+                            show_error(`Communication error when rendering: ${err}`)
                         } else if (start_render_return !== "") {
-                            vscode.window.showErrorMessage(`CodeChat: error when rendering: ${start_render_return}`);
+                            show_error(`Error when rendering: ${start_render_return}`);
                         }
                     }
                 );
@@ -267,9 +267,9 @@ function stop_client() {
             id,
             function(err, stop_client_return) {
                 if (err !== null) {
-                    vscode.window.showErrorMessage(`CodeChat: communication error when stopping the client: ${err}`)
+                    show_error(`Communication error when stopping the client: ${err}`)
                 } else if (stop_client_return !== "") {
-                    vscode.window.showErrorMessage(`CodeChat: error when stopping the client: ${stop_client_return}`);
+                    show_error(`Error when stopping the client: ${stop_client_return}`);
                 }
             }
         );
