@@ -31,6 +31,7 @@
 # Standard library
 # ----------------
 import threading
+from pathlib import PurePosixPath
 import time
 from typing import Union
 import webbrowser
@@ -269,8 +270,11 @@ def client_data(id: int, url_path: str) -> Union[str, Response]:
     try:
         # TODO SECURITY: if a web app, need to limit the base directory to wherever projects are placed on disk.
         response = make_response(send_file(url_path, **send_file_kwargs))  # type: ignore
-        # See same code above.
-        response.cache_control.no_store = True
+        # By default, allow caching on everything but HTML files.
+        dont_cache = PurePosixPath(url_path).suffix in (".htm", ".html")
+        if dont_cache:
+            # See same code above.
+            response.cache_control.no_store = True
         return response
     except (FileNotFoundError, PermissionError):
         abort(404)
