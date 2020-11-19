@@ -30,11 +30,12 @@
     ],
     "dependencies": {
         "thrift": "^0.12.0",
-        "node-int64": "^0.4.0"
+        "escape-html": "^1.0.3"
     },
     "devDependencies": {
         "@types/thrift": "^0.10.10",
         "@types/vscode": "^1.41.0",
+        "@types/escape-html": "^1.0.0",
         "tslint": "^5.16.0",
         "typescript": "^3.9.7",
         "vscode-test": "^1.4.0"

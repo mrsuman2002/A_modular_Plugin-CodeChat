@@ -29,6 +29,7 @@ import thrift = require('thrift');
 import assert = require('assert');
 import EditorPlugin = require('./gen-nodejs/EditorPlugin');
 import ttypes = require('./gen-nodejs/CodeChat_Services_types');
+import escape = require('escape-html');
 
 
 // Globals
@@ -41,6 +42,7 @@ let connection: thrift.Connection | undefined = undefined;
 let client: EditorPlugin.Client | undefined = undefined;
 // Where the webclient resides: ``html`` for a webview panel embedded in VSCode; ``browser`` to use an external browser.
 const client_location: ttypes.CodeChatClientLocation = ttypes.CodeChatClientLocation.html;
+
 // A unique instance of these variables is required for each CodeChat panel. However, this code doesn't have a good UI way to deal with multiple panels, so only one is supported at this time.
 let id: number | undefined = undefined;
 let panel: vscode.WebviewPanel | undefined = undefined;
@@ -49,23 +51,21 @@ let idle_timer: NodeJS.Timeout | undefined = undefined;
 
 // Activation
 // ==========
-// This is invoked when the extension is activated.
-//
-// Ideally, we could create one CodeChat panel per window, which would render whatever the focused editor in that window contained. However, there doesn't seem to be any way to determine the current window.
+// This is invoked when the extension is activated. It either creates a new CodeChat instance or reveals the currently running one.
 export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.commands.registerCommand('extension.codeChat', () => {
 
         // Create or reveal the webview panel.
         if (client_location === ttypes.CodeChatClientLocation.html) {
             if (panel !== undefined) {
-                // Since the panel already exists, make it visible.
-                panel.reveal();
+                // As below, don't take the focus when revealing.
+                panel.reveal(undefined, true);
             } else {
                 // Create a webview panel.
                 panel = vscode.window.createWebviewPanel(
                     "CodeChat", "CodeChat",
                     {
-                        // Without this, the focus becomes this webview, which allows the code window open before this command was execute to retain the focus and be immediately rendered.
+                        // Without this, the focus becomes this webview; seeting this allows the code window open before this command was executed to retain the focus and be immediately rendered.
                         preserveFocus: true,
                         // Put this in the a column beside the current column.
                         viewColumn: vscode.ViewColumn.Beside,
@@ -81,7 +81,7 @@ export function activate(context: vscode.ExtensionContext) {
                 }));
             }
         } else {
-            // Provide a way to restart the client.
+            // Provide a way to restart the client in the external browser.
             stop_client();
         }
 
@@ -104,12 +104,11 @@ export function activate(context: vscode.ExtensionContext) {
                 timeout: 5,
             });
 
-            var was_error: boolean = false;
+            let was_error: boolean = false;
 
             connection.on('error', function(err) {
                 was_error = true;
-                // TODO: quote the error message.
-                show_error(`Error communicating with the CodeChat server: ${err.message}</p><p>Re-run the CodeChat extension to restart it.`);
+                show_error(`Error communicating with the CodeChat server: ${escape(err.message)}. Re-run the CodeChat extension to restart it.`);
                 // The close event will be `emitted next <https://nodejs.org/api/net.html#net_event_error_1>`_; that will handle cleanup.
             });
 
@@ -120,9 +119,10 @@ export function activate(context: vscode.ExtensionContext) {
                     show_error("The connection to the CodeChat server was closed. Re-run the CodeChat extension to restart it.");
                 }
                 connection = undefined;
-                // Since the connection is closed, we can't gracefully shut down the client. Simply mark it as undefined so it will be re-created.
+                // Since the connection is closed, we can't gracefully shut down the client via `stop_client()`. Simply mark it as undefined so it will be re-created.
                 client = undefined;
                 id = undefined;
+                idle_timer = undefined;
             });
 
             connection.on('connect', () => {
@@ -139,17 +139,18 @@ export function activate(context: vscode.ExtensionContext) {
 
 
 // Provide an error message in the panel if possible.
-function show_error(message: string) : void {
+function show_error(message: string) {
     if (panel !== undefined) {
-        // TODO: Escape the error message.
-        panel.webview.html = `<html><h1>CodeChat</h1><p>${message}</p></html>`;
+        panel.webview.html = `<html><h1>CodeChat</h1><p>${escape(message)}</p></html>`;
     } else {
         vscode.window.showErrorMessage(message);
     }
 }
 
 
+// On deactivation, close everything down.
 export function deactivate() {
+    idle_timer = undefined;
     panel?.dispose();
     panel = undefined;
     stop_client();
@@ -220,6 +221,7 @@ function get_render_client(context: vscode.ExtensionContext, connection: thrift.
 }
 
 
+// This is called after an event such as an edit, or when the CodeChat panel becomes visible. Wait a bit in case any other events occur, then request a render.
 function start_render() {
     if (can_render()) {
         // Render after some inactivity: cancel any existing timer, then ...
@@ -247,9 +249,10 @@ function start_render() {
     }
 }
 
-// Only render if an editor is active, we have a valid render client, and the webview is visible.
+// Only render if the window and editor are active, we have a valid render client, and the webview is visible.
 function can_render(): boolean {
     return (
+        vscode.window.state.focused &&
         (vscode.window.activeTextEditor !== undefined) &&
         (id !== undefined) &&
         (client !== undefined) &&
@@ -277,4 +280,9 @@ function stop_client() {
 
     client = undefined;
     id = undefined;
+
+    // Shut the timer down after the client is undefined, to ensure it can't be started again by a call to `start_render()`.
+    if (idle_timer !== undefined) {
+        clearTimeout(idle_timer);
+    }
 }
