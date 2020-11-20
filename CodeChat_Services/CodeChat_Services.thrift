@@ -81,7 +81,7 @@ service EditorPlugin  {
         2: string path,
         // _`id`: The ID of the client to render in.
         3: i32 id,
-        // True if the document is dirty (modified), fale if clean.
+        // True if the document is dirty (modified), false if clean.
         4: bool is_dirty
     ),
 
