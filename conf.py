@@ -195,6 +195,8 @@ exclude_patterns = [
     # Misc files.
     'Thumbs.db',
     '.DS_Store',
+    '.pytest_cache',
+    '**/.mypy_cache',
     # **CodeChat notes:**
     #
     # By default, Enki will instruct Sphinx to place all Sphinx output in
