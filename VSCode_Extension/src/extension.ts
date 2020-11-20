@@ -19,11 +19,17 @@
 // *****************************************************
 // |docname| - The CodeChat Visual Studio Code extension
 // *****************************************************
-// This extension creates a webview, then uses CodeChat services to render editor text in that webview.
+// This extension creates a webview (see `activation/deactivation`_), then uses `CodeChat services`_ to render editor text in that webview.
+//
+// Terminology:
+//
+// -    The ``connection`` is a Thrift network connection to the CodeChat server.
+// -    The ``client`` is the Thrift client using that network connection.
+// -    The render client (identified by a unique ``id``) is obtained using the ``client``, and can be used to render code to HTML.
 //
 //
-// Requires
-// ========
+// Requirements
+// ============
 import vscode = require('vscode');
 import thrift = require('thrift');
 import assert = require('assert');
@@ -44,13 +50,17 @@ let client: EditorPlugin.Client | undefined = undefined;
 const client_location: ttypes.CodeChatClientLocation = ttypes.CodeChatClientLocation.html;
 
 // A unique instance of these variables is required for each CodeChat panel. However, this code doesn't have a good UI way to deal with multiple panels, so only one is supported at this time.
+//
+// The id of this render client, assigned by the CodeChat server.
 let id: number | undefined = undefined;
+// The webview panel used to display the CodeChat client
 let panel: vscode.WebviewPanel | undefined = undefined;
+// A timer used to wait for additional events (keystrokes, etc.) before performing a render.
 let idle_timer: NodeJS.Timeout | undefined = undefined;
 
 
-// Activation
-// ==========
+// Activation/deactivation
+// =======================
 // This is invoked when the extension is activated. It either creates a new CodeChat instance or reveals the currently running one.
 export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.commands.registerCommand('extension.codeChat', () => {
@@ -119,7 +129,7 @@ export function activate(context: vscode.ExtensionContext) {
                     show_error("The connection to the CodeChat server was closed. Re-run the CodeChat extension to restart it.");
                 }
                 connection = undefined;
-                // Since the connection is closed, we can't gracefully shut down the client via `stop_client()`. Simply mark it as undefined so it will be re-created.
+                // Since the connection is closed, we can't gracefully shut down the client via ``stop_client()``. Simply mark it as undefined so it will be re-created.
                 client = undefined;
                 id = undefined;
                 idle_timer = undefined;
@@ -138,19 +148,8 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 
-// Provide an error message in the panel if possible.
-function show_error(message: string) {
-    if (panel !== undefined) {
-        panel.webview.html = `<html><h1>CodeChat</h1><p>${escape(message)}</p></html>`;
-    } else {
-        vscode.window.showErrorMessage(message);
-    }
-}
-
-
 // On deactivation, close everything down.
 export function deactivate() {
-    idle_timer = undefined;
     panel?.dispose();
     panel = undefined;
     stop_client();
@@ -249,19 +248,6 @@ function start_render() {
     }
 }
 
-// Only render if the window and editor are active, we have a valid render client, and the webview is visible.
-function can_render(): boolean {
-    return (
-        vscode.window.state.focused &&
-        (vscode.window.activeTextEditor !== undefined) &&
-        (id !== undefined) &&
-        (client !== undefined) &&
-        // If rendering in an external browser, the CodeChat panel doesn't need to be visible.
-        ((client_location === ttypes.CodeChatClientLocation.browser) ||
-        ((panel !== undefined) && panel.visible))
-    );
-}
-
 
 // Gracefully shut down the render client if possible. Shut down the client as well.
 function stop_client() {
@@ -281,8 +267,34 @@ function stop_client() {
     client = undefined;
     id = undefined;
 
-    // Shut the timer down after the client is undefined, to ensure it can't be started again by a call to `start_render()`.
+    // Shut the timer down after the client is undefined, to ensure it can't be started again by a call to ``start_render()``.
     if (idle_timer !== undefined) {
         clearTimeout(idle_timer);
     }
+}
+
+
+// Supporting functions
+// ====================
+// Provide an error message in the panel if possible.
+function show_error(message: string) {
+    if (panel !== undefined) {
+        panel.webview.html = `<html><h1>CodeChat</h1><p>${escape(message)}</p></html>`;
+    } else {
+        vscode.window.showErrorMessage(message);
+    }
+}
+
+
+// Only render if the window and editor are active, we have a valid render client, and the webview is visible.
+function can_render(): boolean {
+    return (
+        vscode.window.state.focused &&
+        (vscode.window.activeTextEditor !== undefined) &&
+        (id !== undefined) &&
+        (client !== undefined) &&
+        // If rendering in an external browser, the CodeChat panel doesn't need to be visible.
+        ((client_location === ttypes.CodeChatClientLocation.browser) ||
+        ((panel !== undefined) && panel.visible))
+    );
 }
