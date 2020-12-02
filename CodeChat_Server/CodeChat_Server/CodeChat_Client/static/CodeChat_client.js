@@ -19,7 +19,7 @@
 // ***************************************************************************
 // |docname| - Client-side code implementing the logic for the CodeChat client
 // ***************************************************************************
-// TODO.
+// Given an ID to use, run the CodeChat client.
 function run_client(id)
 {
     // Create the client to communiate with the CodeChat server.
