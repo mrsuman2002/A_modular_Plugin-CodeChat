@@ -186,16 +186,15 @@ function scroll_to_bottom(element) {
 }
 
 
-// Parse the error output for errors and warnings.
-function parse_for_errors(errors_html) {
-    // This code parses the error string to determine get the number of
-    // warnings and errors. Common docutils error messages read::
+// This regex parses the error string to determine get the number of warnings and errors.
+const error_regex = new RegExp(
+    // Common docutils error messages read::
     //
     //  <string>:1589: (ERROR/3) Unknown interpreted text role "ref".
     //
     //  X:\ode.py:docstring of sympy:5: (ERROR/3) Unexpected indentation.
     //
-    // and common sphinx errors read::
+    // and common Sphinx errors read::
     //
     //  X:\SVM_train.m.rst:2: SEVERE: Title overline & underline mismatch.
     //
@@ -206,49 +205,41 @@ function parse_for_errors(errors_html) {
     //  In Sphinx 1.6.1:
     //  X:\file.rst: WARNING: document isn't included in any toctree
     //
+    // The CodeChat renderer also produces `error messages <_checkModificationTime>`_ formatted in a similar way so they'll be identified by the same regex::
+    //
+    //  X:\ode.py:: ERROR: CodeChat renderer - source file older than the html file X:\_build\html\ode.py.
+    //
     // Each error/warning occupies one line. The following `regular
-    // expression
-    // <https://docs.python.org/2/library/re.html#regular-expression-syntax>`_
-    // is designed to find the error position (1589/None) and message
-    // type (ERROR/WARNING/SEVERE). Extra spaces are added to show which
-    // parts of the example string it matches. For more details about
-    // Python regular expressions, refer to the
-    // `re docs <https://docs.python.org/2/library/re.html>`_.
+    // expression <https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions>`_ is designed to find the error position (1589/None) and message type (ERROR/WARNING/SEVERE). Extra spaces are added to show which parts of the example string it matches.
     //
-    // Examining this expression one element at a time::
+    // Examining the following expression one element at a time::
     //
     //   <string>:1589:        (ERROR/3)Unknown interpreted text role "ref".
-    let errPosRe =
-        // The filename is anything up to the colon (but don't include newlines).
-        "^([^:\\n]*)" +
-        // Find the first occurence of a pair of colons, or just a single colon.
-        // Between them there can be numbers or "None" or nothing. For example,
-        // this expression matches the string ":1589:" or string ":None:" or
-        // string "::" or the string ":". Next::
-        ":(\\d*|None):? ";
-
-    //   <string>:1589:        (ERROR/3)Unknown interpreted text role "ref".
-    let errTypeRe = "\\(?(WARNING|ERROR|SEVERE)";
-    // Next match the error type, which can
-    // only be "WARNING", "ERROR" or "SEVERE". Before this error type the
-    // message may optionally contain one left parenthesis.
     //
-    let errEolRe = '.*$';
-    // Since one error message occupies one line, a ``*``
-    // quantifier is used along with end-of-line ``$`` to make sure only
-    // the first match is used in each line.
+    // The filename is anything up to the colon. Windows filenames may begin with a drive letter followed by a colon -- don't capture this (the leading ``?:``).
+    "^((?:\\w:)?[^:]*)" +
+    // Find the first occurrence of a pair of colons, or just a single colon. Between them there can be numbers or "None" or nothing. For example, this expression matches the string ":1589:" or string ":None:" or the string "::" or the string ":".
+    ":(\\d*|None):? " +
 
-    let regex = new RegExp(errPosRe + errTypeRe + errEolRe,
-        // The message usually contain multiple lines; search each line
-        // for errors and warnings.
-        "m" +
-        // The global flag must be present to replace all occurrances.
-        "g");
-    // Use findall to return all matches in the message, not just the first.
+    // Next match the error type, which can only be "WARNING", "ERROR" or "SEVERE". Before this error type the message may optionally contain one left parenthesis.
+    "\\(?(WARNING|ERROR|SEVERE)" +
+
+    // Since one error message occupies one line, a ``*`` quantifier is used along with end-of-line ``$`` to make sure only the first match is used in each line.
+    ".*$",
+
+    // The message usually contains multiple lines; search each line for errors and warnings.
+    "m" +
+    // The global flag must be present to replace all occurrences.
+    "g"
+);
+
+
+// Parse the error output for errors and warnings.
+function parse_for_errors(errors_html) {
     let errNum = 0;
     let warningNum = 0;
     // The replacement function is called with the match text then each matched group.
-    errors_html = errors_html.replace(regex, function (match_text, file_path, line, error_string) {
+    errors_html = errors_html.replace(error_regex, function (match_text, file_path, line, error_string) {
         if ((error_string === "ERROR") || (error_string === "SEVERE")) {
             ++errNum;
         } else if (error_string === "WARNING") {

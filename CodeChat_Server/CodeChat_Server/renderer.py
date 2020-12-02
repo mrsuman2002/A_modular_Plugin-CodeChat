@@ -200,8 +200,7 @@ async def _convert_external(
 
     return stdout, stderr
 
-
-# Return False if source_file is newer than output_file; otherwise, return string with an error message.
+# _`_checkModificationTime`: Return False if source_file is newer than output_file; otherwise, return string with an error message.
 def _checkModificationTime(
     source_file: Path, base_html_file: Path, html_ext: str
 ) -> Tuple[str, str]:
@@ -222,14 +221,14 @@ def _checkModificationTime(
         else:
             return (
                 str(html_file),
-                "The file {} is older than the source file {}.".format(
-                    html_file, source_file
+                "{}:: ERROR: CodeChat renderer - source file older than the html file {}.".format(
+                    source_file, html_file
                 ),
             )
     except OSError as e:
         return (
             str(html_file),
-            "Error checking modification time of {}: {}".format(html_file, e),
+            "{}:: ERROR: CodeChat renderer - unable to check modification time of the html file {}: {}.".format(source_file, html_file, e),
         )
 
 
@@ -367,7 +366,7 @@ async def _run_subprocess(
             stderr=asyncio.subprocess.PIPE,
         )
     except Exception as e:
-        return "", "external command:: ERROR:When starting. {}".format(e)
+        return "", ":: ERROR: CodeChat renderer - when starting render process, {}.".format(e)
 
     # Provide a way to send stdout from the process a line at a time to the web client.
     async def stdout_streamer(stdout_stream: asyncio.StreamReader):
@@ -692,7 +691,7 @@ class RenderManager:
                         id
                     )
                 )
-            # Request a `client deletion`_.
+            # Request a client deletion.
             self.delete_client(id)
 
         return ret
