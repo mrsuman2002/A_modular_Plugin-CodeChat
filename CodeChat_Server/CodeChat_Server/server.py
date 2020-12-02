@@ -52,7 +52,6 @@ from thrift.server import TServer  # type: ignore
 from thrift.transport import TTransport  # type: ignore
 from thrift.transport import TSocket
 from thrift.protocol import TBinaryProtocol
-from werkzeug.serving import make_server
 
 
 # Local application imports
@@ -81,7 +80,7 @@ class CodeChatHandler:
                 CodeChatClientLocation._VALUES_TO_NAMES[codeChat_client_location]
             )
         )
-        id = self.render_manager.create_client()
+        id = self.render_manager.threadsafe_create_client()
         # Get the next ID.
         if id is None:
             ret = RenderClientReturn("", -1, "Duplicate id {}".format(id))
@@ -132,7 +131,7 @@ class CodeChatHandler:
                 path, id, is_dirty, text[:80]
             )
         )
-        if self.render_manager.start_render(text, path, id, is_dirty):
+        if self.render_manager.threadsafe_start_render(text, path, id, is_dirty):
             # Indicate success.
             print(" => (empty string)")
             return ""
@@ -141,16 +140,17 @@ class CodeChatHandler:
             print(" => {}".format(ret))
             return ret
 
-    # Pass rendered results back to the web view.
+    # Pass rendered results back to the web view. TODO: this is the only place threadsafe_get_queue is used. Put that in the RenderManager and make the Queue an asyncio one instead.
     def get_result(self, id: int) -> GetResultReturn:
         print("get_result(id={})".format(id))
-        q = self.render_manager.get_queue(id)
+        q = self.render_manager.threadsafe_get_queue(id)
         if not q:
             ret = GetResultReturn(
                 GetResultType.command, "error: unknown client id {}".format(id)
             )
             print("  => {}".format(ret))
             return ret
+        # TODO: if the CodeChat client dies, this will hang and never get the shutdown command. On exit, ensure this case doesn't hang the server.
         ret = q.get()
         # Delete the client if this was a shutdown command.
         if (ret.get_result_type == GetResultType.command) and (ret.text == "shutdown"):
@@ -162,7 +162,7 @@ class CodeChatHandler:
                     )
                 )
             # Request a `client deletion`_.
-            self.render_manager.delete_client(id)
+            self.render_manager.threadsafe_delete_client(id)
         print("  => {}".format(ret))
         return ret
 
@@ -174,13 +174,11 @@ class CodeChatHandler:
     # This method performs the first step; ``get_result`` performs the second.
     def stop_client(self, id: int) -> str:
         print("stop_client(id={})".format(id))
-        q = self.render_manager.get_queue(id)
-        if not q:
+        ok = self.render_manager.threadsafe_shutdown_client(id)
+        if not ok:
             ret = "unknown client {}.".format(id)
             print("  => {}".format(ret))
             return ret
-        # Send the shutdown command to the client.
-        q.put(GetResultReturn(GetResultType.command, "shutdown"))
         # Indicate success.
         print("  => (empty string)")
         return ""
@@ -230,6 +228,7 @@ client_app = Flask(
     template_folder="CodeChat_Client/templates",
 )
 
+
 # The endpoint to get the HTML for the CodeChat client.
 @client_app.route("/client")
 def client_html() -> str:
@@ -251,7 +250,7 @@ def client_service() -> Response:
 @client_app.route("/client/<int:id>/<path:url_path>")
 def client_data(id: int, url_path: str) -> Union[str, Response]:
     # See if we rendered this file.
-    html = handler.render_manager.get_render_results(id, url_path)
+    html = handler.render_manager.threadsafe_get_render_results(id, url_path)
     # If we have rendered HTML, return it.
     if html:
         assert isinstance(html, str)
@@ -307,6 +306,6 @@ def run_servers() -> None:
 
     print("Shutting down...")
     # This will prevent future editor or web requests from being serviced.
-    render_manager.shutdown()
+    render_manager.threadsafe_shutdown()
     # When this is done, the Flask server and editor plugin sever can be shut down, since they're idle. Since they're daemons, they'll be shut down by exiting main.
     render_manager_thread.join()

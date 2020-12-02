@@ -580,8 +580,31 @@ async def convert_file(text: str, file_path: str, cs: ClientState) -> None:
 # RenderManager / render thread
 # ==============================
 class RenderManager:
+    # Provide a way to perform thread-safe access of methods in this class.
+    def __getattr__(self, name: str) -> Callable:
+        if name.startswith('threadsafe_'):
+            # Strip off ``threadsafe`` and look for the function.
+            internal_func = self.__getattr__(name[11:])
+
+            # Invoke it as an async if needed.
+            async def async_wrap(*args, **kwargs):
+                return internal_func(*args, **kwargs)
+
+            # See if we need to wrap thisin an async.
+            async_func = internal_func if asyncio.iscoroutinefunction(internal_func) else async_wrap
+
+            # Wrap the async func in a threadsafe call.
+            def threadsafe_async(*args, **kwargs):
+                future = asyncio.run_coroutine_threadsafe(async_func(*args, **kwargs), self._loop)
+                return future.result()
+
+            return threadsafe_async
+
+        # Not found. Let Python raise the exception for us.
+        return self.__getattribute__(name)
+
     # Determine if the provided id exists and is not being deleted. Return the ClientState for the id if so; otherwise, return False.
-    def _get_client_state(self, id: int) -> Union[bool, ClientState]:
+    def get_client_state(self, id: int) -> Union[bool, ClientState]:
         cs = self._client_state_dict.get(id)
         # Signal an error if this client doesn't exist or is being deleted; otherwise, return it.
         return cs if cs and not cs._is_deleting else False
@@ -597,10 +620,6 @@ class RenderManager:
 
     # Create a new client. Returns the client id on success or False on failure.
     def create_client(self) -> int:
-        future = asyncio.run_coroutine_threadsafe(self._create_client(), self._loop)
-        return future.result()
-
-    async def _create_client(self) -> int:
         if self._is_shutdown:
             return -1
         self._last_id += 1
@@ -612,12 +631,9 @@ class RenderManager:
         return id
 
     def delete_client(self, id: int) -> bool:
-        future = asyncio.run_coroutine_threadsafe(self._delete_client(id), self._loop)
-        return future.result()
-
-    async def _delete_client(self, id: int) -> bool:
-        cs = self._client_state_dict.get(id)
+        cs = self.get_client_state(id)
         if cs:
+            cs = cast(ClientState, cs)
             # Tell the worker to delete this.
             self._enqueue(id)
             cs._is_deleting = True
@@ -629,15 +645,7 @@ class RenderManager:
     def start_render(
         self, editor_text: str, file_path: str, id: int, is_dirty: bool
     ) -> bool:
-        future = asyncio.run_coroutine_threadsafe(
-            self._start_render(editor_text, file_path, id, is_dirty), self._loop
-        )
-        return future.result()
-
-    async def _start_render(
-        self, editor_text: str, file_path: str, id: int, is_dirty: bool
-    ) -> bool:
-        cs = self._get_client_state(id)
+        cs = self.get_client_state(id)
         if not cs:
             # Signal an error for an invalid client id.
             return False
@@ -656,41 +664,45 @@ class RenderManager:
 
     # Get a client's queue.
     def get_queue(self, id: int) -> Optional[Queue]:
-        future = asyncio.run_coroutine_threadsafe(self._get_queue(id), self._loop)
-        return future.result()
-
-    async def _get_queue(self, id: int) -> Optional[Queue]:
-        cs = self._get_client_state(id)
+        cs = self.get_client_state(id)
         return cast(ClientState, cs).q if cs else None
 
     # Given a URL, see if it matches with the latest render; if so, return the resulting HTML. If there's no match to the URL or the ID doesn't exist, return False. Note that the "HTML" can be None, meaning the render was stored to disk and the URL is a path to the rendered file.
-    def get_render_results(self, id: int, url_path: str) -> Union[None, str, bool]:
-        future = asyncio.run_coroutine_threadsafe(
-            self._get_render_results(id, url_path), self._loop
-        )
-        return future.result()
-
-    async def _get_render_results(
+    def get_render_results(
         self, id: int, url_path: str
     ) -> Union[None, str, bool]:
-        cs = self._get_client_state(id)
+        cs = self.get_client_state(id)
         return (
             cast(ClientState, cs)._html
             if cs and path_to_uri(cast(ClientState, cs)._file_path) == url_path
             else False
         )
 
-    # Shut down the render manager.
-    def shutdown(self):
-        future = asyncio.run_coroutine_threadsafe(self._shutdown(), self._loop)
-        return future.result()
+    # Shut down a CodeChat client.
+    def shutdown_client(self, id: int) -> bool:
+        q = self.get_queue(id)
+        # Fail if the ID is unknown.
+        if not q:
+            return False
+        # Send the shutdown command to the client.
+        q.put(GetResultReturn(GetResultType.command, "shutdown"))
+        # In case the client is dead, shut down after a delay.
+        asyncio.create_task(self._delete_client_later(id))
+        # Indicate success.
+        return True
 
-    async def _shutdown(self):
+    # Delete the client after a delay.
+    async def _delete_client_later(self, id: int):
+        await asyncio.sleep(1)
+        self.delete_client(id)
+
+    # Shut down the render manager.
+    async def shutdown(self):
         print("Render manager shutting down...")
         self._is_shutdown = True
         # Stop each client. This will tell the web client to shut down and also delete the render client.
-        for id, cs in self._client_state_dict.items():
-            cs.q.put(GetResultReturn(GetResultType.command, "shutdown"))
+        for id in self._client_state_dict.keys():
+            self.shutdown_client(id)
         # A special case: there are no clients currently. Then, the code above did nothing, so shut the workers down now.
         if len(self._client_state_dict) == 0:
             for i in range(self._num_workers):
