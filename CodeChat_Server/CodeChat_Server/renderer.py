@@ -32,7 +32,6 @@ from contextlib import contextmanager
 import fnmatch
 import io
 from pathlib import Path
-from queue import Queue
 import sys
 from tempfile import NamedTemporaryFile
 from typing import Any, cast, Callable, Dict, Generator, List, Optional, Tuple, Union
@@ -240,7 +239,7 @@ async def _convert_external_project(
 ) -> Tuple[str, str]:
     # Run from the directory containing the project file.
     project_path = str(Path(tool_or_project_path).parent)
-    q.put(
+    await q.put(
         GetResultReturn(
             GetResultType.build,
             "Loading project file {}.\n".format(tool_or_project_path),
@@ -356,7 +355,7 @@ async def _run_subprocess(
     q: asyncio.Queue,
 ) -> Tuple[str, str]:
     # Explain what's going on.
-    q.put(GetResultReturn(GetResultType.build, "{} > {}\n".format(cwd, " ".join(args))))
+    await q.put(GetResultReturn(GetResultType.build, "{} > {}\n".format(cwd, " ".join(args))))
 
     # Start the process.
     try:
@@ -384,12 +383,12 @@ async def _run_subprocess(
         while True:
             ret = await stdout_stream.read(80)
             if ret:
-                q.put(GetResultReturn(GetResultType.build, decoder.decode(ret)))
+                await q.put(GetResultReturn(GetResultType.build, decoder.decode(ret)))
             else:
                 # Tell the decoder the stream is done and collect any last output.
                 s = decoder.decode(b"", True)
                 if s:
-                    q.put(GetResultReturn(GetResultType.build, s))
+                    await q.put(GetResultReturn(GetResultType.build, s))
                 break
 
     # An awaitable sequence to interact with the subprocess.
@@ -445,8 +444,8 @@ def _error_converter(text: str, file_path: str) -> Tuple[str, str]:
 # Store data for about each client.
 class ClientState:
     def __init__(self):
-        # A queue of messages for the client. This can be accessed by any thread.
-        self.q = Queue()
+        # A queue of messages for the client.
+        self.q = asyncio.Queue()
 
         # The remaining data in this class should only be accessed by rendering thread.
         #
@@ -567,14 +566,14 @@ async def convert_file(text: str, file_path: str, cs: ClientState) -> None:
         cs._html = html_string
 
     # Send any errors. An empty error string will clear any errors from a previous build, and should still be sent.
-    cs.q.put(GetResultReturn(GetResultType.errors, err_string))
+    await cs.q.put(GetResultReturn(GetResultType.errors, err_string))
 
     # Sending the HTML signals the end of this build.
     #
     # For Windows, make the path contain forward slashes.
     uri = path_to_uri(cs._file_path)
     # Encode this, for Windows paths which contain a colon (or unusual Linux paths).
-    cs.q.put(GetResultReturn(GetResultType.html, urllib.parse.quote(uri)))
+    await cs.q.put(GetResultReturn(GetResultType.html, urllib.parse.quote(uri)))
 
 
 # RenderManager / render thread
@@ -663,7 +662,7 @@ class RenderManager:
         return True
 
     # Get a client's queue.
-    def get_queue(self, id: int) -> Optional[Queue]:
+    def get_queue(self, id: int) -> Optional[asyncio.Queue]:
         cs = self.get_client_state(id)
         return cast(ClientState, cs).q if cs else None
 
@@ -678,14 +677,34 @@ class RenderManager:
             else False
         )
 
+    # Get a result to pass back to the editor plugin.
+    async def get_result(self, id: int) -> Union[GetResultReturn, None]:
+        q = self.get_queue(id)
+        if not q:
+            return None
+        ret = await q.get()
+        # Delete the client if this was a shutdown command.
+        if (ret.get_result_type == GetResultType.command) and (ret.text == "shutdown"):
+            # Check that the queue is empty
+            if not q.empty():
+                print(
+                    "CodeChat warning: client id {} shut down with pending commands.".format(
+                        id
+                    )
+                )
+            # Request a `client deletion`_.
+            self.delete_client(id)
+
+        return ret
+
     # Shut down a CodeChat client.
-    def shutdown_client(self, id: int) -> bool:
+    async def shutdown_client(self, id: int) -> bool:
         q = self.get_queue(id)
         # Fail if the ID is unknown.
         if not q:
             return False
         # Send the shutdown command to the client.
-        q.put(GetResultReturn(GetResultType.command, "shutdown"))
+        await q.put(GetResultReturn(GetResultType.command, "shutdown"))
         # In case the client is dead, shut down after a delay.
         asyncio.create_task(self._delete_client_later(id))
         # Indicate success.
@@ -702,7 +721,7 @@ class RenderManager:
         self._is_shutdown = True
         # Stop each client. This will tell the web client to shut down and also delete the render client.
         for id in self._client_state_dict.keys():
-            self.shutdown_client(id)
+            await self.shutdown_client(id)
         # A special case: there are no clients currently. Then, the code above did nothing, so shut the workers down now.
         if len(self._client_state_dict) == 0:
             for i in range(self._num_workers):

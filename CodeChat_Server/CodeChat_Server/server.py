@@ -140,29 +140,15 @@ class CodeChatHandler:
             print(" => {}".format(ret))
             return ret
 
-    # Pass rendered results back to the web view. TODO: this is the only place threadsafe_get_queue is used. Put that in the RenderManager and make the Queue an asyncio one instead.
+    # Pass rendered results back to the web view.
     def get_result(self, id: int) -> GetResultReturn:
         print("get_result(id={})".format(id))
-        q = self.render_manager.threadsafe_get_queue(id)
-        if not q:
+        ret = self.render_manager.threadsafe_get_result(id)
+        if not ret:
             ret = GetResultReturn(
                 GetResultType.command, "error: unknown client id {}".format(id)
             )
-            print("  => {}".format(ret))
-            return ret
-        # TODO: if the CodeChat client dies, this will hang and never get the shutdown command. On exit, ensure this case doesn't hang the server.
-        ret = q.get()
-        # Delete the client if this was a shutdown command.
-        if (ret.get_result_type == GetResultType.command) and (ret.text == "shutdown"):
-            # Check that the queue is empty
-            if not q.empty():
-                print(
-                    "CodeChat warning: client id {} shut down with pending commands.".format(
-                        id
-                    )
-                )
-            # Request a `client deletion`_.
-            self.render_manager.threadsafe_delete_client(id)
+
         print("  => {}".format(ret))
         return ret
 
