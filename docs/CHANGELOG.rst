@@ -15,6 +15,16 @@ Change Log
 
     -   No changes yet.
 
+-   0.0.15, 4-Dec-2020:
+
+    -   Provide a more helpful CodeChat client message at startup.
+    -   Correctly handle browsing away from the produced docs.
+    -   Continue operation in the CodeChat client after an error occurs.
+    -   Fix CodeChat renderer error messages so they'll be counted in the CodeChat client's tally of errors.
+    -   Fix error message processing to support Windows drive letters.
+    -   Don't claim focus when revealing the CodeChat panel.
+    -   Fix hang on shutdown.
+
 -   0.0.14, 18-Aug-2020:
 
     -   Additional shutdown fixes.
