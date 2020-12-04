@@ -1,9 +1,9 @@
 {
     "name": "codechat",
-    "version": "0.0.14",
+    "version": "0.0.15",
     "publisher": "CodeChat",
     "engines": {
-        "vscode": "^1.41.0"
+        "vscode": "^1.51.0"
     },
     "license": "SEE LICENSE IN LICENSE.rst",
     "displayName": "CodeChat",
@@ -33,12 +33,12 @@
         "escape-html": "^1.0.3"
     },
     "devDependencies": {
-        "@types/thrift": "^0.10.10",
-        "@types/vscode": "^1.41.0",
         "@types/escape-html": "^1.0.0",
+        "@types/thrift": "^0.10.10",
+        "@types/vscode": "^1.51.0",
         "tslint": "^5.16.0",
         "typescript": "^3.9.7",
-        "vscode-test": "^1.4.0"
+        "vscode-test": "^1.4.1"
     },
     "scripts": {
         "vscode:prepublish": "npm run compile",
