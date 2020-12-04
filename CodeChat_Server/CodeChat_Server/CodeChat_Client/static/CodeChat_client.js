@@ -51,8 +51,6 @@ function run_client(id)
     }
 
     // Wait for a server response, then update.
-    //
-    // TODO: avoid recursive calls to this function. Doing so using ``window.setTimeout(do_get_result)`` worked some of the time, which I expected would be a way to do a non-recursive call of this function. ???
     function do_get_result() {
 
         try {
@@ -68,7 +66,7 @@ function run_client(id)
                         if (is_user_navigation) {
                             console.log("TODO: User navigation.");
                             // Wait for the next command.
-                            do_get_result();
+                            schedule_get_result();
                         } else {
                             status_message.innerHTML = "Build complete.";
                             build_progress.style.display = "none";
@@ -84,7 +82,7 @@ function run_client(id)
                             // #.   One load stores the x, y coordinates and begins to load a new page. This sets the scroll bars to 0.
                             // #.   Before the load finishes, another request comes. The x, y coordinates are saved as 0.
                             // #.   The first load finishes, but scrolls to 0, 0; the second load finish does the same.
-                            do_get_result();
+                            schedule_get_result();
                         }
                     };
 
@@ -167,7 +165,7 @@ function run_client(id)
                 }
 
                 // Repeat to handle the next result.
-                do_get_result();
+                schedule_get_result();
             });
 
         } catch (err) {
@@ -175,6 +173,11 @@ function run_client(id)
             console.log(`"Unexpected exception ${err}.`);
             window.setTimeout(do_get_result, 500);
         }
+    }
+
+    // Invoke do_get_results() non-recursively.
+    function schedule_get_result() {
+        window.setTimeout(do_get_result);
     }
 
     // Return the X and Y coordinates of the scrollbar of the output iframe if possible.
