@@ -51,105 +51,143 @@ function run_client(id)
     }
 
     // Wait for a server response, then update.
+    //
+    // TODO: avoid recursive calls to this function. Doing so using ``window.setTimeout(do_get_result)`` worked some of the time, which I expected would be a way to do a non-recursive call of this function. ???
     function do_get_result() {
 
-        client.get_result(id, function(result) {
+        try {
+            // Wait for a result from the CodeChat server, then display it.
+            client.get_result(id, function(result) {
             if (result.get_result_type === GetResultType.html) {
-                // Save and restore scroll location through the content update.
-                let scrollX = outputElement.contentWindow.scrollX;
-                let scrollY = outputElement.contentWindow.scrollY;
-                // See ideas in https://stackoverflow.com/a/16822995. Works for same-domain only.
-                outputElement.onload = function () {
-                    if (is_user_navigation) {
-                        console.log("TODO: User navigation.");
-                    } else {
-                        status_message.innerHTML = "Build complete.";
-                        build_progress.style.display = "none";
-                        outputElement.classList.remove("building");
-                        this.contentWindow.scrollBy(scrollX, scrollY);
-                        // The programmatic reload is done -- anything else that happens now is from the user.
-                        is_user_navigation = true;
-                        // Get new content only *after* the load finishes. The case to avoid:
-                        //
-                        // #.   One load stores the x, y coordinates and begins to load a new page. This sets the scroll bars to 0.
-                        // #.   Before the load finishes, another request comes. The x, y coordinates are saved as 0.
-                        // #.   The first load finishes, but scrolls to 0, 0; the second load finish does the same.
-                        do_get_result();
-                    }
-                };
+                    // Save and restore scroll location through the content update, if we can.
+                    let [scrollX, scrollY] = getScroll();
+                    // See ideas in https://stackoverflow.com/a/16822995. Works for same-domain only.
+                    outputElement.onload = function () {
+                        // Only run this once, not every time the user navigates in the browser. Otherwise, each click would call ``do_get_result`` again, producing multiple get_result requests at the same time.
+                        outputElement.onload = undefined;
+                        if (is_user_navigation) {
+                            console.log("TODO: User navigation.");
+                            // Wait for the next command.
+                            do_get_result();
+                        } else {
+                            status_message.innerHTML = "Build complete.";
+                            build_progress.style.display = "none";
+                            outputElement.classList.remove("building");
+                            // Restore the scroll location if we were able to save it.
+                            if ( (scrollX !== undefined) && (scrollY !== undefined) ) {
+                                this.contentWindow.scrollBy(scrollX, scrollY);
+                            }
+                            // The programmatic reload is done -- anything else that happens now is from the user.
+                            is_user_navigation = true;
+                            // Get new content only *after* the load finishes. The case to avoid:
+                            //
+                            // #.   One load stores the x, y coordinates and begins to load a new page. This sets the scroll bars to 0.
+                            // #.   Before the load finishes, another request comes. The x, y coordinates are saved as 0.
+                            // #.   The first load finishes, but scrolls to 0, 0; the second load finish does the same.
+                            do_get_result();
+                        }
+                    };
 
-                // Set the new src to (re)load content.
-                outputElement.src = window.location.protocol + '//' + window.location.host + window.location.pathname + "/" + id + "/" + result.text;
-                // The next build output received will apply to the new build, so set the flag.
-                clear_output = true;
-                // See comments above -- avoid double loads and indicate that the is a programmatic reload.
-                is_user_navigation = false;
-                return;
-
-            } else if (result.get_result_type === GetResultType.build) {
-                if (clear_output) {
-                    // This is the start of a new build.
-                    status_message.innerHTML = "Building...";
-                    build_progress.style.display = "inline";
-                    build_div.textContent = result.text;
-                    errors_div.textContent = "";
-                    status_errors_div.innerHTML = "";
-
-                    // Save the current splitter state.
-                    splitter_size[errors_or_warnings] = get_splitter().percent;
-
-                    // _`class building`: Show that the current output HTML is old.
-                    outputElement.classList.add("building");
-
-                    clear_output = false;
-                } else {
-                    build_div.textContent += result.text;
-                }
-                // Scroll to the bottom, to show the content just added.
-                scroll_to_bottom(build_contents);
-
-            } else if (result.get_result_type === GetResultType.errors) {
-                if (clear_output) {
-                    // There was no build output, so just update the errors.
-                    build_div.textContent = "";
-                    errors_div.textContent = result.text;
-                    // Save the current splitter state.
-                    splitter_size[errors_or_warnings] = get_splitter().percent;
-                    clear_output = false;
-                } else {
-                    errors_div.textContent += result.text;
-                }
-                // Scroll to the bottom, to show the content just added.
-                scroll_to_bottom(build_contents);
-
-                // Update the errors/warnings and splitter position.
-                [errors_div.innerHTML, status_errors_div.innerHTML, errors_or_warnings] =
-                    parse_for_errors(errors_div.innerHTML);
-                set_splitter_percent(splitter_size[errors_or_warnings]);
-
-            } else if (result.get_result_type === GetResultType.command) {
-                if (result.text === "shutdown") {
-                    // Close this window -- see https://stackoverflow.com/a/54787080.
-                    window.open('', '_self').close();
-                    // Stop asking for results.
+                    // Set the new src to (re)load content.
+                    outputElement.src = window.location.protocol + '//' + window.location.host + window.location.pathname + "/" + id + "/" + result.text;
+                    // The next build output received will apply to the new build, so set the flag.
+                    clear_output = true;
+                    // See comments above -- avoid double loads and indicate that the is a programmatic reload.
+                    is_user_navigation = false;
+                    // Exit for now; the callbacks above will continue this function's operation.
                     return;
-                } else if (result.text.startsWith("unknown client ")) {
-                    console.log(result.text);
-                    // Close the window -- there's no point in asking for more commands.
-                    window.open('', '_self').close();
+
+                } else if (result.get_result_type === GetResultType.build) {
+                    if (clear_output) {
+                        // This is the start of a new build.
+                        status_message.innerHTML = "Building...";
+                        build_progress.style.display = "inline";
+                        build_div.textContent = result.text;
+                        errors_div.textContent = "";
+                        status_errors_div.innerHTML = "";
+
+                        // Save the current splitter state.
+                        splitter_size[errors_or_warnings] = get_splitter().percent;
+
+                        // _`class building`: Show that the current output HTML is old.
+                        outputElement.classList.add("building");
+
+                        clear_output = false;
+                    } else {
+                        build_div.textContent += result.text;
+                    }
+                    // Scroll to the bottom, to show the content just added.
+                    scroll_to_bottom(build_contents);
+
+                } else if (result.get_result_type === GetResultType.errors) {
+                    if (clear_output) {
+                        // There was no build output, so just update the errors.
+                        build_div.textContent = "";
+                        errors_div.textContent = result.text;
+                        // Save the current splitter state.
+                        splitter_size[errors_or_warnings] = get_splitter().percent;
+                        clear_output = false;
+                    } else {
+                        errors_div.textContent += result.text;
+                    }
+                    // Scroll to the bottom, to show the content just added.
+                    scroll_to_bottom(build_contents);
+
+                    // Update the errors/warnings and splitter position.
+                    [errors_div.innerHTML, status_errors_div.innerHTML, errors_or_warnings] =
+                        parse_for_errors(errors_div.innerHTML);
+                    set_splitter_percent(splitter_size[errors_or_warnings]);
+
+                } else if (result.get_result_type === GetResultType.command) {
+                    if (result.text === "shutdown") {
+                        // Close this window -- see https://stackoverflow.com/a/54787080. See `close the window`_.
+                        outputElement.srcdoc = "<html><body><p>The CodeChat client was shut down. Please close this window.</p></body></html>";
+                        build_div.textContent = "";
+                        errors_div.textContent = "";
+                        status_message.innerHTML = "Client shut down.";
+                        window.open('', '_self').close();
+                        // Stop asking for results.
+                        return;
+                    } else if (result.text.startsWith("error: unknown client ")) {
+                        console.log(result.text);
+                        // _`Close the window` -- there's no point in asking for more commands. Note: there are some cases where this fails, although I've only seen this once. From the Chrome console, ``Scripts may close only the windows that were opened by them.`` In this case, leave a message asking the user to close the window.
+                        outputElement.srcdoc = "<html><body><p>CodeChat client error: lost connection to the CodeChat server. Close this window and restart the editor plug-in.</p></body></html>";
+                        build_div.textContent = "";
+                        errors_div.textContent = "";
+                        status_message.innerHTML = "Server disconnected";
+                        window.open('', '_self').close();
+                        // Stop asking for results.
+                        return;
+                    } else {
+                        console.log("Unknown command " + result.text);
+                    }
+
                 } else {
-                    console.log("Unknown command " + result.text);
+                    console.log("Unknown GetResultType:", result.get_result_type);
                 }
 
-            } else {
-                console.log("Unknown GetResultType:", result.get_result_type);
-            }
+                // Repeat to handle the next result.
+                do_get_result();
+            });
 
-            // Repeat to handle the next result.
-            do_get_result();
-        });
+        } catch (err) {
+            // If any exception occurs, report it then run again. Wait a bit to avoid thrashing if the connection is broken.
+            console.log(`"Unexpected exception ${err}.`);
+            window.setTimeout(do_get_result, 500);
+        }
     }
 
+    // Return the X and Y coordinates of the scrollbar of the output iframe if possible.
+    function getScroll() {
+        try {
+            // This is only allowed for same-domain origins -- for example, if the user clicks on a link in the docs that goes to an external website, then the following lines will raise an exception.
+            return [outputElement.contentWindow.scrollX, outputElement.contentWindow.scrollY];
+        } catch (err) {
+            return [undefined, undefined];
+        }
+    }
+
+    // Start requesting results as soon as the web page is loaded.
     addEvent(window, 'load', function () {
         // Start listening to the server.
         do_get_result();
