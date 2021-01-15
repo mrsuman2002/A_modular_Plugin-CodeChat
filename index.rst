@@ -29,8 +29,8 @@ The CodeChat system integrates the capabilities of the `CodeChat renderer <https
     }
 
     CodeChat_plugin -> thrift_server [label = <Thrift>, dir = both, lhead = cluster_server];
-    thrift_server -> JavaScript [label = <Thrift>, dir = both, lhead = cluster_client, ltail = cluster_server];
-    web_server -> JavaScript [label = <Thrift/web>, dir = both, lhead = cluster_client, ltail = cluster_server];
+    thrift_server -> JavaScript [label = <websocket>, dir = both, lhead = cluster_client, ltail = cluster_server];
+    web_server -> JavaScript [label = <HTTP>, dir = both, lhead = cluster_client, ltail = cluster_server];
     renderers -> external_renderers [label = <subprocess>, ltail = cluster_server, dir = both];
 
 This approach bridges the services CodeChat provides, which are defined in Python, to the variety of programming languages which various text editors require. To accomplish these goals, this project:

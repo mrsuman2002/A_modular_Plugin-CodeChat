@@ -20,16 +20,6 @@ ttypes.CodeChatClientLocation = {
   '2' : 'browser',
   'browser' : 2
 };
-ttypes.GetResultType = {
-  '0' : 'html',
-  'html' : 0,
-  '1' : 'build',
-  'build' : 1,
-  '2' : 'errors',
-  'errors' : 2,
-  '3' : 'command',
-  'command' : 3
-};
 var RenderClientReturn = module.exports.RenderClientReturn = function(args) {
   this.html = null;
   this.id = null;
@@ -102,69 +92,6 @@ RenderClientReturn.prototype.write = function(output) {
   if (this.error !== null && this.error !== undefined) {
     output.writeFieldBegin('error', Thrift.Type.STRING, 3);
     output.writeString(this.error);
-    output.writeFieldEnd();
-  }
-  output.writeFieldStop();
-  output.writeStructEnd();
-  return;
-};
-
-var GetResultReturn = module.exports.GetResultReturn = function(args) {
-  this.get_result_type = null;
-  this.text = null;
-  if (args) {
-    if (args.get_result_type !== undefined && args.get_result_type !== null) {
-      this.get_result_type = args.get_result_type;
-    }
-    if (args.text !== undefined && args.text !== null) {
-      this.text = args.text;
-    }
-  }
-};
-GetResultReturn.prototype = {};
-GetResultReturn.prototype.read = function(input) {
-  input.readStructBegin();
-  while (true) {
-    var ret = input.readFieldBegin();
-    var ftype = ret.ftype;
-    var fid = ret.fid;
-    if (ftype == Thrift.Type.STOP) {
-      break;
-    }
-    switch (fid) {
-      case 1:
-      if (ftype == Thrift.Type.I32) {
-        this.get_result_type = input.readI32();
-      } else {
-        input.skip(ftype);
-      }
-      break;
-      case 2:
-      if (ftype == Thrift.Type.STRING) {
-        this.text = input.readString();
-      } else {
-        input.skip(ftype);
-      }
-      break;
-      default:
-        input.skip(ftype);
-    }
-    input.readFieldEnd();
-  }
-  input.readStructEnd();
-  return;
-};
-
-GetResultReturn.prototype.write = function(output) {
-  output.writeStructBegin('GetResultReturn');
-  if (this.get_result_type !== null && this.get_result_type !== undefined) {
-    output.writeFieldBegin('get_result_type', Thrift.Type.I32, 1);
-    output.writeI32(this.get_result_type);
-    output.writeFieldEnd();
-  }
-  if (this.text !== null && this.text !== undefined) {
-    output.writeFieldBegin('text', Thrift.Type.STRING, 2);
-    output.writeString(this.text);
     output.writeFieldEnd();
   }
   output.writeFieldStop();

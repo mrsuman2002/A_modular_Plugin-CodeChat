@@ -11,7 +11,18 @@
 *******************
 The CodeChat client
 *******************
-TODO.
+One major goal of the CodeChat system is to provide as much functionality outside the IDE/editor host as possible. The CodeChat client therefore uses JavaScript as a platform-neutral method of doing most of the work of displaying the rendered results and enabling the user to interact with those results. Specifically, the client:
+
+-   Provides panes to display rendered output, errors, and build status.
+-   Parses warnings/errors and provide (currently useless) links to them.
+-   Provides a simple build status progress bar.
+
+Future work
+===========
+-   Click on an error message locates that line in the editor.
+-   Sync.
+-   Update progress bar with percent complete.
+
 
 Sync notes
 ===========
@@ -26,3 +37,4 @@ Contents
     templates/CodeChat_client.html
     static/CodeChat_client.js
     static/CodeChat_client.css
+    static/ReconnectingWebsocket.js

@@ -91,31 +91,3 @@ service EditorPlugin  {
         1:i32 id
     )
  }
-
-
-// CodeChat client
-// ===============
-// The type of result returned by get_result_.
-enum GetResultType {
-    // A URL indicating that new content is available.
-    html,
-    // A build output message.
-    build,
-    // Errors from the build
-    errors,
-    // A command
-    command,
-}
-
-// The return type for get_result_.
-struct GetResultReturn {
-    1: GetResultType get_result_type,
-    2: string text,
-}
-
-
-// Provide CodeChat services to the web browser.
- service CodeChatClient {
-     // _`get_result`: Ask the server for an update.
-    GetResultReturn get_result(1: i32 id),
- }

@@ -11,9 +11,7 @@ import Int64 = require('node-int64');
 
 import ttypes = require('./CodeChat_Services_types');
 import CodeChatClientLocation = ttypes.CodeChatClientLocation
-import GetResultType = ttypes.GetResultType
 import RenderClientReturn = ttypes.RenderClientReturn
-import GetResultReturn = ttypes.GetResultReturn
 
 declare class Client {
   private output: thrift.TTransport;

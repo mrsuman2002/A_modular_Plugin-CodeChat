@@ -15,24 +15,10 @@ declare enum CodeChatClientLocation {
   browser = 2,
 }
 
-declare enum GetResultType {
-  html = 0,
-  build = 1,
-  errors = 2,
-  command = 3,
-}
-
 declare class RenderClientReturn {
   public html: string;
   public id: number;
   public error: string;
 
     constructor(args?: { html: string; id: number; error: string; });
-}
-
-declare class GetResultReturn {
-  public get_result_type: GetResultType;
-  public text: string;
-
-    constructor(args?: { get_result_type: GetResultType; text: string; });
 }

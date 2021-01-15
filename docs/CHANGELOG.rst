@@ -13,7 +13,7 @@ Change Log
 **********
 -   `Github master <https://github.com/bjones1/CodeChat_system.git>`_:
 
-    -   No changes yet.
+    -   Prevent CodeChat from dying when a laptop goes to sleep then wakes back up.
 
 -   0.0.15, 4-Dec-2020:
 

@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<!-- *********
-     |docname|
-     *********
-     This web page defines the CodeChat client.
+<!-- *******************************************************
+     |docname| - The web page containing the CodeChat client
+     *******************************************************
+     This fairly simple web page contains IDs and classes to allow CSS/JS to style and manipulate the contents.
 -->
 <html lang="en">
 <head>
@@ -11,10 +11,8 @@
     <!-- Provide a `splitter <https://github.com/andrienko/splitter>`_ between the output and build panes. -->
     <script src="/static/splitter.js"></script>
     <link rel="stylesheet" type="text/css" href="/static/splitter.css"/>
-    <!-- The `Thrift JavaScript client <https://github.com/apache/thrift/blob/master/lib/js/src/thrift.js>`_ and generated files for `../../../../CodeChat_Services/contents`. -->
-    <script src="/static/thrift.js"></script>
-    <script src="/static/gen-js/CodeChatClient.js"></script>
-    <script src="/static/gen-js/CodeChat_Services_types.js"></script>
+    <!-- Use the ``ReconnectingWebsocket`` to automatically reconnect a websocket when the network connection drops -- for example, a laptop goes to sleep then wakes back up. -->
+    <script src="/static/ReconnectingWebsocket.js"></script>
     <!-- The `../static/CodeChat_client.js`. -->
     <script src="/static/CodeChat_client.js"></script>
     <!-- Styling in `../static/CodeChat_client.css`. -->

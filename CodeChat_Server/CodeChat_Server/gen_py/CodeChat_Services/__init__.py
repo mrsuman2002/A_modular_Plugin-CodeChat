@@ -1,1 +1,1 @@
-__all__ = ['ttypes', 'constants', 'EditorPlugin', 'CodeChatClient']
+__all__ = ['ttypes', 'constants', 'EditorPlugin']

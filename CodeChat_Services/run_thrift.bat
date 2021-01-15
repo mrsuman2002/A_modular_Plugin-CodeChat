@@ -23,5 +23,4 @@ REM This requires the `Apache Thrift compiler <https://thrift.apache.org/downloa
 
 mkdir ..\CodeChat_Server\CodeChat_Server\gen_py
 thrift-0.13.0.exe --gen py --strict -out ..\CodeChat_Server\CodeChat_Server\gen_py CodeChat_Services.thrift
-thrift-0.13.0.exe --gen js --strict -o ..\CodeChat_Server\CodeChat_Server\CodeChat_Client\static CodeChat_Services.thrift
 thrift-0.13.0.exe --gen js:node,ts --strict -o ..\VSCode_Extension\src CodeChat_Services.thrift

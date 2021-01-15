@@ -19,9 +19,8 @@
 # *******************************
 # |docname| - The CodeChat server
 # *******************************
-# TODO:
+# The CodeChat server receives requests from the editor/IDE, renders these, then displays them in the CodeChat client; likewise, it listens for CodeChat client requests, processes them, and forwards the results to the editor/IDE.
 #
-# - Try out `Quart <https://gitlab.com/pgjones/quart>`_.
 #
 # Imports
 # =======
@@ -40,14 +39,12 @@ import webbrowser
 # -------------------
 from flask import (
     Flask,
-    request,
     Response,
     make_response,
     render_template,
     send_file,
     abort,
 )
-from thrift.protocol import TJSONProtocol  # type: ignore
 from thrift.server import TServer  # type: ignore
 from thrift.transport import TTransport  # type: ignore
 from thrift.transport import TSocket
@@ -57,10 +54,8 @@ from thrift.protocol import TBinaryProtocol
 # Local application imports
 # -------------------------
 from . import renderer
-from .gen_py.CodeChat_Services import EditorPlugin, CodeChatClient
+from .gen_py.CodeChat_Services import EditorPlugin
 from .gen_py.CodeChat_Services.ttypes import (
-    GetResultType,
-    GetResultReturn,
     RenderClientReturn,
     CodeChatClientLocation,
 )
@@ -68,7 +63,7 @@ from .gen_py.CodeChat_Services.ttypes import (
 
 # Service provider
 # ================
-# This class implements both the EditorPlugin and CodeChat client services.
+# This class implements the EditorPlugin service.
 class CodeChatHandler:
     def __init__(self):
         self.render_manager: renderer.RenderManager
@@ -140,18 +135,6 @@ class CodeChatHandler:
             print(" => {}".format(ret))
             return ret
 
-    # Pass rendered results back to the web view.
-    def get_result(self, id: int) -> GetResultReturn:
-        print("get_result(id={})".format(id))
-        ret = self.render_manager.threadsafe_get_result(id)
-        if not ret:
-            ret = GetResultReturn(
-                GetResultType.command, "error: unknown client id {}".format(id)
-            )
-
-        print("  => {}".format(ret))
-        return ret
-
     # _`Shut down an editor client`. The sequence is:
     #
     # #.    _`Client stop`: send a message to the web client, informing it of the shutdown. While the editor shouldn't make any more ``start_render`` or ``stop_client`` calls, doing so won't cause the server to misbehave.
@@ -198,13 +181,6 @@ def editor_plugin_server() -> None:
 
 # Server for the CodeChat client
 # ------------------------------
-# Create these once, globally.
-client_processor = CodeChatClient.Processor(handler)
-client_protocol = TJSONProtocol.TJSONProtocolFactory()
-client_server = TServer.TServer(
-    client_processor, None, None, None, client_protocol, client_protocol
-)
-
 client_app = Flask(
     __name__,
     # Serve CodeChat client files statically.
@@ -219,17 +195,6 @@ client_app = Flask(
 @client_app.route("/client")
 def client_html() -> str:
     return render_template("CodeChat_client.html")
-
-
-# The endpoint for the CodeChat client service.
-@client_app.route("/client", methods=["POST"])
-def client_service() -> Response:
-    itrans = TTransport.TMemoryBuffer(request.data)
-    otrans = TTransport.TMemoryBuffer()
-    iprot = client_server.inputProtocolFactory.getProtocol(itrans)
-    oprot = client_server.outputProtocolFactory.getProtocol(otrans)
-    client_server.processor.process(iprot, oprot)
-    return make_response(otrans.getvalue())
 
 
 # The endpoint for files requested by a specific client, including rendered source files.

@@ -29,7 +29,9 @@ import ast
 import asyncio
 import codecs
 from contextlib import contextmanager
+from enum import Enum
 import fnmatch
+import json
 import io
 from pathlib import Path
 import sys
@@ -44,17 +46,32 @@ import docutils.core
 import docutils.writers.html4css1
 from CodeChat.CodeToRest import code_to_rest_string, html_static_path  # type: ignore
 from CodeChat.CommentDelimiterInfo import SUPPORTED_GLOBS  # type: ignore
+import websockets
+
 
 # Local imports
 # -------------
-from .gen_py.CodeChat_Services.ttypes import (
-    GetResultType,
-    GetResultReturn,
-)
+# None
+
+
+# Constants
+# =========
+# .. _GetResultType Py:
+#
+# These must match the `constants in the client <GetResultType JS>`.
+class GetResultType(Enum):
+    html = 0
+    build = 1
+    errors = 2
+    command = 3
 
 
 # Utilities
 # =========
+def GetResultReturn(get_result_type: GetResultType, text: str):
+    return {"get_result_type": get_result_type.value, "text": text}
+
+
 # Convert a path to a URI component: make it absolute and use forward (POSIX) slashes. If the provided ``file_path`` is falsey, just return it.
 def path_to_uri(file_path: str):
     return Path(file_path).resolve().as_posix() if file_path else file_path
@@ -199,6 +216,7 @@ async def _convert_external(
                 stdout = f.read()
 
     return stdout, stderr
+
 
 # _`_checkModificationTime`: Return False if source_file is newer than output_file; otherwise, return string with an error message.
 def _checkModificationTime(
@@ -676,25 +694,33 @@ class RenderManager:
             else False
         )
 
-    # Get a result to pass back to the editor plugin.
-    async def get_result(self, id: int) -> Union[GetResultReturn, None]:
+    # Communicate with a client via a websocket.
+    async def websocket_handler(self, websocket: websockets.WebSocketServerProtocol, path: str):
+        # First, read this client's ID.
+        # TODO: should wrap this in a try/catch block.
+        id = json.loads(await websocket.recv())
         q = self.get_queue(id)
         if not q:
-            return None
-        ret = await q.get()
-        # Delete the client if this was a shutdown command.
-        if (ret.get_result_type == GetResultType.command) and (ret.text == "shutdown"):
-            # Check that the queue is empty
-            if not q.empty():
-                print(
-                    "CodeChat warning: client id {} shut down with pending commands.".format(
-                        id
+            return
+        while not self._is_shutdown:
+            ret = await q.get()
+            # Delete the client if this was a shutdown command.
+            if (ret["get_result_type"] == GetResultType.command) and (ret["text"] == "shutdown"):
+                # Check that the queue is empty
+                if not q.empty():
+                    print(
+                        "CodeChat warning: client id {} shut down with pending commands.".format(
+                            id
+                        )
                     )
-                )
-            # Request a client deletion.
-            self.delete_client(id)
+                # Request a client deletion.
+                self.delete_client(id)
 
-        return ret
+            try:
+                await websocket.send(json.dumps(ret))
+            except websockets.exceptions.WebSocketException:
+                # An error occurred -- close the websocket. The client will open another, so we can try again.
+                return
 
     # Shut down a CodeChat client.
     async def shutdown_client(self, id: int) -> bool:
@@ -725,6 +751,9 @@ class RenderManager:
         if len(self._client_state_dict) == 0:
             for i in range(self._num_workers):
                 await self._job_q.put(None)
+        # Shut down the websocket.
+        self.websocket_server.close()
+        await self.websocket_server.wait_closed()
 
     # Start the render manager. This typically never returns.
     def run(self, *args, debug: bool = True) -> None:
@@ -750,6 +779,7 @@ class RenderManager:
         self._loop = asyncio.get_running_loop()
         self._is_shutdown = False
 
+        self.websocket_server = await websockets.serve(self.websocket_handler, "127.0.0.1", 5001)
         await asyncio.gather(*[self._worker(i) for i in range(num_workers)])
 
     # Process items in the render queue.
