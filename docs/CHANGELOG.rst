@@ -14,6 +14,7 @@ Change Log
 -   `Github master <https://github.com/bjones1/CodeChat_system.git>`_:
 
     -   Prevent CodeChat from dying when a laptop goes to sleep then wakes back up.
+    -   Automatically start the CodeChat server when the VSCode extension is run.
 
 -   0.0.15, 4-Dec-2020:
 

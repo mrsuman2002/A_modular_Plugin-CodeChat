@@ -30,12 +30,14 @@
 //
 // Requirements
 // ============
-import vscode = require('vscode');
-import thrift = require('thrift');
 import assert = require('assert');
+import child_process = require('child_process');
+import vscode = require('vscode');
+import escape = require('escape-html');
+import thrift = require('thrift');
+import tree_kill = require('tree-kill');
 import EditorPlugin = require('./gen-nodejs/EditorPlugin');
 import ttypes = require('./gen-nodejs/CodeChat_Services_types');
-import escape = require('escape-html');
 
 
 // Globals
@@ -48,6 +50,8 @@ let connection: thrift.Connection | undefined = undefined;
 let client: EditorPlugin.Client | undefined = undefined;
 // Where the webclient resides: ``html`` for a webview panel embedded in VSCode; ``browser`` to use an external browser.
 const client_location: ttypes.CodeChatClientLocation = ttypes.CodeChatClientLocation.html;
+// The subprocess in which the CodeChat server runs.
+let codechat_server: child_process.ChildProcess | undefined = undefined;
 
 // A unique instance of these variables is required for each CodeChat panel. However, this code doesn't have a good UI way to deal with multiple panels, so only one is supported at this time.
 //
@@ -97,7 +101,7 @@ export function activate(context: vscode.ExtensionContext) {
 
         // Provide a simple status display while the CodeChat system is starting up.
         if (panel !== undefined) {
-            panel.webview.html = "`<html><h1>CodeChat</h1><p>Loading...</p></html>";
+            panel.webview.html = "<h1>CodeChat</h1><p>Loading...</p>";
         } else {
             vscode.window.showInformationMessage("CodeChat is loading in an external browser...");
         }
@@ -105,6 +109,15 @@ export function activate(context: vscode.ExtensionContext) {
         if (connection === undefined) {
             // The client should never exist if there's no connection.
             assert(client === undefined);
+
+            // Launch the CodeChat server if it's not running.
+            if (codechat_server === undefined) {
+                let codechat_server_path = vscode.workspace.getConfiguration("CodeChat.CodeChatServer").get("Path");
+                assert(typeof codechat_server_path === "string");
+                codechat_server = child_process.spawn(codechat_server_path);
+                codechat_server.on("error", (err) => show_error(`While running CodeChat server: ${err}`));
+                codechat_server.on("exit", (event) => codechat_server = undefined);
+            }
 
             // Try to connect to the CodeChat server. The `createConnection function <https://github.com/apache/thrift/blob/master/lib/nodejs/lib/thrift/connection.js#L258>`_ wraps `net.createConnection <https://nodejs.org/api/net.html#net_net_createconnection_options_connectlistener>`_ then returns a `Connection object <https://github.com/apache/thrift/blob/master/lib/nodejs/lib/thrift/connection.js#L35>`_.
             connection = thrift.createConnection("localhost", 9090, {
@@ -157,6 +170,11 @@ export function deactivate() {
     connection = undefined;
     client = undefined;
     id = undefined;
+    if (codechat_server !== undefined) {
+        // If the CodeChat server was the executable stub, it runs the Python code in a subprocess. A plain ``codechat_server.kill()`` doesn't kill it (or any of its render subprocesses, should they be running.)
+        tree_kill(codechat_server.pid);
+        codechat_server = undefined;
+    }
 }
 
 
@@ -279,7 +297,7 @@ function stop_client() {
 // Provide an error message in the panel if possible.
 function show_error(message: string) {
     if (panel !== undefined) {
-        panel.webview.html = `<html><h1>CodeChat</h1><p>${escape(message)}</p></html>`;
+        panel.webview.html += `<p>${escape(message)}</p>`;
     } else {
         vscode.window.showErrorMessage(message);
     }

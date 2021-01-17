@@ -18,6 +18,16 @@
     ],
     "main": "out/extension.js",
     "contributes": {
+        "configuration": {
+            "title": "CodeChat",
+            "properties": {
+                "CodeChat.CodeChatServer.Path": {
+                    "type": "string",
+                    "default": "CodeChat_Server",
+                    "description": "Path to the CodeChat Server executable."
+                }
+            }
+        },
         "commands": [
             {
                 "command": "extension.codeChat",
@@ -29,8 +39,9 @@
         "onCommand:extension.codeChat"
     ],
     "dependencies": {
+        "escape-html": "^1.0.3",
         "thrift": "^0.12.0",
-        "escape-html": "^1.0.3"
+        "tree-kill": "^1.2.2"
     },
     "devDependencies": {
         "@types/escape-html": "^1.0.0",
