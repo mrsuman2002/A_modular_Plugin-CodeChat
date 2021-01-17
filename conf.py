@@ -338,3 +338,8 @@ html_sourcelink_suffix = ''
 # `html_file_suffix <http://sphinx-doc.org/config.html#confval-html_file_suffix>`_:
 # This is the file name suffix for HTML files (e.g. ".xhtml").
 ##html_file_suffix = None
+#
+# Options for `Graphviz output <https://www.sphinx-doc.org/master/usage/extensions/graphviz.html>`_
+# ===========================================================================================================
+# The output format for Graphviz when building HTML files.
+graphviz_output_format = "svg"
