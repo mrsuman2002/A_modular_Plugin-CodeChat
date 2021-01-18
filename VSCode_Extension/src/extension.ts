@@ -170,8 +170,6 @@ export function deactivate() {
     stop_client();
     connection?.end();
     connection = undefined;
-    client = undefined;
-    id = undefined;
     if (codechat_server !== undefined) {
         // If the CodeChat server was the executable stub, it runs the Python code in a subprocess. A plain ``codechat_server.kill()`` doesn't kill it (or any of its render subprocesses, should they be running.)
         tree_kill(codechat_server.pid);
