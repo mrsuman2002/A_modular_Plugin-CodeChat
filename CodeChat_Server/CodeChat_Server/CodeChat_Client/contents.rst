@@ -17,12 +17,6 @@ One major goal of the CodeChat system is to provide as much functionality outsid
 -   Parses warnings/errors and provide (currently useless) links to them.
 -   Provides a simple build status progress bar.
 
-Future work
-===========
--   Click on an error message locates that line in the editor.
--   Sync.
--   Update progress bar with percent complete.
-
 
 Sync notes
 ===========

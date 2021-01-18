@@ -40,7 +40,8 @@ This approach bridges the services CodeChat provides, which are defined in Pytho
 #.  Introduces a `plugin for Visual Studio Code <VSCode_Extension/contents>`, a free and popular cross-platform text editor; and
 #.  Employs `Apache Thrift <https://thrift.apache.org>`_ to define `CodeChat services <CodeChat_Services/contents>`, which allows the CodeChat server to communicate with plugins developed in a `variety of languages <https://thrift.apache.org/docs/Languages>`_.
 
-Contents:
+Contents
+--------
 
 .. toctree::
     :maxdepth: 2
@@ -57,7 +58,7 @@ Contents:
 
 
 Contributors
-================
+============
 The following developers provided valuable help in creating the CodeChat system.
 
 -   `Bryan A. Jones <https://github.com/bjones1/>`_
@@ -69,6 +70,7 @@ The following developers provided valuable help in creating the CodeChat system.
 To do
 =====
 -   Lots of testing.
+-   Scan for percentages in the web client and update the progress bar.
 -   Handle syntax error line number click from the web client.
 -   Provide way to do a rebuild all.
 -   Find a way not to overload/abuse the ClientState._file_name.
@@ -81,6 +83,9 @@ To do
 -   Improve docs
 -   Support at least one more editor.
 -   Save and restore scroll position on a per-file basis.
+-   Create a pre-commit check to run black, flake8, mypy, and unit tests.
+-   Separate the render manager code from the renderer code.
+-   Provide a verbose/non-verbose logging option.
 
 Ideas:
 
