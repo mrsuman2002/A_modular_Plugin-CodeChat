@@ -27,8 +27,8 @@
 #
 # Standard library
 # ----------------
-# None.
-#
+import sys
+
 # Third-party imports
 # -------------------
 # None.
@@ -46,4 +46,4 @@ if __name__ == "__main__":
     print("Loading...")
     from .server import run_servers
 
-    run_servers()
+    sys.exit(run_servers())

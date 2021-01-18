@@ -29,8 +29,9 @@
 #
 # Standard library
 # ----------------
-import threading
 from pathlib import PurePosixPath
+import socket
+import threading
 import time
 from typing import Union
 import webbrowser
@@ -234,18 +235,27 @@ def client_data(id: int, url_path: str) -> Union[str, Response]:
 # =========
 # Run both servers. This does not (usually) return.
 def run_servers() -> None:
+    # See if the required ports are in use, probably by another instance of this server.
+    if is_port_in_use(5000) or is_port_in_use(5001):
+        print("Error: ports 5000 and/or 5001 are already in use. Exiting.")
+        return 1
+
     # Both servers block when run, so place them in a thread. Mark the Thrift server as a daemon, so it will be killed when the program shuts down.
-    editor_plugin_thread = threading.Thread(target=editor_plugin_server, daemon=True)
+    editor_plugin_thread = threading.Thread(
+        target=editor_plugin_server, name="Editor plugin server", daemon=True
+    )
     editor_plugin_thread.start()
 
     # Taken from https://stackoverflow.com/a/45017691.
-    flask_server_thread = threading.Thread(target=client_app.run, daemon=True)
+    flask_server_thread = threading.Thread(
+        target=client_app.run, name="Flask", daemon=True
+    )
     flask_server_thread.start()
 
     # Start the render loop in another thread.
     render_manager = renderer.RenderManager()
     handler.render_manager = render_manager
-    render_manager_thread = threading.Thread(target=render_manager.run)
+    render_manager_thread = threading.Thread(target=render_manager.run, name="asyncio")
     render_manager_thread.start()
 
     # Run the servers in threads until a user-requested shutdown occurs.
@@ -260,3 +270,10 @@ def run_servers() -> None:
     render_manager.threadsafe_shutdown()
     # When this is done, the Flask server and editor plugin sever can be shut down, since they're idle. Since they're daemons, they'll be shut down by exiting main.
     render_manager_thread.join()
+    return 0
+
+
+# Copied verbatim from Stack Overflow.
+def is_port_in_use(port):
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        return s.connect_ex(("localhost", port)) == 0
