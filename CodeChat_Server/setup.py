@@ -57,7 +57,7 @@
 # <https://github.com/pypa/sampleproject/commit/3b73bd9433d031f0873a6cbc5bd04cea2e3407cb>`_.
 #
 # Always prefer setuptools over distutils
-from setuptools import setup, find_packages
+from setuptools import setup, find_packages  # type: ignore
 from os import path
 
 here = path.abspath(path.dirname(__file__))
