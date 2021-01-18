@@ -70,7 +70,6 @@ The following developers provided valuable help in creating the CodeChat system.
 To do
 =====
 -   Lots of testing.
--   Scan for percentages in the web client and update the progress bar.
 -   Handle syntax error line number click from the web client.
 -   Provide way to do a rebuild all.
 -   Find a way not to overload/abuse the ClientState._file_name.

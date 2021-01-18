@@ -13,7 +13,8 @@ Change Log
 **********
 -   `Github master <https://github.com/bjones1/CodeChat_system.git>`_:
 
-    -   No changes yet.
+    -   Correctly return an error message when no renderer is found (another fixed case).
+    -   Display percentage in the progress bar when available.
 
 -   0.0.16, 18-Jan-2021:
 

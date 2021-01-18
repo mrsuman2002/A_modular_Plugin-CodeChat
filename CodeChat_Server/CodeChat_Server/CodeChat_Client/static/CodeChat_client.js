@@ -32,6 +32,19 @@ const GetResultType = {
 }
 
 
+// A regex to match a percentage: one or more digits, optionally followed by a period and one or more digits, and ending with a percent sign.
+let percent_regex = new RegExp(
+    // Capture the number in front of the percent sign.
+    "(" +
+        // Look for one or more digits, ...
+        "\\d+" +
+        // Optionally followed by a decimal point and one ore more digits. (Don't include these in a capture group.)
+        "(?:\\.\\d+)?" +
+    // End the capture group, then require a percent sign. Search globally (for all matches).
+    ")%", "g"
+);
+
+
 // Core client
 // ===========
 // Given an ID to use, run the CodeChat client.
@@ -74,7 +87,7 @@ function run_client(id, ws_address)
             let [scrollX, scrollY] = getScroll();
             // See ideas in https://stackoverflow.com/a/16822995. Works for same-domain only.
             outputElement.onload = function () {
-                // Only run this once, not every time the user navigates in the browser. Otherwise, each click would call ``do_get_result`` again, producing multiple get_result requests at the same time.
+                // Only run this once, not every time the user navigates in the browser.
                 outputElement.onload = undefined;
                 if (is_user_navigation) {
                     console.log("TODO: User navigation.");
@@ -103,13 +116,13 @@ function run_client(id, ws_address)
             // See comments above -- avoid double loads and indicate that the is a programmatic reload.
             is_user_navigation = false;
             // Exit for now; the callbacks above will continue this function's operation.
-            return;
 
         } else if (result.get_result_type === GetResultType.build) {
             if (clear_output) {
                 // This is the start of a new build.
                 status_message.innerHTML = "Building...";
                 build_progress.style.display = "inline";
+                build_progress.removeAttribute("value");
                 build_div.textContent = result.text;
                 errors_div.textContent = "";
                 status_errors_div.innerHTML = "";
@@ -123,6 +136,12 @@ function run_client(id, ws_address)
                 clear_output = false;
             } else {
                 build_div.textContent += result.text;
+            }
+            // Look for a percentage, to update the progress bar.
+            let percent_matches = result.text.match(percent_regex);
+            if (percent_matches !== null) {
+                // Update the progress bar with the percentage from the last match.
+                build_progress.value = parseFloat(percent_matches[percent_matches.length - 1]);
             }
             // Scroll to the bottom, to show the content just added.
             scroll_to_bottom(build_contents);
@@ -155,7 +174,7 @@ function run_client(id, ws_address)
                 status_message.innerHTML = "Client shut down.";
                 window.open('', '_self').close();
                 // Stop asking for results.
-                return;
+                ws.close();
             } else if (result.text.startsWith("error: unknown client ")) {
                 console.log(result.text);
                 // _`Close the window` -- there's no point in asking for more commands. Note: there are some cases where this fails, although I've only seen this once. From the Chrome console, ``Scripts may close only the windows that were opened by them.`` In this case, leave a message asking the user to close the window.
@@ -165,7 +184,7 @@ function run_client(id, ws_address)
                 status_message.innerHTML = "Server disconnected";
                 window.open('', '_self').close();
                 // Stop asking for results.
-                return;
+                ws.close();
             } else {
                 console.log("Unknown command " + result.text);
             }
@@ -184,12 +203,6 @@ function run_client(id, ws_address)
             return [undefined, undefined];
         }
     }
-
-    // Start requesting results as soon as the web page is loaded.
-    addEvent(window, 'load', function () {
-        // Start listening to the server.
-        do_get_result();
-    });
 
     // The let statement below makes this accessible globally.
     navigate_to_error = function(file_path, line) {
