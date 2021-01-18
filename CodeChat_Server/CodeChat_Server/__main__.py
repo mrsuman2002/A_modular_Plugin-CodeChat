@@ -40,10 +40,13 @@ import sys
 #
 # Main
 # ====
-# Run both servers.
-if __name__ == "__main__":
+def main():
     # This file takes a long time to load and run. Print a status message as it starts.
     print("Loading...")
     from .server import run_servers
 
     sys.exit(run_servers())
+
+
+if __name__ == "__main__":
+    main()
