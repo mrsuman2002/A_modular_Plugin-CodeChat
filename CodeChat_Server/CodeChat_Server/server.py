@@ -219,7 +219,7 @@ def client_data(id: int, url_path: str) -> Union[str, Response]:
     # See if we rendered this file.
     html = handler.render_manager.threadsafe_get_render_results(id, url_path)
     # If we have rendered HTML, return it.
-    if html:
+    if type(html) == str:
         assert isinstance(html, str)
         response = make_response(html)
         # Don't allow the browser to cache files. See the `Flask docs <https://flask.palletsprojects.com/en/1.1.x/api/#flask.Request.cache_control>`_ and `MDN docs <https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#Directives>`_. TODO: allow caching of static files (but how do we know which files are static?)
