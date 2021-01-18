@@ -15,6 +15,7 @@ Change Log
 
     -   Prevent CodeChat from dying when a laptop goes to sleep then wakes back up.
     -   Automatically start the CodeChat server when the VSCode extension is run.
+    -   Correctly return an error message when no renderer is found.
 
 -   0.0.15, 4-Dec-2020:
 

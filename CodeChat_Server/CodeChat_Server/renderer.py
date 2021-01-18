@@ -246,7 +246,9 @@ def _checkModificationTime(
     except OSError as e:
         return (
             str(html_file),
-            "{}:: ERROR: CodeChat renderer - unable to check modification time of the html file {}: {}.".format(source_file, html_file, e),
+            "{}:: ERROR: CodeChat renderer - unable to check modification time of the html file {}: {}.".format(
+                source_file, html_file, e
+            ),
         )
 
 
@@ -372,7 +374,9 @@ async def _run_subprocess(
     q: asyncio.Queue,
 ) -> Tuple[str, str]:
     # Explain what's going on.
-    await q.put(GetResultReturn(GetResultType.build, "{} > {}\n".format(cwd, " ".join(args))))
+    await q.put(
+        GetResultReturn(GetResultType.build, "{} > {}\n".format(cwd, " ".join(args)))
+    )
 
     # Start the process.
     try:
@@ -384,7 +388,10 @@ async def _run_subprocess(
             stderr=asyncio.subprocess.PIPE,
         )
     except Exception as e:
-        return "", ":: ERROR: CodeChat renderer - when starting render process, {}.".format(e)
+        return (
+            "",
+            ":: ERROR: CodeChat renderer - when starting render process, {}.".format(e),
+        )
 
     # Provide a way to send stdout from the process a line at a time to the web client.
     async def stdout_streamer(stdout_stream: asyncio.StreamReader):
@@ -453,7 +460,8 @@ def _pass_through(text: str, file_path: str) -> Tuple[str, str]:
 
 # The "error converter" when a converter can't be found.
 def _error_converter(text: str, file_path: str) -> Tuple[str, str]:
-    return "", "{}:: ERROR: no converter found for this file.".format(file_path)
+    msg = "No converter found for this file."
+    return msg, "{}:: ERROR: {}".format(file_path, msg)
 
 
 # ClientState
@@ -598,7 +606,7 @@ async def convert_file(text: str, file_path: str, cs: ClientState) -> None:
 class RenderManager:
     # Provide a way to perform thread-safe access of methods in this class.
     def __getattr__(self, name: str) -> Callable:
-        if name.startswith('threadsafe_'):
+        if name.startswith("threadsafe_"):
             # Strip off ``threadsafe`` and look for the function.
             internal_func = self.__getattr__(name[11:])
 
@@ -607,11 +615,17 @@ class RenderManager:
                 return internal_func(*args, **kwargs)
 
             # See if we need to wrap thisin an async.
-            async_func = internal_func if asyncio.iscoroutinefunction(internal_func) else async_wrap
+            async_func = (
+                internal_func
+                if asyncio.iscoroutinefunction(internal_func)
+                else async_wrap
+            )
 
             # Wrap the async func in a threadsafe call.
             def threadsafe_async(*args, **kwargs):
-                future = asyncio.run_coroutine_threadsafe(async_func(*args, **kwargs), self._loop)
+                future = asyncio.run_coroutine_threadsafe(
+                    async_func(*args, **kwargs), self._loop
+                )
                 return future.result()
 
             return threadsafe_async
@@ -684,9 +698,7 @@ class RenderManager:
         return cast(ClientState, cs).q if cs else None
 
     # Given a URL, see if it matches with the latest render; if so, return the resulting HTML. If there's no match to the URL or the ID doesn't exist, return False. Note that the "HTML" can be None, meaning the render was stored to disk and the URL is a path to the rendered file.
-    def get_render_results(
-        self, id: int, url_path: str
-    ) -> Union[None, str, bool]:
+    def get_render_results(self, id: int, url_path: str) -> Union[None, str, bool]:
         cs = self.get_client_state(id)
         return (
             cast(ClientState, cs)._html
@@ -695,7 +707,9 @@ class RenderManager:
         )
 
     # Communicate with a client via a websocket.
-    async def websocket_handler(self, websocket: websockets.WebSocketServerProtocol, path: str):
+    async def websocket_handler(
+        self, websocket: websockets.WebSocketServerProtocol, path: str
+    ):
         # First, read this client's ID.
         # TODO: should wrap this in a try/catch block.
         id = json.loads(await websocket.recv())
@@ -705,7 +719,9 @@ class RenderManager:
         while not self._is_shutdown:
             ret = await q.get()
             # Delete the client if this was a shutdown command.
-            if (ret["get_result_type"] == GetResultType.command) and (ret["text"] == "shutdown"):
+            if (ret["get_result_type"] == GetResultType.command) and (
+                ret["text"] == "shutdown"
+            ):
                 # Check that the queue is empty
                 if not q.empty():
                     print(
@@ -779,7 +795,9 @@ class RenderManager:
         self._loop = asyncio.get_running_loop()
         self._is_shutdown = False
 
-        self.websocket_server = await websockets.serve(self.websocket_handler, "127.0.0.1", 5001)
+        self.websocket_server = await websockets.serve(
+            self.websocket_handler, "127.0.0.1", 5001
+        )
         await asyncio.gather(*[self._worker(i) for i in range(num_workers)])
 
     # Process items in the render queue.
