@@ -11,20 +11,23 @@
 *****************************************
 The Visual Studio Code CodeChat extension
 *****************************************
-This extension provide CodeChat's capabilities within the Visual Studio Code editor.
+This extension provides CodeChat's capabilities within the Visual Studio Code editor.
 
 
 Installation
 ============
-First, `install the CodeChat extension for Visual Studio Code <https://code.visualstudio.com/docs/introvideos/extend>`_. Then, `install the CodeChat server <../CodeChat_Server/contents>`, which performs all the back-end work and is required for the extension to work. Optionally, install additional external renderers such as Pandoc, Doxygen, etc.
+After `installing the CodeChat extension for Visual Studio Code <https://code.visualstudio.com/docs/introvideos/extend>`_:
+
+#.  `Install the CodeChat Server <../CodeChat_Server/contents>`, which performs all the back-end work and is required for the extension to work. Optionally, install additional external renderers such as Pandoc, Doxygen, etc.
+#.  Open the Visual Studio Code settings for CodeChat by navigating to ``File`` > ``Preferences`` > ``Settings`` then typing ``CodeChat`` in the search box.
+#.  Enter the path to the CodeChat Server -- see the CodeChat Server installation instructions for a method to determine this.
 
 
 .. _use CodeChat:
 
 Use
 ===
-#.  `Start  the CodeChat Server <../CodeChat_Server/contents>`_.
-#.  Open a file that CodeChat can render (`most source files <https://codechat.readthedocs.io/en/master/CodeChat/CommentDelimiterInfo.py.html#supported-languages>`_, along with .rst, .md, .html files).
+#.  Open a file that CodeChat can render (`most source files <https://codechat.readthedocs.io/en/master/CodeChat/CommentDelimiterInfo.py.html#supported-languages>`_, along with ``.rst``, ``.md``, and ``.html`` files).
 #.  Open the `Visual Studio Code command palette <https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette>`_ by pressing ``Ctrl+Shift+P``. Type ``CodeChat``, then press enter to run the extension. After a moment, the rendered file should load.
 
 If you would like to build documentation for an entire project instead of a single file, create a `project configuration file <../codechat_config.json>` then place it in the root directory of your project.

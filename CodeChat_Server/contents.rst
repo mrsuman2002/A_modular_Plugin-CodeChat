@@ -11,17 +11,17 @@
 *******************
 The CodeChat server
 *******************
-TODO: introduction.
+The CodeChat server receives requests from CodeChat plugins/extensions running in text editors/IDEs to render a file, performs the render, then displays it in the CodeChat client. It also responds to user input from the CodeChat client by processing this request then sending the results back to the plugin/extension.
 
 
 Installation
 ============
-To install the CodeChat server, first `install a recent version of Python <https://www.python.org/downloads/>`_. From a terminal or command line, execute ``python -m pip install -U CodeChat_Server`` or ``python3 -m pip install -U CodeChat_Server`` depending on your OS.
+To install the CodeChat server:
 
-
-Execution
-=========
-To run the server, enter ``CodeChat_Server`` on the terminal/command line.
+#.  `Install a recent version of Python <https://www.python.org/downloads/>`_.
+#.  From a terminal or command line, execute ``python -m pip install -U CodeChat_Server`` or ``python3 -m pip install -U CodeChat_Server``, depending on your OS.
+#.  Determine the location of the ``CodeChat_Server`` by entering ``where CodeChat_Server`` (Linux/OS X) or ``which CodeChat_Server`` (Windows) at the terminal/command line.
+#.  Enter this path into your text editor/IDE's CodeChat configuration as the CodeChat server path.
 
 
 Use
