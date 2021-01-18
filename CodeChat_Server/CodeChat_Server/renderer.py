@@ -56,6 +56,10 @@ import websockets
 
 # Constants
 # =========
+# The port used by a websocket connection between the CodeChat Server and the CodeChat Client.
+WEBSOCKET_PORT = 5001
+
+
 # .. _GetResultType Py:
 #
 # These must match the `constants in the client <GetResultType JS>`.
@@ -796,7 +800,7 @@ class RenderManager:
         self._is_shutdown = False
 
         self.websocket_server = await websockets.serve(
-            self.websocket_handler, "127.0.0.1", 5001
+            self.websocket_handler, "127.0.0.1", WEBSOCKET_PORT
         )
         await asyncio.gather(*[self._worker(i) for i in range(num_workers)])
 

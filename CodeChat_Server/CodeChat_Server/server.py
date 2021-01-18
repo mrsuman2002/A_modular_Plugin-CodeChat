@@ -62,6 +62,16 @@ from .gen_py.CodeChat_Services.ttypes import (
 )
 
 
+# Constants
+# =========
+# The port used for and HTTP connection from the CodeChat Client to the CodeChat Server.
+HTTP_PORT = 5000
+# .. _CodeChat service port:
+#
+# The port used for the Thrift connection between text editor/IDE extensions/plugins and the CodeChat Server. All editor/IDE plugins must use this port to access CodeChat services.
+THRIFT_PORT = 9090
+
+
 # Service provider
 # ================
 # This class implements the EditorPlugin service.
@@ -88,7 +98,7 @@ class CodeChatHandler:
             return ret
 
         # Return what's requested.
-        url = "http://127.0.0.1:5000/client?id={}".format(id)
+        url = "http://127.0.0.1:{}/client?id={}".format(HTTP_PORT, id)
         if codeChat_client_location == CodeChatClientLocation.url:
             # Just return the URL.
             ret_str = url
@@ -164,19 +174,22 @@ handler = CodeChatHandler()
 # Server for the CodeChat editor plugin
 # -------------------------------------
 def editor_plugin_server() -> None:
-    transport = TSocket.TServerSocket(host="127.0.0.1", port=9090)
+    transport = TSocket.TServerSocket(host="127.0.0.1", port=THRIFT_PORT)
     tfactory = TTransport.TBufferedTransportFactory()
     pfactory = TBinaryProtocol.TBinaryProtocolFactory()
     processor = EditorPlugin.Processor(handler)
 
-    # This server spawns a thread per connection.
-    ## server = TServer.TThreadedServer(processor, transport, tfactory, pfactory)
     # Spawns up to 10 threads by default, then uses those. Mark these threads as daemon, so they will be terminated on program exit.
     server = TServer.TThreadPoolServer(
         processor, transport, tfactory, pfactory, daemon=True
     )
-    # For simplicity, we can use:
-    # server = TServer.TSimpleServer(processor, transport, tfactory, pfactory)
+    # Other options for the server:
+    #
+    # This server spawns a thread per connection.
+    ## server = TServer.TThreadedServer(processor, transport, tfactory, pfactory)  # noqa: E266
+    # An simpler server:
+    ## server = TServer.TSimpleServer(processor, transport, tfactory, pfactory)  # noqa: E266
+
     server.serve()
 
 
@@ -195,7 +208,9 @@ client_app = Flask(
 # The endpoint to get the HTML for the CodeChat client.
 @client_app.route("/client")
 def client_html() -> str:
-    return render_template("CodeChat_client.html")
+    return render_template(
+        "CodeChat_client.html", WEBSOCKET_PORT=renderer.WEBSOCKET_PORT
+    )
 
 
 # The endpoint for files requested by a specific client, including rendered source files.
@@ -236,8 +251,14 @@ def client_data(id: int, url_path: str) -> Union[str, Response]:
 # Run both servers. This does not (usually) return.
 def run_servers() -> int:
     # See if the required ports are in use, probably by another instance of this server.
-    if is_port_in_use(5000) or is_port_in_use(5001):
-        print("Error: ports 5000 and/or 5001 are already in use. Exiting.")
+    if (
+        is_port_in_use(HTTP_PORT)
+        or is_port_in_use(renderer.WEBSOCKET_PORT)
+        or is_port_in_use(THRIFT_PORT)
+    ):
+        print(
+            f"Error: ports {HTTP_PORT}, {renderer.WEBSOCKET_PORT}, and/or {THRIFT_PORT} are already in use. Exiting."
+        )
         return 1
 
     # Both servers block when run, so place them in a thread. Mark the Thrift server as a daemon, so it will be killed when the program shuts down.

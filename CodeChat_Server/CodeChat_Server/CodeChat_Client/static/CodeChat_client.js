@@ -35,7 +35,7 @@ const GetResultType = {
 // Core client
 // ===========
 // Given an ID to use, run the CodeChat client.
-function run_client(id)
+function run_client(id, ws_address)
 {
     // Get commonly-used nodes in the DOM.
     let status_message = document.getElementById("status_message");
@@ -61,7 +61,7 @@ function run_client(id)
     }
 
     // Create a websocket to communicate with the CodeChat server.
-    let ws = new ReconnectingWebSocket("ws://127.0.0.1:5001/");
+    let ws = new ReconnectingWebSocket(ws_address);
 
     // Identify this client on connection.
     ws.onopen = event => ws.send(JSON.stringify(id))

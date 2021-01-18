@@ -44,7 +44,7 @@
     </div>
 
     <script>
-        run_client( {{ request.args.get('id', '') }} );
+        run_client({{ request.args.get("id", "") }}, "ws://127.0.0.1:{{WEBSOCKET_PORT}}/");
     </script>
 </body>
 </html>

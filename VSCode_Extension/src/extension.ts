@@ -120,11 +120,13 @@ export function activate(context: vscode.ExtensionContext) {
             }
 
             // Try to connect to the CodeChat server. The `createConnection function <https://github.com/apache/thrift/blob/master/lib/nodejs/lib/thrift/connection.js#L258>`_ wraps `net.createConnection <https://nodejs.org/api/net.html#net_net_createconnection_options_connectlistener>`_ then returns a `Connection object <https://github.com/apache/thrift/blob/master/lib/nodejs/lib/thrift/connection.js#L35>`_.
+            //
+            // This must use the `CodeChat service port <CodeChat service port>`.
             connection = thrift.createConnection("localhost", 9090, {
                 transport: thrift.TBufferedTransport,
                 protocol:  thrift.TBinaryProtocol,
-                connect_timeout: 5,
-                timeout: 5,
+                connect_timeout: 10,
+                timeout: 10,
             });
 
             let was_error: boolean = false;
