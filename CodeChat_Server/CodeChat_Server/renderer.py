@@ -168,7 +168,10 @@ def _convertCodeChat(text: str, filePath: str) -> Tuple[str, str]:
         # extensions, CodeChat may not support the lexer chosen by Pygments.
         # For example, a ``.v`` file may be Verilog (supported by CodeChat)
         # or Coq (not supported). In this case, provide an error message
-        return "", "{}:ERROR: this file is not supported by CodeChat.".format(filePath)
+        return (
+            "",
+            "{}:: ERROR: this file is not supported by CodeChat.".format(filePath),
+        )
     return _convertReST(rest_string, filePath, True)
 
 
@@ -274,17 +277,17 @@ async def _convert_external_project(
         with open(tool_or_project_path, encoding="utf-8") as f:
             data = f.read()
     except Exception as e:
-        return "", "{}::ERROR: Unable to open. {}".format(tool_or_project_path, e)
+        return "", "{}:: ERROR: Unable to open. {}".format(tool_or_project_path, e)
 
     # Parse it and check the format
     try:
         d = ast.literal_eval(data)
     except Exception as e:
-        return "", "{}::ERROR: Unable to parse. {}".format(tool_or_project_path, e)
+        return "", "{}:: ERROR: Unable to parse. {}".format(tool_or_project_path, e)
     if not isinstance(d, dict):
         return (
             "",
-            "{}::ERROR: Unexpected type; file should contain a dict, but saw a {}".format(
+            "{}:: ERROR: Unexpected type; file should contain a dict, but saw a {}".format(
                 tool_or_project_path, type(d)
             ),
         )
@@ -292,7 +295,7 @@ async def _convert_external_project(
     if not isinstance(args, list):
         return (
             "",
-            "{}::ERROR: missing args or wrong type; saw {} (type was {}).".format(
+            "{}:: ERROR: missing args or wrong type; saw {} (type was {}).".format(
                 tool_or_project_path, args, type(args)
             ),
         )
@@ -300,7 +303,7 @@ async def _convert_external_project(
     if not isinstance(source_path, str):
         return (
             "",
-            "{}::ERROR: missing source_path or wrong type; saw {} (type was {}).".format(
+            "{}:: ERROR: missing source_path or wrong type; saw {} (type was {}).".format(
                 tool_or_project_path, source_path, type(source_path)
             ),
         )
@@ -308,7 +311,7 @@ async def _convert_external_project(
     if not isinstance(output_path, str):
         return (
             "",
-            "{}::ERROR: missing output_path or wrong type; saw {} (type was {}).".format(
+            "{}:: ERROR: missing output_path or wrong type; saw {} (type was {}).".format(
                 tool_or_project_path, output_path, type(output_path)
             ),
         )
@@ -316,7 +319,7 @@ async def _convert_external_project(
     if not isinstance(html_ext, str):
         return (
             "",
-            "{}::ERROR: wrong type for html_ext; saw {} (type was {}).".format(
+            "{}:: ERROR: wrong type for html_ext; saw {} (type was {}).".format(
                 file_path_, html_ext, type(html_ext)
             ),
         )
@@ -338,7 +341,7 @@ async def _convert_external_project(
     except Exception as e:
         return (
             "",
-            "{}::ERROR: unable to compute path relative to {}. {}".format(
+            "{}:: ERROR: unable to compute path relative to {}. {}".format(
                 file_path, source_path, e
             ),
         )
@@ -464,8 +467,7 @@ def _pass_through(text: str, file_path: str) -> Tuple[str, str]:
 
 # The "error converter" when a converter can't be found.
 def _error_converter(text: str, file_path: str) -> Tuple[str, str]:
-    msg = "No converter found for this file."
-    return msg, "{}:: ERROR: {}".format(file_path, msg)
+    return "", "{}:: ERROR: No converter found for this file.".format(file_path)
 
 
 # ClientState
@@ -715,11 +717,27 @@ class RenderManager:
         self, websocket: websockets.WebSocketServerProtocol, path: str
     ):
         # First, read this client's ID.
-        # TODO: should wrap this in a try/catch block.
-        id = json.loads(await websocket.recv())
+        try:
+            id = json.loads(await websocket.recv())
+        except websockets.exceptions.WebSocketException:
+            # Give up if there's a websocket error.
+            return
+
+        # Find the queue for this client.
         q = self.get_queue(id)
         if not q:
+            try:
+                await websocket.send(
+                    GetResultReturn(
+                        GetResultType.command, f"error: unknown client {id}."
+                    )
+                )
+            except websockets.exceptions.WebSocketException:
+                # Ignore any errors here, since we're closing the socket anyway.
+                pass
             return
+
+        # Send messages until shutdown.
         while not self._is_shutdown:
             ret = await q.get()
             # Delete the client if this was a shutdown command.
