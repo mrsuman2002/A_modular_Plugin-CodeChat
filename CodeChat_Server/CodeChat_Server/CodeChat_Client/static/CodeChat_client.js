@@ -49,7 +49,7 @@ function run_client(id, ws_address)
     // Set up "globals" for the function below.
     //
     // True if the output/errors should be cleared on the next result.
-    let clear_output = false;
+    let clear_output = true;
     // True if the most recent reload was caused by the user; false if this was a programmatic reload.
     let is_user_navigation = false;
     // True if there were warnings or errors in the last build.
