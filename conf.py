@@ -138,6 +138,11 @@ rst_epilog = (
 
 .. |docname| replace:: :docname:`name`
 """
+
+    # A commonly-used link.
+    """
+.. _PEP 8: http://www.python.org/dev/peps/pep-0008/#imports
+"""
 )
 
 # `source_suffix <http://sphinx-doc.org/config.html#confval-source_suffix>`_:
@@ -157,6 +162,7 @@ CodeChat_lexer_for_glob = {
     ".gitignore": "Perl",
     "MANIFEST.in": "Perl",
     "docs-requirements.txt": "Perl",
+    ".flake8": "Perl",
     # Treat JavaScript as plain JavaScript; the auto-detect code finds something else.
     "*.js": "JavaScript",
     # The ``codechat_config.json`` file is actually Python.

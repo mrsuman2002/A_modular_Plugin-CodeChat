@@ -82,7 +82,6 @@ To do
 -   Improve docs
 -   Support at least one more editor.
 -   Save and restore scroll position on a per-file basis.
--   Create a pre-commit check to run black, flake8, mypy, and unit tests.
 -   Separate the render manager code from the renderer code.
 -   Provide a verbose/non-verbose logging option.
 
