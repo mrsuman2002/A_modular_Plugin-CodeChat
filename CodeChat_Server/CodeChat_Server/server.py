@@ -46,8 +46,8 @@ from flask import (
     send_file,
     abort,
 )
-from thrift.server import TServer  # type: ignore
-from thrift.transport import TTransport  # type: ignore
+from thrift.server import TServer
+from thrift.transport import TTransport
 from thrift.transport import TSocket
 from thrift.protocol import TBinaryProtocol
 
@@ -234,7 +234,7 @@ def client_data(id: int, url_path: str) -> Union[str, Response]:
 # Main code
 # =========
 # Run both servers. This does not (usually) return.
-def run_servers() -> None:
+def run_servers() -> int:
     # See if the required ports are in use, probably by another instance of this server.
     if is_port_in_use(5000) or is_port_in_use(5001):
         print("Error: ports 5000 and/or 5001 are already in use. Exiting.")
