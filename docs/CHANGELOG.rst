@@ -13,11 +13,12 @@ Change Log
 **********
 -   `Github master <https://github.com/bjones1/CodeChat_system.git>`_:
 
-    -   Correctly return an error message when no renderer is found (another fixed case).
-    -   Display percentage in the progress bar when available.
+    -   No changes yet.
 
 -   0.0.16, 18-Jan-2021:
 
+    -   Correctly return an error message when no renderer is found (another fixed case).
+    -   Display percentage in the progress bar when available.
     -   Prevent CodeChat from dying when a laptop goes to sleep then wakes back up.
     -   Automatically start the CodeChat server when the VSCode extension is run.
     -   Correctly return an error message when no renderer is found.
