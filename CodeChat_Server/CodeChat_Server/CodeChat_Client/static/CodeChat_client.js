@@ -299,7 +299,7 @@ function parse_for_errors(errors_html) {
         let div = document.createElement("div");
         div.innerHTML = file_path;
         file_path = div.textContent;
-        // Make an unspecificed filename empty.
+        // Make an unspecified filename empty.
         if (file_path === "<string>") {
             file_path = "";
         }
@@ -309,7 +309,7 @@ function parse_for_errors(errors_html) {
             line = -1;
         }
 
-        // Create a hyperlink to nagivate to the error.
+        // Create a hyperlink to navigate to the error.
         return `<a href='javascript:navigate_to_error(${JSON.stringify(file_path)}, ${line})' class="error_link">${match_text}</a>`;
     });
 
