@@ -32,7 +32,6 @@
 from pathlib import PurePosixPath
 import socket
 import threading
-import time
 from typing import Union
 import webbrowser
 
@@ -269,7 +268,7 @@ def run_servers() -> int:
 
     # Taken from https://stackoverflow.com/a/45017691.
     flask_server_thread = threading.Thread(
-        target=client_app.run, name="Flask", daemon=True
+        target=client_app.run, kwargs=dict(port=HTTP_PORT), name="Flask", daemon=True
     )
     flask_server_thread.start()
 
@@ -280,9 +279,10 @@ def run_servers() -> int:
     render_manager_thread.start()
 
     # Run the servers in threads until a user-requested shutdown occurs.
+    print("Type q then enter to quit the server.\n")
     try:
-        while True:
-            time.sleep(100)
+        while input() != "q":
+            pass
     except KeyboardInterrupt:
         pass
 
