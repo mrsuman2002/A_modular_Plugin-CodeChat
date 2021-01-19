@@ -24,8 +24,8 @@
 # <http://packaging.python.org/en/latest/tutorial.html#version>`_.
 __version__ = "0.0.16"
 
-# Contents
-# ========
+# Contents:
+#
 # .. toctree::
 #   :maxdepth: 2
 #

@@ -48,7 +48,6 @@ from CodeChat.CodeToRest import code_to_rest_string, html_static_path  # type: i
 from CodeChat.CommentDelimiterInfo import SUPPORTED_GLOBS  # type: ignore
 import websockets
 
-
 # Local imports
 # -------------
 # None
