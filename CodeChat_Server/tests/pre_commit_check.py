@@ -11,25 +11,27 @@
 #
 # Standard library
 # ----------------
-from pathlib import Path
-import sys
-
+# None.
+#
 # Third-party imports
 # -------------------
 # None.
 #
 # Local application imports
 # -------------------------
-# This isn't in the path, since it's used only for development.
-sys.path.insert(0, str(Path(__file__).parent / "ci_utils"))
-from ci_utils import xqt, pushd  # noqa: E402
+from ci_utils import xqt, pushd
 
 
 # Checks
 # ======
 def checks():
     xqt(
-        "black --check .", "flake8 .", "mypy .",
+        # fmt: off
+        "black --check .",
+        "flake8",
+        "mypy",
+        "pytest",
+        # fmt: on
     )
     with pushd(".."):
         xqt(

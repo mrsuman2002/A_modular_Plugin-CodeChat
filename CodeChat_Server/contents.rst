@@ -42,8 +42,4 @@ Contents
     README
     CodeChat_Server/__init__.py
     setup.py
-    pre_commit_check.py
-    ci_utils/ci_utils.py
-    mypy.ini
-    .flake8
-    pyproject.toml
+    tests/contents

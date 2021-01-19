@@ -199,7 +199,7 @@ exclude_patterns = [
     # Misc files.
     "Thumbs.db",
     ".DS_Store",
-    ".pytest_cache",
+    "**/.pytest_cache",
     "**/.mypy_cache",
     # **CodeChat notes:**
     #
