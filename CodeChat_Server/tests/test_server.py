@@ -8,8 +8,8 @@
 #
 # Standard library
 # ----------------
-# None.
-#
+import socketserver
+
 # Third-party imports
 # -------------------
 # None.
@@ -20,4 +20,10 @@ from CodeChat_Server.server import is_port_in_use
 
 
 def test_1():
-    assert is_port_in_use(5000) is True
+    # Pick a random, unused port to test. First, make sure it's actually unused.
+    port = 6000
+    assert is_port_in_use(port) is False
+
+    # Open a port, so that it's in use.
+    with socketserver.TCPServer(("localhost", port), socketserver.BaseRequestHandler):
+        assert is_port_in_use(port) is True
