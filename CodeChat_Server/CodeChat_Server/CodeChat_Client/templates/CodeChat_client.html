@@ -22,7 +22,12 @@
     <div class="horizontally_divided" id="splitter">
         <div>
             <!-- The children of the splitter div must be divs, which the splitter JS will assign styles to. So, wrap the iframe in a div. -->
-            <iframe id="output"></iframe>
+            <iframe id="output" srcdoc="
+                <html>
+                    <h1>CodeChat</h1>
+                    <p>Waiting for initial render. Switch the active source code window to begin.</p>
+                </html>">
+            </iframe>
         </div>
         <div>
             <!-- Likewise, wrap the ``build_contents`` in a plain div, allowing us to assign styles via the stylesheet; the parent div's styles will be overriden by spliter JS assignments. -->
@@ -35,7 +40,7 @@
     </div>
     <div id="status_div">
         <span id="status_left">
-            <span id="status_message">Waiting for initial render. Switch the active source code window to begin...</span>
+            <span id="status_message">Waiting...</span>
         </span>
         <span id="status_right">
             <span id="status_errors"></span>

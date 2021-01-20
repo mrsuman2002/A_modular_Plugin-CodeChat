@@ -65,13 +65,15 @@ function run_client(id, ws_address)
     let clear_output = true;
     // True if the most recent reload was caused by the user; false if this was a programmatic reload.
     let is_user_navigation = false;
-    // True if there were warnings or errors in the last build.
-    let errors_or_warnings = false;
+    // True if there were warnings or errors in the last build. Initialize to true so that the build messages pane is visible initially.
+    let errors_or_warnings = true;
     // The size of the splitter, with a key of ``errors_or_warnings``.
     let splitter_size = {
         true: 85,
         false: 100,
     }
+    splitMe.init();
+    set_splitter_percent(splitter_size[errors_or_warnings]);
 
     // Create a websocket to communicate with the CodeChat server.
     let ws = new ReconnectingWebSocket(ws_address);
@@ -109,7 +111,8 @@ function run_client(id, ws_address)
                 }
             };
 
-            // Set the new src to (re)load content.
+            // Set the new src to (re)load content. At startup, the ``srcdoc`` attribute present some welcome text. Remove it so that we can now assign the ``src`` attribute.
+            outputElement.removeAttribute("srcdoc");
             outputElement.src = window.location.protocol + '//' + window.location.host + window.location.pathname + "/" + id + "/" + result.text;
             // The next build output received will apply to the new build, so set the flag.
             clear_output = true;
