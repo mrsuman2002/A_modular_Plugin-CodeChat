@@ -13,8 +13,13 @@ Change Log
 **********
 -   `Github master <https://github.com/bjones1/CodeChat_system.git>`_:
 
+    -   No changes yet.
+
+-   0.0.17, 20-Jan-2021:
+
     -   Correctly size splitter on startup.
     -   Correct shut-down sequence.
+    -   Show errors if the plugin/server connection is lost.
 
 -   0.0.16, 18-Jan-2021:
 
