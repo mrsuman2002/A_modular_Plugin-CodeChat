@@ -307,7 +307,11 @@ def run_servers() -> int:
     return 0
 
 
-# Copied verbatim from Stack Overflow.
+# Inspired by Stack Overflow. The original post used ``connect_ex``, which is very slow (~2 seconds).
 def is_port_in_use(port):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        return s.connect_ex(("localhost", port)) == 0
+        try:
+            s.bind(("localhost", port))
+        except OSError:
+            return True
+        return False
