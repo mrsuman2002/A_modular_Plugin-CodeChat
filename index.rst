@@ -71,7 +71,11 @@ To do
 =====
 -   Lots of testing.
 -   Handle syntax error line number click from the web client.
+-   Hyperlink the file and line, or perhaps just the line, instead of the entire error message.
+-   Use https://libraries.io/npm/shlex to parse a command line, not just a path, to the CodeChat Server.
 -   Provide way to do a rebuild all.
+-   Add a CodeChat Client GUI to select render language for non-project builds.
+-   Rename the GetResultType.html to GetResultType.url.
 -   Find a way not to overload/abuse the ClientState._file_name.
 -   Add in sync.
 -   Monitor iframe location changes and try to sync by loading another file.
