@@ -360,6 +360,81 @@ EditorPlugin_stop_client_result.prototype.write = function(output) {
   return;
 };
 
+var EditorPlugin_shutdown_server_args = function(args) {
+};
+EditorPlugin_shutdown_server_args.prototype = {};
+EditorPlugin_shutdown_server_args.prototype.read = function(input) {
+  input.readStructBegin();
+  while (true) {
+    var ret = input.readFieldBegin();
+    var ftype = ret.ftype;
+    if (ftype == Thrift.Type.STOP) {
+      break;
+    }
+    input.skip(ftype);
+    input.readFieldEnd();
+  }
+  input.readStructEnd();
+  return;
+};
+
+EditorPlugin_shutdown_server_args.prototype.write = function(output) {
+  output.writeStructBegin('EditorPlugin_shutdown_server_args');
+  output.writeFieldStop();
+  output.writeStructEnd();
+  return;
+};
+
+var EditorPlugin_shutdown_server_result = function(args) {
+  this.success = null;
+  if (args) {
+    if (args.success !== undefined && args.success !== null) {
+      this.success = args.success;
+    }
+  }
+};
+EditorPlugin_shutdown_server_result.prototype = {};
+EditorPlugin_shutdown_server_result.prototype.read = function(input) {
+  input.readStructBegin();
+  while (true) {
+    var ret = input.readFieldBegin();
+    var ftype = ret.ftype;
+    var fid = ret.fid;
+    if (ftype == Thrift.Type.STOP) {
+      break;
+    }
+    switch (fid) {
+      case 0:
+      if (ftype == Thrift.Type.STRING) {
+        this.success = input.readString();
+      } else {
+        input.skip(ftype);
+      }
+      break;
+      case 0:
+        input.skip(ftype);
+        break;
+      default:
+        input.skip(ftype);
+    }
+    input.readFieldEnd();
+  }
+  input.readStructEnd();
+  return;
+};
+
+EditorPlugin_shutdown_server_result.prototype.write = function(output) {
+  output.writeStructBegin('EditorPlugin_shutdown_server_result');
+  if (this.success !== null && this.success !== undefined) {
+    output.writeFieldBegin('success', Thrift.Type.STRING, 0);
+    output.writeString(this.success);
+    output.writeFieldEnd();
+  }
+  output.writeFieldStop();
+  output.writeStructEnd();
+  return;
+};
+
 var EditorPluginClient = exports.Client = function(output, pClass) {
   this.output = output;
   this.pClass = pClass;
@@ -549,6 +624,62 @@ EditorPluginClient.prototype.recv_stop_client = function(input,mtype,rseqid) {
   }
   return callback('stop_client failed: unknown result');
 };
+
+EditorPluginClient.prototype.shutdown_server = function(callback) {
+  this._seqid = this.new_seqid();
+  if (callback === undefined) {
+    var _defer = Q.defer();
+    this._reqs[this.seqid()] = function(error, result) {
+      if (error) {
+        _defer.reject(error);
+      } else {
+        _defer.resolve(result);
+      }
+    };
+    this.send_shutdown_server();
+    return _defer.promise;
+  } else {
+    this._reqs[this.seqid()] = callback;
+    this.send_shutdown_server();
+  }
+};
+
+EditorPluginClient.prototype.send_shutdown_server = function() {
+  var output = new this.pClass(this.output);
+  var args = new EditorPlugin_shutdown_server_args();
+  try {
+    output.writeMessageBegin('shutdown_server', Thrift.MessageType.CALL, this.seqid());
+    args.write(output);
+    output.writeMessageEnd();
+    return this.output.flush();
+  }
+  catch (e) {
+    delete this._reqs[this.seqid()];
+    if (typeof output.reset === 'function') {
+      output.reset();
+    }
+    throw e;
+  }
+};
+
+EditorPluginClient.prototype.recv_shutdown_server = function(input,mtype,rseqid) {
+  var callback = this._reqs[rseqid] || function() {};
+  delete this._reqs[rseqid];
+  if (mtype == Thrift.MessageType.EXCEPTION) {
+    var x = new Thrift.TApplicationException();
+    x.read(input);
+    input.readMessageEnd();
+    return callback(x);
+  }
+  var result = new EditorPlugin_shutdown_server_result();
+  result.read(input);
+  input.readMessageEnd();
+
+  if (null !== result.success) {
+    return callback(null, result.success);
+  }
+  return callback('shutdown_server failed: unknown result');
+};
 var EditorPluginProcessor = exports.Processor = function(handler) {
   this._handler = handler;
 };
@@ -673,6 +804,42 @@ EditorPluginProcessor.prototype.process_stop_client = function(seqid, input, out
       } else {
         result_obj = new Thrift.TApplicationException(Thrift.TApplicationExceptionType.UNKNOWN, err.message);
         output.writeMessageBegin("stop_client", Thrift.MessageType.EXCEPTION, seqid);
+      }
+      result_obj.write(output);
+      output.writeMessageEnd();
+      output.flush();
+    });
+  }
+};
+EditorPluginProcessor.prototype.process_shutdown_server = function(seqid, input, output) {
+  var args = new EditorPlugin_shutdown_server_args();
+  args.read(input);
+  input.readMessageEnd();
+  if (this._handler.shutdown_server.length === 0) {
+    Q.fcall(this._handler.shutdown_server.bind(this._handler)
+    ).then(function(result) {
+      var result_obj = new EditorPlugin_shutdown_server_result({success: result});
+      output.writeMessageBegin("shutdown_server", Thrift.MessageType.REPLY, seqid);
+      result_obj.write(output);
+      output.writeMessageEnd();
+      output.flush();
+    }).catch(function (err) {
+      var result;
+      result = new Thrift.TApplicationException(Thrift.TApplicationExceptionType.UNKNOWN, err.message);
+      output.writeMessageBegin("shutdown_server", Thrift.MessageType.EXCEPTION, seqid);
+      result.write(output);
+      output.writeMessageEnd();
+      output.flush();
+    });
+  } else {
+    this._handler.shutdown_server(function (err, result) {
+      var result_obj;
+      if ((err === null || typeof err === 'undefined')) {
+        result_obj = new EditorPlugin_shutdown_server_result((err !== null || typeof err === 'undefined') ? err : {success: result});
+        output.writeMessageBegin("shutdown_server", Thrift.MessageType.REPLY, seqid);
+      } else {
+        result_obj = new Thrift.TApplicationException(Thrift.TApplicationExceptionType.UNKNOWN, err.message);
+        output.writeMessageBegin("shutdown_server", Thrift.MessageType.EXCEPTION, seqid);
       }
       result_obj.write(output);
       output.writeMessageEnd();

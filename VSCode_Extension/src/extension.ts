@@ -133,7 +133,7 @@ export function activate(context: vscode.ExtensionContext) {
 
             connection.on('error', function(err) {
                 was_error = true;
-                show_error(`Error communicating with the CodeChat server: ${escape(err.message)}. Re-run the CodeChat extension to restart it.`);
+                show_error(`Error communicating with the CodeChat server: ${err.message}. Re-run the CodeChat extension to restart it.`);
                 // The close event will be `emitted next <https://nodejs.org/api/net.html#net_event_error_1>`_; that will handle cleanup.
             });
 
@@ -165,16 +165,44 @@ export function activate(context: vscode.ExtensionContext) {
 
 // On deactivation, close everything down.
 export function deactivate() {
-    panel?.dispose();
-    panel = undefined;
-    stop_client();
-    connection?.end();
-    connection = undefined;
-    if (codechat_server !== undefined) {
-        // If the CodeChat server was the executable stub, it runs the Python code in a subprocess. A plain ``codechat_server.kill()`` doesn't kill it (or any of its render subprocesses, should they be running.)
-        tree_kill(codechat_server.pid);
-        codechat_server = undefined;
-    }
+    // Return a promise that shuts down the server or stops the client, then do final cleanup.
+    return new Promise(resolve => {
+        if (client !== undefined) {
+            // If we started the server, request a graceful shutdown.
+            if (codechat_server !== undefined) {
+                client.shutdown_server(err => {
+                    client = undefined;
+                    id = undefined;
+                    // Wait for the server to shut down.
+                    setTimeout(() => {
+                        resolve(err);
+                    }, 500);
+                });
+            } else {
+                // Otherwise, shut down the client.
+                assert(id !== undefined);
+                client.stop_client(id, err => {
+                    client = undefined;
+                    id = undefined;
+                    resolve(err);
+                });
+            }
+        } else {
+            // With no client, there's nothing to do in this phase of the shutdown.
+            resolve("");
+        }
+    }).then(() => {
+        // Perform final cleanup.
+        panel?.dispose();
+        panel = undefined;
+        connection?.end();
+        connection = undefined;
+        if (codechat_server !== undefined) {
+            // If the CodeChat server was the executable stub, it runs the Python code in a subprocess. A plain ``codechat_server.kill()`` doesn't kill it (or any of its render subprocesses, should they be running.)
+            tree_kill(codechat_server.pid);
+            codechat_server = undefined;
+        }
+    });
 }
 
 
@@ -282,12 +310,14 @@ function stop_client() {
         );
     }
 
+    // Even though the callbacks to ``stop_client`` haven't completed yet, set this now to prevent further use of the client, which is stopping.
     client = undefined;
     id = undefined;
 
     // Shut the timer down after the client is undefined, to ensure it can't be started again by a call to ``start_render()``.
     if (idle_timer !== undefined) {
         clearTimeout(idle_timer);
+        idle_timer = undefined;
     }
 }
 
@@ -297,6 +327,10 @@ function stop_client() {
 // Provide an error message in the panel if possible.
 function show_error(message: string) {
     if (panel !== undefined) {
+        // If the panel was displaying other content, reset it for errors.
+        if (!panel.webview.html.startsWith("<h1>CodeChat</h1>")) {
+            panel.webview.html = "<h1>CodeChat</h1>";
+        }
         panel.webview.html += `<p>${escape(message)}</p>`;
     } else {
         vscode.window.showErrorMessage(message);

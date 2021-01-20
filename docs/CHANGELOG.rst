@@ -14,6 +14,7 @@ Change Log
 -   `Github master <https://github.com/bjones1/CodeChat_system.git>`_:
 
     -   Correctly size splitter on startup.
+    -   Correct shut-down sequence.
 
 -   0.0.16, 18-Jan-2021:
 

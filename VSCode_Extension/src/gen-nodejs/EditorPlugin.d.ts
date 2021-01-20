@@ -31,6 +31,10 @@ declare class Client {
   stop_client(id: number): string;
 
   stop_client(id: number, callback?: (error: void, response: string)=>void): void;
+
+  shutdown_server(): string;
+
+  shutdown_server(callback?: (error: void, response: string)=>void): void;
 }
 
 declare class Processor {
@@ -41,4 +45,5 @@ declare class Processor {
   process_get_client(seqid: number, input: thrift.TProtocol, output: thrift.TProtocol): void;
   process_start_render(seqid: number, input: thrift.TProtocol, output: thrift.TProtocol): void;
   process_stop_client(seqid: number, input: thrift.TProtocol, output: thrift.TProtocol): void;
+  process_shutdown_server(seqid: number, input: thrift.TProtocol, output: thrift.TProtocol): void;
 }

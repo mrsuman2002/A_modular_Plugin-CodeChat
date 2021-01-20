@@ -90,4 +90,7 @@ service EditorPlugin  {
         // See id_.
         1:i32 id
     )
+
+    // Shut down the CodeChat server. Returns an empty string on success, or an error message.
+    string shutdown_server()
  }

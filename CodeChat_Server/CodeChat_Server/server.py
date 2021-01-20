@@ -162,6 +162,12 @@ class CodeChatHandler:
         print("  => (empty string)")
         return ""
 
+    # Shut down the server.
+    def shutdown_server(self) -> str:
+        print("shutdown_server")
+        shutdown_event.set()
+        return ""
+
 
 # Instantiate this class, which will be used by both servers.
 handler = CodeChatHandler()
@@ -247,6 +253,10 @@ def client_data(id: int, url_path: str) -> Union[str, Response]:
 
 # Main code
 # =========
+# When this event is ``set``, ``run_servers`` will shut down the servers and return.
+shutdown_event = threading.Event()
+
+
 # Run both servers. This does not (usually) return.
 def run_servers() -> int:
     # See if the required ports are in use, probably by another instance of this server.
@@ -279,10 +289,13 @@ def run_servers() -> int:
     render_manager_thread.start()
 
     # Run the servers in threads until a user-requested shutdown occurs.
-    print("Type q then enter to quit the server.\n")
     try:
-        while input() != "q":
-            pass
+        while True:
+            # Ctrl+C is ignored while waiting, so use a 1 second poll.
+            if shutdown_event.wait(1):
+                # If the event is received, exit the loop in order to shut down. First, clear the event so the next invocation of this function will work correctly.
+                shutdown_event.clear()
+                break
     except KeyboardInterrupt:
         pass
 
