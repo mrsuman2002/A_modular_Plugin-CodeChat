@@ -619,7 +619,7 @@ class RenderManager:
             async def async_wrap(*args, **kwargs):
                 return internal_func(*args, **kwargs)
 
-            # See if we need to wrap thisin an async.
+            # See if we need to wrap this in an async.
             async_func = (
                 internal_func
                 if asyncio.iscoroutinefunction(internal_func)
@@ -739,8 +739,14 @@ class RenderManager:
         # Send messages until shutdown.
         while not self._is_shutdown:
             ret = await q.get()
+            try:
+                await websocket.send(json.dumps(ret))
+            except websockets.exceptions.WebSocketException:
+                # An error occurred -- close the websocket. The client will open another, so we can try again.
+                return
+
             # Delete the client if this was a shutdown command.
-            if (ret["get_result_type"] == GetResultType.command) and (
+            if (ret["get_result_type"] == GetResultType.command.value) and (
                 ret["text"] == "shutdown"
             ):
                 # Check that the queue is empty
@@ -751,13 +757,7 @@ class RenderManager:
                         )
                     )
                 # Request a client deletion.
-                self.delete_client(id)
-
-            try:
-                await websocket.send(json.dumps(ret))
-            except websockets.exceptions.WebSocketException:
-                # An error occurred -- close the websocket. The client will open another, so we can try again.
-                return
+                assert self.delete_client(id)
 
     # Shut down a CodeChat client.
     async def shutdown_client(self, id: int) -> bool:
@@ -775,7 +775,13 @@ class RenderManager:
     # Delete the client after a delay.
     async def _delete_client_later(self, id: int):
         await asyncio.sleep(1)
-        self.delete_client(id)
+        if self.delete_client(id):
+            print(f"Client {id} not responding -- deleted it.")
+
+    # Shut down the render manager, called from another thread.
+    def threadsafe_shutdown(self):
+        # We can't wait for a result, since this causes the asyncio event loop to exit, but the result must be retrieved from a Future running within the event loop. Therefore, call without waiting.
+        self._loop.call_soon_threadsafe(asyncio.create_task, self.shutdown())
 
     # Shut down the render manager.
     async def shutdown(self):
