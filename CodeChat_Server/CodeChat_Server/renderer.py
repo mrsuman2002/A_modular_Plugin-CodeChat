@@ -805,8 +805,6 @@ class RenderManager:
         if is_win:
             asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 
-        # Let the user know that the server is now ready -- this is the last piece of it to start.
-        print("Ready.")
         asyncio.run(self._run(*args), debug=debug)
         print("Render manager is shut down.")
 
@@ -825,6 +823,8 @@ class RenderManager:
         self.websocket_server = await websockets.serve(
             self.websocket_handler, "127.0.0.1", WEBSOCKET_PORT
         )
+        # Let the user know that the server is now ready -- this is the last piece of it to start.
+        print("Ready.")
         await asyncio.gather(*[self._worker(i) for i in range(num_workers)])
 
     # Process items in the render queue.

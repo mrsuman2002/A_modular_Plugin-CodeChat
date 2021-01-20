@@ -9,9 +9,9 @@
 #
 # Standard library
 # ----------------
+from time import sleep
 import socketserver
-import subprocess
-import sys
+import threading
 
 # Third-party imports
 # -------------------
@@ -19,26 +19,39 @@ import pytest
 
 # Local imports
 # -------------
-from CodeChat_Server.server import is_port_in_use
+from CodeChat_Server.server import run_servers, HTTP_PORT, shutdown_event
 
 
 # Fixtures
 # ========
 @pytest.fixture
-def run_servers():
-    p = subprocess.Popen(
-        [sys.argv[0], "-m", "CodeChat_Server"], stdin=subprocess.PIPE, text=True
-    )
+def run_servers_fixture(capsys):
+    t = threading.Thread(target=run_servers, name="run_servers")
+    t.start()
+    # Wait for the server to start.
+    out = ""
+    while "Ready.\n" not in out:
+        sleep(0.1)
+        _out, err = capsys.readouterr()
+        # Accumulate the characters -- prints may get chopped in pieces by thread switching. (Or the may not -- is print an atomic operation?)
+        out += _out
     yield
-    p.communicate("q\n")
-    p.wait()
+    shutdown_event.set()
+    t.join()
 
 
-def test_1():
-    # Pick a random, unused port to test. First, make sure it's actually unused.
-    port = 6000
-    assert is_port_in_use(port) is False
-
+def test_1(capsys):
     # Open a port, so that it's in use.
-    with socketserver.TCPServer(("localhost", port), socketserver.BaseRequestHandler):
-        assert is_port_in_use(port) is True
+    with socketserver.TCPServer(
+        ("localhost", HTTP_PORT), socketserver.BaseRequestHandler
+    ):
+        # Run the server.
+        assert run_servers() == 1
+        # Check that it reported the ports were in use.
+        out, err = capsys.readouterr()
+        assert out.startswith("Error: ports ")
+
+
+# For now, just test out the fixture.
+def test_2(run_servers_fixture):
+    pass
