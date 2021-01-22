@@ -825,6 +825,8 @@ class RenderManager:
         )
         # Let the user know that the server is now ready -- this is the last piece of it to start.
         print("Ready.")
+        # For testing, flush this since test code waits for it before running the rest of a test.
+        sys.stdout.flush()
         await asyncio.gather(*[self._worker(i) for i in range(num_workers)])
 
     # Process items in the render queue.
