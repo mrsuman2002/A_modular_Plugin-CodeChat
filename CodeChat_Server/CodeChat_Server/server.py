@@ -70,6 +70,8 @@ HTTP_PORT = 5000
 # The port used for the Thrift connection between text editor/IDE extensions/plugins and the CodeChat Server. All editor/IDE plugins must use this port to access CodeChat services.
 THRIFT_PORT = 9090
 
+UNKNOWN_CLIENT = "Unknown client id {}."
+
 
 # Service provider
 # ================
@@ -141,7 +143,7 @@ class CodeChatHandler:
             print(" => (empty string)")
             return ""
         else:
-            ret = "Unknown client id {}".format(id)
+            ret = UNKNOWN_CLIENT.format(id)
             print(" => {}".format(ret))
             return ret
 
@@ -155,7 +157,7 @@ class CodeChatHandler:
         print("stop_client(id={})".format(id))
         ok = self.render_manager.threadsafe_shutdown_client(id)
         if not ok:
-            ret = "unknown client {}.".format(id)
+            ret = UNKNOWN_CLIENT.format(id)
             print("  => {}".format(ret))
             return ret
         # Indicate success.
