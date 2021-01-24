@@ -82,11 +82,13 @@ class CodeChatHandler:
 
     # _`get_client`: Return the HTML for a web client.
     def get_client(self, codeChat_client_location: int) -> RenderClientReturn:
-        print(
-            "get_client({})".format(
-                CodeChatClientLocation._VALUES_TO_NAMES[codeChat_client_location]
-            )
-        )
+        try:
+            location_name = CodeChatClientLocation._VALUES_TO_NAMES[
+                codeChat_client_location
+            ]
+        except KeyError:
+            location_name = "invalid location"
+        print("get_client({})".format(location_name))
         id = self.render_manager.threadsafe_create_client()
         # Get the next ID.
         if id is None:
@@ -122,7 +124,7 @@ class CodeChatHandler:
             ret_str = ""
         else:
             ret = RenderClientReturn(
-                "", -1, "Unknown command {}".format(codeChat_client_location)
+                "", -1, "Invalid location {}".format(codeChat_client_location)
             )
             print("  => {}".format(ret))
             return ret

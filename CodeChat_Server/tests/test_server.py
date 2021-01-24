@@ -24,16 +24,15 @@ from thrift.protocol import TBinaryProtocol
 # -------------
 from CodeChat_Server.server import HTTP_PORT, THRIFT_PORT
 from CodeChat_Server.gen_py.CodeChat_Services import EditorPlugin
-from CodeChat_Server.gen_py.CodeChat_Services.ttypes import (
-    RenderClientReturn,
-    CodeChatClientLocation,
-)
+from CodeChat_Server.gen_py.CodeChat_Services.ttypes import RenderClientReturn
 
 
 # Fixtures
 # ========
-SUBPROCESS_SERVER_ARGS = ([sys.executable, "-m", "CodeChat_Server"], )
-SUBPROCESS_SERVER_KWARGS = dict(stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+SUBPROCESS_SERVER_ARGS = ([sys.executable, "-m", "CodeChat_Server"],)
+SUBPROCESS_SERVER_KWARGS = dict(
+    stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+)
 
 
 @pytest.fixture
@@ -42,7 +41,6 @@ def editor_plugin():
     # Wait for the server to start.
     out = ""
     line = ""
-    #import pdb; pdb.set_trace()
     while "Ready.\n" not in line:
         p.stdout.flush()
         line = p.stdout.readline()
@@ -55,7 +53,7 @@ def editor_plugin():
             assert False
         sleep(0.1)
 
-    transport = TSocket.TSocket('localhost', THRIFT_PORT)
+    transport = TSocket.TSocket("localhost", THRIFT_PORT)
     transport = TTransport.TBufferedTransport(transport)
     protocol = TBinaryProtocol.TBinaryProtocol(transport)
     client = EditorPlugin.Client(protocol)
@@ -87,11 +85,15 @@ def test_1():
         assert "Error: ports " in cp.stdout
 
 
-# Test the plugin with invalid IDs.
+# Test the plugin with invalid parameters.
 def test_2(editor_plugin):
     unknown_client = "Unknown client id 0."
     assert editor_plugin.start_render("", "", 0, False) == unknown_client
     assert editor_plugin.stop_client(0) == unknown_client
+
+    assert editor_plugin.get_client(3) == RenderClientReturn(
+        "", -1, "Invalid location 3"
+    )
 
 
 # Test the plugin shutdown.
