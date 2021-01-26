@@ -196,7 +196,7 @@ def editor_plugin_server() -> None:
     #
     # This server spawns a thread per connection.
     ## server = TServer.TThreadedServer(processor, transport, tfactory, pfactory)  # noqa: E266
-    # An simpler server:
+    # A simpler server:
     ## server = TServer.TSimpleServer(processor, transport, tfactory, pfactory)  # noqa: E266
 
     server.serve()
@@ -227,32 +227,22 @@ def client_html() -> str:
 def client_data(id: int, url_path: str) -> Union[str, Response]:
     # See if we rendered this file.
     html = handler.render_manager.threadsafe_get_render_results(id, url_path)
+
     # If we have rendered HTML, return it.
     if type(html) == str:
         assert isinstance(html, str)
         response = make_response(html)
-        # Don't allow the browser to cache files. See the `Flask docs <https://flask.palletsprojects.com/en/1.1.x/api/#flask.Request.cache_control>`_ and `MDN docs <https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#Directives>`_. TODO: allow caching of static files (but how do we know which files are static?)
-        response.cache_control.no_store = True
-        return response
-
-    # If this render was a project, then ``html`` is None. In this case, the rendered HTML is already on disk at ``url_path``; however, don't allow Flask to cache this, since it changes with each edit.
-    if html is None:
-        send_file_kwargs = dict(cache_timeout=0)
     else:
-        send_file_kwargs = {}
+        # The file is on disk. Send it or a 404 if nothing was found.
+        try:
+            # Don't allow Flask to cache files on disk, since they may change with each edit.
+            response = make_response(send_file(url_path, cache_timeout=0))  # type: ignore
+        except (FileNotFoundError, PermissionError):
+            abort(404)
 
-    # Send a static file or a 404 if nothing was found.
-    try:
-        # TODO SECURITY: if a web app, need to limit the base directory to wherever projects are placed on disk.
-        response = make_response(send_file(url_path, **send_file_kwargs))  # type: ignore
-        # By default, allow caching on everything but HTML files.
-        dont_cache = PurePosixPath(url_path).suffix in (".htm", ".html")
-        if dont_cache:
-            # See same code above.
-            response.cache_control.no_store = True
-        return response
-    except (FileNotFoundError, PermissionError):
-        abort(404)
+    # Don't allow the browser to cache files. See the `Flask docs <https://flask.palletsprojects.com/en/1.1.x/api/#flask.Request.cache_control>`_ and `MDN docs <https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#Directives>`_.
+    response.cache_control.no_store = True
+    return response
 
 
 # Main code
