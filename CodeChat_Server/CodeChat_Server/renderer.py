@@ -702,7 +702,10 @@ class RenderManager:
         cs = self.get_client_state(id)
         return cast(ClientState, cs).q if cs else None
 
-    # Given a URL, see if it matches with the latest render; if so, return the resulting HTML. If there's no match to the URL or the ID doesn't exist, return False. Note that the "HTML" can be None, meaning the render was stored to disk and the URL is a path to the rendered file.
+    # Return the results of rendering the provided URL:
+    #
+    # - If the URL matches with the latest render, return the resulting HTML for a non-project render. Return ``None`` for a project render, indicating that the render was stored to disk and the URL is a path to the rendered file.
+    # - If there's no match to the URL or the ID doesn't exist, return False. Note that the "HTML" can be None, meaning
     def get_render_results(self, id: int, url_path: str) -> Union[None, str, bool]:
         cs = self.get_client_state(id)
         return (
@@ -717,18 +720,24 @@ class RenderManager:
     ):
         # First, read this client's ID.
         try:
-            id = json.loads(await websocket.recv())
+            data = await websocket.recv()
         except websockets.exceptions.WebSocketException:
             # Give up if there's a websocket error.
             return
 
         # Find the queue for this client.
+        try:
+            id = json.loads(data)
+        except json.decoder.JSONDecodeError:
+            id = f"<invalid id {repr(data)}>"
         q = self.get_queue(id)
         if not q:
             try:
                 await websocket.send(
-                    GetResultReturn(
-                        GetResultType.command, f"error: unknown client {id}."
+                    json.dumps(
+                        GetResultReturn(
+                            GetResultType.command, f"error: unknown client {id}."
+                        )
                     )
                 )
             except websockets.exceptions.WebSocketException:

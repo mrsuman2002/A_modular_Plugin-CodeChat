@@ -8,6 +8,8 @@
 #
 # Standard library
 # ----------------
+import asyncio
+import json
 from time import sleep
 import socketserver
 import subprocess
@@ -16,6 +18,7 @@ import sys
 # Third-party imports
 # -------------------
 import pytest
+import requests
 from thrift.transport import TSocket
 from thrift.transport import TTransport
 from thrift.protocol import TBinaryProtocol
@@ -23,8 +26,16 @@ from thrift.protocol import TBinaryProtocol
 # Local imports
 # -------------
 from CodeChat_Server.server import HTTP_PORT, THRIFT_PORT
+from CodeChat_Server.renderer import WEBSOCKET_PORT, GetResultType, GetResultReturn
 from CodeChat_Server.gen_py.CodeChat_Services import EditorPlugin
 from CodeChat_Server.gen_py.CodeChat_Services.ttypes import RenderClientReturn
+import websockets
+
+
+# Constants
+# =========
+HTTP_ADDRESS = f"http://localhost:{HTTP_PORT}/"
+WEBSOCKET_ADDRESS = f"ws://localhost:{WEBSOCKET_PORT}"
 
 
 # Fixtures
@@ -74,6 +85,10 @@ def editor_plugin():
 
 # Tests
 # =====
+#
+#
+# Editor plug-in
+# --------------
 def test_1():
     # Open a port, so that it's in use.
     with socketserver.TCPServer(
@@ -100,3 +115,36 @@ def test_2(editor_plugin):
 def test_3(editor_plugin):
     assert editor_plugin.shutdown_server() == ""
     editor_plugin.subprocess.wait()
+
+
+# CodeChat Client HTTP
+# --------------------
+# Make a request of a non-existent ID.
+def test_4(editor_plugin):
+    # Test on a file that doesn't exist.
+    r = requests.get(HTTP_ADDRESS + "client/1/a file that does not exist")
+    assert r.status_code == 404
+
+
+# CodeChat Client websocket
+# -------------------------
+async def atest_5():
+    # Test an invalid id.
+    async with websockets.connect(WEBSOCKET_ADDRESS) as ws:
+        await ws.send("boom")
+        r = await ws.recv()
+        assert json.loads(r) == GetResultReturn(
+            GetResultType.command, "error: unknown client <invalid id 'boom'>."
+        )
+
+    # Test an unknown client.
+    async with websockets.connect(WEBSOCKET_ADDRESS) as ws:
+        await ws.send("1")
+        r = await ws.recv()
+        assert json.loads(r) == GetResultReturn(
+            GetResultType.command, "error: unknown client 1."
+        )
+
+
+def test_5(editor_plugin):
+    asyncio.run(atest_5())
