@@ -29,7 +29,6 @@
 #
 # Standard library
 # ----------------
-from pathlib import PurePosixPath
 import socket
 import threading
 from typing import Union

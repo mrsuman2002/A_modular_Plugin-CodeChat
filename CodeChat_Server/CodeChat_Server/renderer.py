@@ -63,9 +63,13 @@ WEBSOCKET_PORT = 5001
 #
 # These must match the `constants in the client <GetResultType JS>`.
 class GetResultType(Enum):
-    html = 0
+    # A URL indicating that new rendered content is available.
+    url = 0
+    # A build output message.
     build = 1
+    # Errors from the build.
     errors = 2
+    # A command, such as ``shutdown```.
     command = 3
 
 
@@ -578,22 +582,23 @@ async def convert_file(text: str, file_path: str, cs: ClientState) -> None:
 
     if asyncio.iscoroutinefunction(converter):
         # Coroutines get the queue, so they can report progress during the build.
-        html_string, err_string = await converter(
+        html_string_or_file_path, err_string = await converter(
             text, file_path, tool_or_project_path, cs.q
         )
     else:
         assert tool_or_project_path is None
-        html_string, err_string = converter(text, file_path)
+        html_string_or_file_path, err_string = converter(text, file_path)
 
     # Update the client's state, now that the rendering is complete.
     cs._editor_text = text
-    # For projects, the rendered HTML is already on disk.
     if is_project:
-        cs._file_path = html_string
+        # For projects, the rendered HTML is already on disk; a path to this rendered file is returned.
+        cs._file_path = html_string_or_file_path
         cs._html = None
     else:
+        # Otherwise, the rendered HTML is returned as a string and can be directly used. Provide a path to the source file which was just rendered.
         cs._file_path = file_path
-        cs._html = html_string
+        cs._html = html_string_or_file_path
 
     # Send any errors. An empty error string will clear any errors from a previous build, and should still be sent.
     await cs.q.put(GetResultReturn(GetResultType.errors, err_string))
@@ -603,7 +608,7 @@ async def convert_file(text: str, file_path: str, cs: ClientState) -> None:
     # For Windows, make the path contain forward slashes.
     uri = path_to_uri(cs._file_path)
     # Encode this, for Windows paths which contain a colon (or unusual Linux paths).
-    await cs.q.put(GetResultReturn(GetResultType.html, urllib.parse.quote(uri)))
+    await cs.q.put(GetResultReturn(GetResultType.url, urllib.parse.quote(uri)))
 
 
 # RenderManager / render thread

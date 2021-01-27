@@ -25,7 +25,7 @@
 //
 // These must match the `constants in the server <GetResultType Py>`.
 const GetResultType = {
-    html: 0,
+    url: 0,
     build: 1,
     errors: 2,
     command: 3,
@@ -84,7 +84,7 @@ function run_client(id, ws_address)
     // Handle messages.
     ws.onmessage = event => {
         result = JSON.parse(event.data);
-        if (result.get_result_type === GetResultType.html) {
+        if (result.get_result_type === GetResultType.url) {
             // Save and restore scroll location through the content update, if we can.
             let [scrollX, scrollY] = getScroll();
             // See ideas in https://stackoverflow.com/a/16822995. Works for same-domain only.
