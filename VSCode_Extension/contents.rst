@@ -21,6 +21,7 @@ After `installing the CodeChat extension for Visual Studio Code <https://code.vi
 #.  `Install the CodeChat Server <../CodeChat_Server/contents>`, which performs all the back-end work and is required for the extension to work. Optionally, install additional external renderers such as Pandoc, Doxygen, etc.
 #.  Open the Visual Studio Code settings for CodeChat by navigating to ``File`` > ``Preferences`` > ``Settings`` then typing ``CodeChat`` in the search box.
 #.  Enter the path to the CodeChat Server -- see the CodeChat Server installation instructions for a method to determine this.
+#.  `Switch to a light theme <https://code.visualstudio.com/docs/getstarted/themes>`_ -- unfortunately, Visual Studio's the dark theme isn't supported by the CodeChat system.
 
 
 .. _use CodeChat:

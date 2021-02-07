@@ -13,7 +13,9 @@ Change Log
 **********
 -   `Github master <https://github.com/bjones1/CodeChat_system.git>`_:
 
-    -   No changes yet.
+    -   Add missing dependency to the server.
+    -   Reduce server start-up time.
+    -   Update install docs for the VSCode extension; need to use a light theme.
 
 -   0.0.17, 20-Jan-2021:
 
