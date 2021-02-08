@@ -1,6 +1,6 @@
 {
     "name": "codechat",
-    "version": "0.0.17",
+    "version": "0.0.18",
     "publisher": "CodeChat",
     "engines": {
         "vscode": "^1.51.0"
@@ -49,7 +49,7 @@
         "@types/vscode": "^1.51.0",
         "tslint": "^5.16.0",
         "typescript": "^3.9.7",
-        "vscode-test": "^1.4.1"
+        "vscode-test": "^1.5.0"
     },
     "scripts": {
         "vscode:prepublish": "npm run compile",
