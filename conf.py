@@ -191,6 +191,8 @@ exclude_patterns = [
     ".DS_Store",
     "**/.pytest_cache",
     "**/.mypy_cache",
+    "CodeChat_Server/.tox",
+
     # Sphinx build output
     "_build",
 
