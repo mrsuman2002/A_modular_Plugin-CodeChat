@@ -19,11 +19,11 @@
 # ************************************************
 # |docname| - Configuration for a CodeChat project
 # ************************************************
-# This file defines the configuration for a CodeChat project. In addition to allowing standard JSON objects, it also allows Python-style comments and any valid Python literal.
+# This file defines the configuration for a CodeChat project. In addition to allowing standard JSON objects, it also allows Python-style comments and any valid Python literal. This file contains a working `Sphinx <https://www.sphinx-doc.org/>`_ configuration.
 #
 # The file must contain a single dict, with the following keys:
 {
-    # ``source_path``: optional; defaults to ``.``. A path to the root of the source tree. Relative paths are rooted in the directory containing this file.
+    # ``source_path``: optional; defaults to ``.`` (the current directory). A path to the root of the source tree. Relative paths are rooted in the directory containing this file.
     #"source_path": ".",
 
     # ``output_path``: required. A path to the root of the HTML output produced by this renderer. Relative paths are rooted in the directory containing this file.
@@ -35,7 +35,7 @@
     # - ``{source_path}``: the ``source_path`` above, but as an absolute path.
     # - ``{output_path}``: the ``output_path`` above, but as an absolute path.
     "args": [
-        # See https://www.sphinx-doc.org/en/master/man/sphinx-build.html.
+        # See `sphinx-build <https://www.sphinx-doc.org/en/master/man/sphinx-build.html>`_.
         "sphinx-build",
         # The source directory.
         ".",
