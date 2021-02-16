@@ -24,9 +24,6 @@ syntax: glob
 # CodeChat-generated files
 _build/
 
-# Npm-generated files
-node_modules/
-
 # TypeScript transpiles.
 VSCode_Extension/out
 VSCode_Extension/.vscode
@@ -38,8 +35,9 @@ dist/
 *.egg-info/
 
 # Mypy-generated files
-.mypy_cache/
 
 # Others
-sphinx-enki-info.txt
+.mypy_cache/
+.tox/
 thrift*.exe
+node_modules/
