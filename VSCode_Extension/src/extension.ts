@@ -30,15 +30,22 @@
 //
 // Requirements
 // ============
+// Node.js packages
+// ----------------
 import assert = require('assert');
-import child_process = require('child_process');
-import vscode = require('vscode');
+
+// Third-party packages
+// --------------------
 import escape = require('escape-html');
+import shlex = require('shlex');
 import thrift = require('thrift');
-import tree_kill = require('tree-kill');
+import vscode = require('vscode');
+
+// Local packages
+// --------------
 import EditorPlugin = require('./gen-nodejs/EditorPlugin');
 import ttypes = require('./gen-nodejs/CodeChat_Services_types');
-
+let which = require('which');
 
 // Globals
 // =======
@@ -51,7 +58,7 @@ let client: EditorPlugin.Client | undefined = undefined;
 // Where the webclient resides: ``html`` for a webview panel embedded in VSCode; ``browser`` to use an external browser.
 const client_location: ttypes.CodeChatClientLocation = ttypes.CodeChatClientLocation.html;
 // The subprocess in which the CodeChat server runs.
-let codechat_server: child_process.ChildProcess | undefined = undefined;
+let codechat_server: vscode.Terminal | undefined = undefined;
 
 // A unique instance of these variables is required for each CodeChat panel. However, this code doesn't have a good UI way to deal with multiple panels, so only one is supported at this time.
 //
@@ -111,13 +118,25 @@ export function activate(context: vscode.ExtensionContext) {
             assert(client === undefined);
 
             // Launch the CodeChat server if it's not running.
-            if (codechat_server === undefined) {
-                let codechat_server_path = vscode.workspace.getConfiguration("CodeChat.CodeChatServer").get("Path");
-                assert(typeof codechat_server_path === "string");
-                codechat_server = child_process.spawn(codechat_server_path);
-                codechat_server.on("error", (err) => show_error(`While running CodeChat server: ${err}`));
-                codechat_server.on("exit", (event) => codechat_server = undefined);
+            if ((codechat_server === undefined) || (codechat_server.exitStatus !== undefined))  {
+                // Get the command from the VSCode configuration.
+                const codechat_server_command = vscode.workspace.getConfiguration("CodeChat.CodeChatServer").get("Command");
+                assert(typeof codechat_server_command === "string");
+
+                // Split it into a command and args.
+                let [command, ...args] = shlex.split(codechat_server_command);
+                // Find it in the path.
+                let abspath_command = which.sync(command, {nothrow: true});
+                if (abspath_command === null) {
+                    show_error(`Unable to locate the CodeChat Server command in path; value was ${command}.`);
+                } else {
+                    // Run it in a VSCode terminal. While the feedback isn't very helpful if the command returns a non-zero exit code, it does provide a good way for the user to monitor what's going on for other cases.
+                    codechat_server = vscode.window.createTerminal("CodeChat Server", abspath_command, args);
+                }
             }
+
+            // Show the terminal, in case there are errors. This helps the user understand what's going wrong.
+            codechat_server?.show(true);
 
             // Try to connect to the CodeChat server. The `createConnection function <https://github.com/apache/thrift/blob/master/lib/nodejs/lib/thrift/connection.js#L258>`_ wraps `net.createConnection <https://nodejs.org/api/net.html#net_net_createconnection_options_connectlistener>`_ then returns a `Connection object <https://github.com/apache/thrift/blob/master/lib/nodejs/lib/thrift/connection.js#L35>`_.
             //
@@ -197,11 +216,8 @@ export function deactivate() {
         panel = undefined;
         connection?.end();
         connection = undefined;
-        if (codechat_server !== undefined) {
-            // If the CodeChat server was the executable stub, it runs the Python code in a subprocess. A plain ``codechat_server.kill()`` doesn't kill it (or any of its render subprocesses, should they be running.)
-            tree_kill(codechat_server.pid);
-            codechat_server = undefined;
-        }
+        codechat_server?.dispose();
+        codechat_server = undefined;
     });
 }
 

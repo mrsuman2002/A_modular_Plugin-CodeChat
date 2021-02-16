@@ -19,8 +19,6 @@ Installation
 After `installing the CodeChat extension for Visual Studio Code <https://code.visualstudio.com/docs/introvideos/extend>`_:
 
 #.  `Install the CodeChat Server <../CodeChat_Server/contents>`, which performs all the back-end work and is required for the extension to work. Optionally, install additional external renderers such as Pandoc, Doxygen, etc.
-#.  Open the Visual Studio Code settings for CodeChat by navigating to ``File`` > ``Preferences`` > ``Settings`` then typing ``CodeChat`` in the search box.
-#.  Enter the path to the CodeChat Server -- see the CodeChat Server installation instructions for a method to determine this.
 #.  `Switch to a light theme <https://code.visualstudio.com/docs/getstarted/themes>`_ -- unfortunately, Visual Studio's the dark theme isn't supported by the CodeChat system.
 
 
@@ -29,11 +27,13 @@ After `installing the CodeChat extension for Visual Studio Code <https://code.vi
 Use
 ===
 #.  Open a file that CodeChat can render (`most source files <https://codechat.readthedocs.io/en/master/CodeChat/CommentDelimiterInfo.py.html#supported-languages>`_, along with ``.rst``, ``.md``, and ``.html`` files).
-#.  Open the `Visual Studio Code command palette <https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette>`_ by pressing ``Ctrl+Shift+P``. Type ``CodeChat``, then press enter to run the extension. After a moment, the rendered file should load.
+#.  Open the `Visual Studio Code command palette <https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette>`_ by pressing ``Ctrl+Shift+P``. Type ``CodeChat``, then press enter to run the extension. After a moment, the rendered file should load. If it doesn't:
 
-If you would like to build documentation for an entire project instead of a single file, create a `project configuration file <../codechat_config.json>` then place it in the root directory of your project.
+    #.  Determine the location of the ``CodeChat_Server`` by entering ``which CodeChat_Server`` (Linux/OS X) or ``where CodeChat_Server`` (Windows) at the terminal/command line.
+    #.  Open the Visual Studio Code settings for CodeChat by navigating to ``File`` > ``Preferences`` > ``Settings`` then typing ``CodeChat`` in the search box. Enter this path for the ``Code Chat.Code Chat Server: Command``. **Important**: in Windows, replace ``\`` in the location you determined with either ``\\`` or ``/``.
+    #.  Run the extension again (``Ctrl+Shift+P`` then select CodeChat).
 
-See the `CodeChat tutorial <https://codechat.readthedocs.io/en/master/docs/tutorial.html>`_ for step-by-step instructions on authoring literate programming documents.
+See the `CodeChat tutorial <https://codechat.readthedocs.io/en/master/docs/tutorial.html>`_ for step-by-step instructions on authoring literate programming documents using Sphinx. For other documentation systems, create a `project configuration file <../codechat_config.json>` then place it in the root directory of your project.
 
 
 From source

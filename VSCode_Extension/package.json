@@ -21,10 +21,10 @@
         "configuration": {
             "title": "CodeChat",
             "properties": {
-                "CodeChat.CodeChatServer.Path": {
+                "CodeChat.CodeChatServer.Command": {
                     "type": "string",
                     "default": "CodeChat_Server",
-                    "description": "Path to the CodeChat Server executable."
+                    "markdownDescription": "Command to invoke the CodeChat Server executable; for example, `CodeChat_Server` (any platform), `python3 -m CodeChat_Server` (Linux/OS X), or `py -m CodeChat_Server` (Windows).\n\nIf providing an absolute path on Windows, either use a forward slash (`/`) or a double backslash (`\\\\`) for the path separator; for example, `C:/Python39/python.exe` or `C:\\\\Python39\\\\python.exe`, **not** `C:\\Python39\\python.exe`."
                 }
             }
         },
@@ -40,8 +40,9 @@
     ],
     "dependencies": {
         "escape-html": "^1.0.3",
+        "shlex": "^2.0.0",
         "thrift": "^0.12.0",
-        "tree-kill": "^1.2.2"
+        "which": "^2.0.0"
     },
     "devDependencies": {
         "@types/escape-html": "^1.0.0",
