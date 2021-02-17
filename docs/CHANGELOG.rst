@@ -13,7 +13,12 @@ Change Log
 **********
 -   `Github master <https://github.com/bjones1/CodeChat_system.git>`_:
 
-    -   Run the CodeChat Server is a VSCode terminal. Allow the user to specify a command to run the server, not just a path to an executable.
+    -   No changes yet.
+
+-   0.0.19, 17-Feb-2021:
+
+    -   Run the CodeChat Server in a VSCode terminal.
+    -   Allow the user to specify a command to run the server, not just a path to an executable.
 
 -   0.0.18, 8-Feb-2021:
 
