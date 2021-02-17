@@ -87,6 +87,7 @@ To do
 -   Save and restore scroll position on a per-file basis.
 -   Separate the render manager code from the renderer code.
 -   Provide a verbose/non-verbose logging option; use logger instead of print.
+-   Use `node-pty <https://github.com/microsoft/node-pty>`_ to allow syntax coloring in the VSCode terminal window.
 
 Ideas:
 
