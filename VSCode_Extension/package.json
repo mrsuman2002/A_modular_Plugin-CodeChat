@@ -66,5 +66,8 @@
     "repository": {
         "type": "git",
         "url": "https://github.com/bjones1/CodeChat_system"
+    },
+    "prettier": {
+        "tabWidth": 4
     }
 }
