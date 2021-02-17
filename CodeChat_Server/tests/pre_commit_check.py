@@ -30,7 +30,7 @@ def checks():
         "black --check .",
         "flake8",
         "mypy",
-        "pytest",
+        "tox",
         # fmt: on
     )
     with pushd(".."):
