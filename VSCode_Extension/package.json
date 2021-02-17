@@ -48,8 +48,8 @@
         "@types/thrift": "^0.10.10",
         "@types/vscode": "^1.51.0",
         "tslint": "^5.16.0",
-        "typescript": "^3.9.7",
-        "vscode-test": "^1.5.0"
+        "typescript": "^3.9.9",
+        "vscode-test": "^1.5.1"
     },
     "scripts": {
         "vscode:prepublish": "npm run compile",
