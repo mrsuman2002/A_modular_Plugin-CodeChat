@@ -397,10 +397,19 @@ async def _run_subprocess(
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
+    except FileNotFoundError:
+        return (
+            "",
+            ":: ERROR: CodeChat renderer - when starting render process, unable to find renderer executable '{}'.\n".format(
+                args[0] if len(args) > 0 else "<undefined>"
+            ),
+        )
     except Exception as e:
         return (
             "",
-            ":: ERROR: CodeChat renderer - when starting render process, {}.".format(e),
+            ":: ERROR: CodeChat renderer - when starting render process, {}.\n".format(
+                e
+            ),
         )
 
     # Provide a way to send stdout from the process a line at a time to the web client.
