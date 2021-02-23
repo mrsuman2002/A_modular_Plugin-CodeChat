@@ -15,6 +15,11 @@ Change Log
 
     -   No changes yet.
 
+-   0.0.20, 23-Feb-2021:
+
+    -   The CodeChat Server now displays stderr in the VSCode terminal and runs correctly.
+    -   Better CodeChat Server handling of signals and exceptions.
+
 -   0.0.19, 17-Feb-2021:
 
     -   Run the CodeChat Server in a VSCode terminal.
