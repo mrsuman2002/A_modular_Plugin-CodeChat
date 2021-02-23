@@ -220,7 +220,8 @@ export function deactivate() {
             resolve("");
         }
     }).then(() => {
-        // Perform final cleanup.
+        // Perform final cleanup. The next line stops the ``idle_timer`` (the client is already stopped).
+        stop_client();
         panel?.dispose();
         panel = undefined;
         connection?.end();
@@ -451,6 +452,10 @@ function create_CodeChat_terminal() {
         });
         assert(server_process.stdout !== null);
         server_process.stdout.on("data", (chunk) =>
+            writeEmitter.fire(chunk.toString())
+        );
+        assert(server_process.stderr !== null);
+        server_process.stderr.on("data", (chunk) =>
             writeEmitter.fire(chunk.toString())
         );
     };
