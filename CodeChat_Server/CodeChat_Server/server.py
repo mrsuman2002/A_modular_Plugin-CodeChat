@@ -29,7 +29,9 @@
 #
 # Standard library
 # ----------------
+import signal
 import socket
+import sys
 import threading
 from typing import Union
 import webbrowser
@@ -250,6 +252,17 @@ def client_data(id: int, url_path: str) -> Union[str, Response]:
 shutdown_event = threading.Event()
 
 
+# Handle signals by setting the shutdown event.
+def signal_handler(signum, frame):
+    shutdown_event.set()
+
+
+# Handle exceptions in the same way.
+def excepthook(type, value, traceback):
+    shutdown_event.set()
+    sys.__excepthook__(type, value, traceback)
+
+
 # Run both servers. This does not (usually) return.
 def run_servers() -> int:
     # See if the required ports are in use, probably by another instance of this server.
@@ -262,6 +275,9 @@ def run_servers() -> int:
             f"Error: ports {HTTP_PORT}, {renderer.WEBSOCKET_PORT}, and/or {THRIFT_PORT} are already in use. Exiting."
         )
         return 1
+
+    # Shut down if any unhandled exception occurs.
+    sys.excepthook = excepthook
 
     # Both servers block when run, so place them in a thread. Mark the Thrift server as a daemon, so it will be killed when the program shuts down.
     editor_plugin_thread = threading.Thread(
@@ -281,16 +297,17 @@ def run_servers() -> int:
     render_manager_thread = threading.Thread(target=render_manager.run, name="asyncio")
     render_manager_thread.start()
 
+    # On a signal, shut down gracefully.
+    signal.signal(signal.SIGTERM, signal_handler)
+    signal.signal(signal.SIGINT, signal_handler)
+
     # Run the servers in threads until a user-requested shutdown occurs.
-    try:
-        while True:
-            # Ctrl+C is ignored while waiting, so use a 1 second poll.
-            if shutdown_event.wait(1):
-                # If the event is received, exit the loop in order to shut down. First, clear the event so the next invocation of this function will work correctly.
-                shutdown_event.clear()
-                break
-    except KeyboardInterrupt:
-        pass
+    while True:
+        # Ctrl+C is ignored while waiting, so use a 1 second poll.
+        if shutdown_event.wait(1):
+            # If the event is received, exit the loop in order to shut down. First, clear the event so the next invocation of this function will work correctly.
+            shutdown_event.clear()
+            break
 
     print("Shutting down...")
     # This will prevent future editor or web requests from being serviced.
