@@ -11,15 +11,15 @@
 *****************************************
 The Visual Studio Code CodeChat extension
 *****************************************
-This extension provides CodeChat's capabilities within the Visual Studio Code editor.
+This extension provides CodeChat's capabilities within the Visual Studio Code editor, as illustrated in `the CodeChat system for Visual Studio Code <README>` page.
 
 
 Installation
 ============
-After `installing the CodeChat extension for Visual Studio Code <https://code.visualstudio.com/docs/introvideos/extend>`_:
+First, install `Visual Studio Code <https://code.visualstudio.com/>`_ then install the `CodeChat extension for Visual Studio code <https://marketplace.visualstudio.com/items?itemName=CodeChat.codechat>`_. Next:
 
 #.  `Install the CodeChat Server <../CodeChat_Server/contents>`, which performs all the back-end work and is required for the extension to work. Optionally, install additional external renderers such as Pandoc, Doxygen, etc.
-#.  `Switch to a light theme <https://code.visualstudio.com/docs/getstarted/themes>`_ -- unfortunately, Visual Studio's the dark theme isn't supported by the CodeChat system.
+#.  `Switch to a light theme <https://code.visualstudio.com/docs/getstarted/themes>`_ -- unfortunately, Visual Studio's dark theme isn't supported by the CodeChat system.
 
 
 .. _use CodeChat:
