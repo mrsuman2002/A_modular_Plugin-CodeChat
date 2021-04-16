@@ -18,8 +18,8 @@ Installation
 ============
 To install the CodeChat server:
 
-#.  `Install a recent version of Python <https://www.python.org/downloads/>`_.
-#.  From a terminal or command line, execute ``py -m pip install -U CodeChat_Server`` (Windows) or ``python3 -m pip install -U CodeChat_Server`` (Linux/OS X). The Windows Store version of Python is not supported.
+#.  `Install a recent version of Python <https://www.python.org/downloads/>`_; make sure it is in your `Windows path <https://datatofish.com/add-python-to-windows-path/>`_. (If on OS X or Linux, it usually already is.)
+#.  From a terminal or command line, execute ``python -m pip install -U CodeChat_Server`` (Windows) or ``python3 -m pip install -U CodeChat_Server`` (Linux/OS X). The Windows Store version of Python is not supported.
 
 
 Use
