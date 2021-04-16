@@ -8,20 +8,12 @@
 
     You should have received a `copy of the GNU General Public License </docs/LICENSE>` along with the CodeChat system.  If not, see http://www.gnu.org/licenses/.
 
-*****************
-CodeChat services
-*****************
-"The Apache Thrift software framework, for scalable cross-language services development, combines a software stack with a code generation engine to build services that work efficiently and seamlessly between C++, Java, Python, PHP, Ruby, Erlang, Perl, Haskell, C#, Cocoa, JavaScript, Node.js, Smalltalk, OCaml and Delphi and other languages." [#]_
-
-A Thrift file defines CodeChat services, which are then provided by the `../CodeChat_Server/contents` CodeChat server and used by `text editor/IDE plugins <../extensions/contents>`.
+**************************************
+CodeChat editor/IDE extensions/plugins
+**************************************
+This directory contains text editor/IDE extensions/plugins.
 
 .. toctree::
     :maxdepth: 2
 
-    CodeChat_Services.thrift
-    run_thrift.bat
-
-
-Footnotes
-=========
-.. [#] https://thrift.apache.org/
+    VSCode_Extension/contents

@@ -24,7 +24,7 @@ To install the CodeChat server:
 
 Use
 ===
-Install a `CodeChat plugin or extension <../VSCode_Extension/contents>` to use the CodeChat system.
+Install a `CodeChat plugin or extension <../extensions/contents>` to use the CodeChat system.
 
 
 Server architecture

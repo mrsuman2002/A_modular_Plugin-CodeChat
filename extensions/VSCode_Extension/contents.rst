@@ -18,7 +18,7 @@ Installation
 ============
 First, install `Visual Studio Code <https://code.visualstudio.com/>`_ then install the `CodeChat extension for Visual Studio code <https://marketplace.visualstudio.com/items?itemName=CodeChat.codechat>`_. Next:
 
-#.  `Install the CodeChat Server <../CodeChat_Server/contents>`, which performs all the back-end work and is required for the extension to work. Optionally, install additional external renderers such as Pandoc, Doxygen, etc.
+#.  `Install the CodeChat Server <../../CodeChat_Server/contents>`, which performs all the back-end work and is required for the extension to work. Optionally, install additional external renderers such as Pandoc, Doxygen, etc.
 #.  `Switch to a light theme <https://code.visualstudio.com/docs/getstarted/themes>`_ -- unfortunately, Visual Studio's dark theme isn't supported by the CodeChat system.
 
 
@@ -37,7 +37,7 @@ At any time, run the CodeChat extension again (``Ctrl+Shift+P``, then ``CodeChat
 
 The CodeChat Server runs in an `integrated terminal <https://code.visualstudio.com/docs/editor/integrated-terminal>`_. You may hide this window (the X button at the top right of the pane) if you wish. To stop the server, either press any key in the terminal or click the trash can icon near the top right of the pane; re-run the CodeChat extension to restart it.
 
-See the `CodeChat tutorial <https://codechat.readthedocs.io/en/master/docs/tutorial.html>`_ for step-by-step instructions on authoring literate programming documents using Sphinx. For other documentation systems, create a `project configuration file <../codechat_config.json>` then place it in the root directory of your project.
+See the `CodeChat tutorial <https://codechat.readthedocs.io/en/master/docs/tutorial.html>`_ for step-by-step instructions on authoring literate programming documents using Sphinx. For other documentation systems, create a `project configuration file <../../codechat_config.yaml>` then place it in the root directory of your project.
 
 
 From source

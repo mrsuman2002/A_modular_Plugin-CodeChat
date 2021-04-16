@@ -197,9 +197,9 @@ exclude_patterns = [
     "_build",
 
     # JavaScript/TypeScript generated files
-    "VSCode_Extension/node_modules",
-    "VSCode_Extension/out",
-    "VSCode_Extension/.vscode",
+    "extensions/VSCode_Extension/node_modules",
+    "extensions/VSCode_Extension/out",
+    "extensions/VSCode_Extension/.vscode",
     "**/gen-*",
     "**/gen_*",
 
