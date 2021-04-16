@@ -88,6 +88,9 @@ To do
 -   Separate the render manager code from the renderer code.
 -   Provide a verbose/non-verbose logging option; use logger instead of print.
 -   Use `node-pty <https://github.com/microsoft/node-pty>`_ to allow syntax coloring in the VSCode terminal window.
+-   Provide ``codechat_config.json`` examples for common programs (doxygen, javadoc, mkdocs, etc.)
+-   Define a StrictYAML config file to replace the ``GLOB_TO_CONVERTER`` data structure more flexibly. Add in a bunch of conversions using Pandoc.
+
 
 Ideas:
 
