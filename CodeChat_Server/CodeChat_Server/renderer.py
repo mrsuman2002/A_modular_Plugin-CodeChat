@@ -41,11 +41,12 @@ import urllib.parse
 
 # Third-party imports
 # -------------------
-import markdown  # type: ignore
-import docutils.core
-import docutils.writers.html4css1
 from CodeChat.CodeToRest import code_to_rest_string, html_static_path  # type: ignore
 from CodeChat.CommentDelimiterInfo import SUPPORTED_GLOBS  # type: ignore
+import docutils.core
+import docutils.writers.html4css1
+import markdown  # type: ignore
+import strictyaml
 import websockets
 
 # Local imports
@@ -192,7 +193,7 @@ async def _convert_external(
     args = cast(List[str], args_)
 
     # Run from the directory containing the file.
-    cwd = str(Path(file_path).parent)
+    cwd = Path(file_path).parent
 
     # Save the text in a temporary file for use with the external tool.
     with _optional_temp_file(not uses_stdin) as input_file, _optional_temp_file(
@@ -262,12 +263,13 @@ def _checkModificationTime(
         )
 
 
-# Convert an external project
+# Convert an external project.
 async def _convert_external_project(
-    text: str, file_path_: str, tool_or_project_path: str, q: asyncio.Queue
+    text: str, file_path_: str, _tool_or_project_path: str, q: asyncio.Queue
 ) -> Tuple[str, str]:
     # Run from the directory containing the project file.
-    project_path = str(Path(tool_or_project_path).parent)
+    tool_or_project_path = Path(_tool_or_project_path)
+    project_path = tool_or_project_path.parent
     await q.put(
         GetResultReturn(
             GetResultType.build,
@@ -282,27 +284,45 @@ async def _convert_external_project(
     except Exception as e:
         return "", "{}:: ERROR: Unable to open. {}".format(tool_or_project_path, e)
 
-    # Parse it and check the format
-    try:
-        d = ast.literal_eval(data)
-    except Exception as e:
-        return "", "{}:: ERROR: Unable to parse. {}".format(tool_or_project_path, e)
-    if not isinstance(d, dict):
-        return (
-            "",
-            "{}:: ERROR: Unexpected type; file should contain a dict, but saw a {}".format(
-                tool_or_project_path, type(d)
-            ),
+    if tool_or_project_path.suffix == ".yaml":
+        schema = strictyaml.Map(
+            {
+                strictyaml.Optional("source_path", default="."): strictyaml.Str(),
+                "output_path": strictyaml.Str(),
+                "args": strictyaml.Str() | strictyaml.Seq(strictyaml.Str()),
+                strictyaml.Optional("html_ext", default=".html"): strictyaml.Str(),
+            }
         )
-    args = d.get("args")
-    if not isinstance(args, list):
+        try:
+            data_dict = strictyaml.load(data, schema).data
+        except strictyaml.YAMLError as e:
+            return "", "{}:: ERROR: Unable to parse. {}".format(tool_or_project_path, e)
+    else:
+        # Parse it and check the format.
+        assert tool_or_project_path.suffix == ".json"
+        try:
+            data_dict = ast.literal_eval(data)
+        except Exception as e:
+            return "", "{}:: ERROR: Unable to parse. {}".format(tool_or_project_path, e)
+        if not isinstance(data_dict, dict):
+            return (
+                "",
+                "{}:: ERROR: Unexpected type; file should contain a dict, but saw a {}".format(
+                    tool_or_project_path, type(data_dict)
+                ),
+            )
+
+    # If we can drop the ``.json`` format, then we can remove the following validation as well; the YAML data is validated by the schema.
+    args = data_dict.get("args")
+    # Note that we don't check the type of each element of the list (which should be a str).
+    if not (isinstance(args, list) or isinstance(args, str)):
         return (
             "",
             "{}:: ERROR: missing args or wrong type; saw {} (type was {}).".format(
                 tool_or_project_path, args, type(args)
             ),
         )
-    source_path = d.get("source_path", ".")
+    source_path = data_dict.get("source_path", ".")
     if not isinstance(source_path, str):
         return (
             "",
@@ -310,7 +330,7 @@ async def _convert_external_project(
                 tool_or_project_path, source_path, type(source_path)
             ),
         )
-    output_path = d.get("output_path")
+    output_path = data_dict.get("output_path")
     if not isinstance(output_path, str):
         return (
             "",
@@ -318,7 +338,7 @@ async def _convert_external_project(
                 tool_or_project_path, output_path, type(output_path)
             ),
         )
-    html_ext = d.get("html_ext", ".html")
+    html_ext = data_dict.get("html_ext", ".html")
     if not isinstance(html_ext, str):
         return (
             "",
@@ -328,7 +348,7 @@ async def _convert_external_project(
         )
 
     # Make paths absolute.
-    def abs_path(path: str) -> Path:
+    def abs_path(path: Union[str, Path]) -> Path:
         path_ = Path(path)
         if not path_.is_absolute():
             path_ = project_path / path_
@@ -355,14 +375,18 @@ async def _convert_external_project(
     # If not, render and try again.
     if error:
         # Perform replacement on the args.
-        args = [
-            s.format(
+        def args_format(arg):
+            return arg.format(
                 project_path=project_path,
                 source_path=source_path,
                 output_path=output_path,
             )
-            for s in args
-        ]
+
+        args = (
+            args_format(args)
+            if isinstance(args, str)
+            else [args_format(arg) for arg in args]
+        )
         # Render.
         stdout, stderr = await _run_subprocess(args, project_path, None, True, q)
         html_file, error = _checkModificationTime(file_path, base_html_file, html_ext)
@@ -378,7 +402,7 @@ async def _convert_external_project(
 # Run a subprocess, optionally streaming the stdout.
 async def _run_subprocess(
     args: List[str],
-    cwd: str,
+    cwd: Path,
     input_text: Optional[str],
     stream_stdout: bool,
     q: asyncio.Queue,
@@ -527,7 +551,7 @@ class ClientState:
 #
 # TODO:
 #
-# #.    Read this from a JSON file instead.
+# #.    Read this from a StrictYAML file instead.
 # #.    Use Pandoc to offer lots of other format conversions.
 GLOB_TO_CONVERTER: Dict[str, Tuple[Callable, Optional[List[Union[bool, str]]]]] = {
     glob: (_convertCodeChat, None) for glob in SUPPORTED_GLOBS
@@ -572,6 +596,9 @@ def _select_converter(
     # Search for an external builder configuration file.
     for project_path in Path(file_path).parents:
         project_file = project_path / "codechat_config.json"
+        if project_file.exists():
+            return _convert_external_project, str(project_file), True
+        project_file = project_path / "codechat_config.yaml"
         if project_file.exists():
             return _convert_external_project, str(project_file), True
 

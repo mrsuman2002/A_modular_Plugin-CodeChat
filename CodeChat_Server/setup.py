@@ -119,14 +119,22 @@ setup(
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
     install_requires=(
-        ["CodeChat", "Flask", "Thrift", "Sphinx", "markdown", "websockets"]
+        [
+            "CodeChat",
+            "Flask",
+            "markdown",
+            "Sphinx",
+            "strictyaml",
+            "Thrift",
+            "websockets",
+        ]
     ),
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,
     # for example:
     #
     #    ``$ pip install -e .[test]``
-    extras_require={"test": ["pytest", "requests"]},
+    extras_require={"test": ["mypy", "pytest", "requests", "tox"]},
     # To package data files, I'm using ``include_package_data=True`` then
     # putting the files in :doc:`MANIFEST.in <MANIFEST.in>`. See `including data
     # files <http://pythonhosted.org/setuptools/setuptools.html#including-data-files>`_.

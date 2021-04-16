@@ -41,7 +41,7 @@
 # .. toctree::
 #   :maxdepth: 2
 #
-#   codechat_config.json
+#   codechat_config.yaml
 #   readthedocs.yml
 #   docs/docs-requirements.txt
 #
