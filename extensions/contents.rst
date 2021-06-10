@@ -49,12 +49,14 @@ Modules
 =======
 A typical plugin/extension has these modules:
 
--   A terminal/subprocess for the server.
--   A Thrift network connection to the server.
--   A system to make render requests based on IDE activity (edits, switching windows, etc.)
+-   A ``codechat_terminal``: terminal/subprocess hosting the CodeChat Server.
+-   A ``thrift_connection``: Thrift network connection to the server, along with a ``thrift_client`` created from that connection.
+-   A set of functions/methods to invoke `CodeChat editor/IDE services <editor_services>` along with a ``codechat_client_id``, used to communicate with the CodeChat Client.
 -   A web browser (optional; can be an external browser instead) hosting the CodeChat client.
+-   A system to make render requests based on IDE activity (edits, switching windows, etc.)
 
 The extension GUI should allow restarting the server, which should require closing/restarting the Thrift connection and the web browser's contents. Closing the extension should cause all resources to be freed, so that restarting it would then restart the entire system.
+
 
 Logging
 =======
