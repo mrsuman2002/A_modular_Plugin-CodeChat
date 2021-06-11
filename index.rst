@@ -14,30 +14,31 @@ The CodeChat system integrates the capabilities of the `CodeChat renderer <https
     }
 
     subgraph cluster_server {
-        label = <CodeChat server>;
+        label = <CodeChat Server>;
         thrift_server [label = <Thrift<br />server>];
+        websocket_server [label = <Websocket<br />server>];
         web_server [label = <Web <br />server>];
-        renderers [label = <Built-in<br />Renderers>];
+        renderers [label = <Built-in<br />renderers>];
     }
 
     external_renderers [label = <External <br />renderers>];
 
     subgraph cluster_client {
-        label = "CodeChat client";
+        label = "CodeChat Client";
         rendered_code [label = <Rendered code>, style = dashed];
         JavaScript;
     }
 
     CodeChat_plugin -> thrift_server [label = <Thrift>, dir = both, lhead = cluster_server];
-    thrift_server -> JavaScript [label = <websocket>, dir = both, lhead = cluster_client, ltail = cluster_server];
+    websocket_server -> JavaScript [label = <websocket>, dir = both, lhead = cluster_client, ltail = cluster_server];
     web_server -> JavaScript [label = <HTTP>, dir = both, lhead = cluster_client, ltail = cluster_server];
     renderers -> external_renderers [label = <subprocess>, ltail = cluster_server, dir = both];
 
 This approach bridges the services CodeChat provides, which are defined in Python, to the variety of programming languages which various text editors require. To accomplish these goals, this project:
 
-#.  Develops a `CodeChat server <CodeChat_Server/contents>` to provide the needed services;
-#.  Provides a `CodeChat client <CodeChat_Server/CodeChat_Server/CodeChat_Client/contents>`, hosted in a web browser, to display the rendered source code and provide for user input;
-#.  Introduces a `plugin for Visual Studio Code <extensions/VSCode_Extension/contents>`, a free and popular cross-platform text editor; and
+#.  Develops a `CodeChat Server <CodeChat_Server/contents>` to provide the needed services;
+#.  Provides a `CodeChat Client <CodeChat_Server/CodeChat_Server/CodeChat_Client/contents>`, hosted in a web browser, to display the rendered source code and provide for user input;
+#.  Introduces an `extension for Visual Studio Code <extensions/VSCode_Extension/contents>`, a free and popular cross-platform text editor; and
 #.  Employs `Apache Thrift <https://thrift.apache.org>`_ to define `CodeChat services <CodeChat_Services/contents>`, which allows the CodeChat server to communicate with plugins developed in a `variety of languages <https://thrift.apache.org/docs/Languages>`_.
 
 Contents

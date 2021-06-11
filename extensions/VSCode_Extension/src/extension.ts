@@ -21,12 +21,6 @@
 // *****************************************************
 // This extension creates a webview (see `activation/deactivation`_), then uses `CodeChat services`_ to render editor text in that webview.
 //
-// Terminology:
-//
-// -    The ``connection`` is a Thrift network connection to the CodeChat server.
-// -    The ``client`` is the Thrift client using that network connection.
-// -    The render client (identified by a unique ``id``) is obtained using the ``client``, and can be used to render code to HTML.
-//
 //
 // Requirements
 // ============

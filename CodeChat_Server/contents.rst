@@ -9,9 +9,9 @@
     You should have received a `copy of the GNU General Public License <LICENSE>` along with the CodeChat system.  If not, see http://www.gnu.org/licenses/.
 
 *******************
-The CodeChat server
+The CodeChat Server
 *******************
-The CodeChat server receives requests from CodeChat plugins/extensions running in text editors/IDEs to render a file, performs the render, then displays it in the CodeChat client. It also responds to user input from the CodeChat client by processing this request then sending the results back to the plugin/extension.
+The CodeChat Server receives requests from CodeChat plugins/extensions running in text editors/IDEs to render a file, performs the render, then displays it in the CodeChat Client. It also responds to user input from the CodeChat Client by processing this request then sending the results back to the plugin/extension.
 
 
 Installation

@@ -9,9 +9,9 @@
     You should have received a `copy of the GNU General Public License <LICENSE>` along with the CodeChat system.  If not, see http://www.gnu.org/licenses/.
 
 *******************
-The CodeChat client
+The CodeChat Client
 *******************
-One major goal of the CodeChat system is to provide as much functionality outside the IDE/editor host as possible. The CodeChat client therefore uses JavaScript as a platform-neutral method of doing most of the work of displaying the rendered results and enabling the user to interact with those results. Specifically, the client:
+One major goal of the CodeChat system is to provide as much functionality outside the IDE/editor host as possible. The CodeChat Client therefore uses JavaScript as a platform-neutral method of doing most of the work of displaying the rendered results and enabling the user to interact with those results. Specifically, the client:
 
 -   Provides panes to display rendered output, errors, and build status.
 -   Parses warnings/errors and provide (currently useless) links to them.
