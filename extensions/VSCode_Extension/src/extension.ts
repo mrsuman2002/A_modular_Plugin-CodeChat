@@ -60,6 +60,8 @@ const codechat_client_location: ttypes.CodeChatClientLocation =
     ttypes.CodeChatClientLocation.browser;
 // The subprocess in which the CodeChat server runs.
 let codechat_terminal: CodeChatTerminal | undefined = undefined;
+// True if the subscriptions to IDE change notifications have been registered.
+let subscribed = false;
 
 // A unique instance of these variables is required for each CodeChat panel. However, this code doesn't have a good UI way to deal with multiple panels, so only one is supported at this time.
 //
@@ -77,6 +79,25 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(
         vscode.commands.registerCommand("extension.codeChat", async () => {
             console.log("CodeChat extension starting.");
+
+            if (!subscribed) {
+                subscribed = true;
+
+                // Render when the text is changed by listening for the correct `event <https://code.visualstudio.com/docs/extensionAPI/vscode-api#Event>`_.
+                context.subscriptions.push(
+                    vscode.workspace.onDidChangeTextDocument((event) => {
+                        start_render();
+                    })
+                );
+
+                // Render when the active editor changes.
+                context.subscriptions.push(
+                    vscode.window.onDidChangeActiveTextEditor((event) => {
+                        start_render();
+                    })
+                );
+            }
+
             // Create or reveal the webview panel; if this is an external browser, we'll open it after the client is created.
             if (codechat_client_location === ttypes.CodeChatClientLocation.html) {
                 if (webview_panel !== undefined) {
@@ -97,14 +118,18 @@ export function activate(context: vscode.ExtensionContext) {
                             enableScripts: true,
                         }
                     );
-                    context.subscriptions.push(
-                        webview_panel.onDidDispose((event) => {
-                            // Shut down the render client when the webview panel closes.
-                            console.log("CodeChat extension: shut down webview.");
-                            stop_client();
-                            webview_panel = undefined;
-                        })
-                    );
+                    // TODO: do I need to dispose of this and the following event handlers? I'm assuming that it will be done automatically when the object is disposed.
+                    webview_panel.onDidDispose((event) => {
+                        // Shut down the render client when the webview panel closes.
+                        console.log("CodeChat extension: shut down webview.");
+                        stop_client();
+                        webview_panel = undefined;
+                    });
+
+                    // Render when the webveiw panel is shown.
+                    webview_panel.onDidChangeViewState((event) => {
+                        start_render();
+                    });
                 }
             }
 
@@ -219,7 +244,6 @@ export function deactivate() {
         // Perform final cleanup. The next line stops the ``idle_timer`` (the client is already stopped).
         stop_client();
         webview_panel?.dispose();
-        webview_panel = undefined;
         thrift_connection?.end();
         thrift_connection = undefined;
         codechat_terminal?.terminal?.dispose();
@@ -267,29 +291,6 @@ function get_render_client(
                     // Save the ID just provided.
                     assert(codechat_client_id === undefined);
                     codechat_client_id = render_client_return.id;
-
-                    // Render when the text is changed by listening for the correct `event <https://code.visualstudio.com/docs/extensionAPI/vscode-api#Event>`_.
-                    context.subscriptions.push(
-                        vscode.workspace.onDidChangeTextDocument((event) => {
-                            start_render();
-                        })
-                    );
-
-                    // Render when the active editor changes.
-                    context.subscriptions.push(
-                        vscode.window.onDidChangeActiveTextEditor((event) => {
-                            start_render();
-                        })
-                    );
-
-                    // Render when the webveiw panel is shown (if we have it -- we might be using an external browser).
-                    if (webview_panel !== undefined) {
-                        context.subscriptions.push(
-                            webview_panel.onDidChangeViewState((event) => {
-                                start_render();
-                            })
-                        );
-                    }
 
                     // Do an initial render.
                     start_render();
