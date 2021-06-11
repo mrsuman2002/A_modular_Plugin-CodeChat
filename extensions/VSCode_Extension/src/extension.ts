@@ -51,7 +51,7 @@ let thrift_connection: thrift.Connection | undefined = undefined;
 let thrift_client: EditorPlugin.Client | undefined = undefined;
 // Where the webclient resides: ``html`` for a webview panel embedded in VSCode; ``browser`` to use an external browser.
 const codechat_client_location: ttypes.CodeChatClientLocation =
-    ttypes.CodeChatClientLocation.browser;
+    ttypes.CodeChatClientLocation.html;
 // The subprocess in which the CodeChat server runs.
 let codechat_terminal: CodeChatTerminal | undefined = undefined;
 // True if the subscriptions to IDE change notifications have been registered.
@@ -177,11 +177,20 @@ export function activate(context: vscode.ExtensionContext) {
                 });
 
                 thrift_connection.on("close", (hadError) => {
-                    // If there was an error, the event handler above already provided the message. Note: the `parameter hadError <https://nodejs.org/api/net.html#net_event_close_1>`_ only applies to transmission errors, not to any other errors which trigger the error callback. Therefore, I'm using the ``was_error`` flag instead to catch non-transmission errors, and assuming that a transmission error would also result in a call to the error callback, so ``was_error`` should report ALL errors.
+                    console.log("CodeChat extension: closing Thrift connection.");
+                    // BUG: on deactivation, VS Code closes this socket before calling the ``deactivate()`` method. This prevents us from shutting down the client. I'm not sure what event handler would allow me to perform cleanup before the socket is closed.
+
+                    // If there was an error, the event handler above already provided the message. Note: the `parameter hadError <https://nodejs.org/api/net.html#net_event_close_1>`_ only applies to transmission errors, not to any other errors which trigger the error callback. Therefore, I'm using the ``was_error`` flag instead to catch non-transmission errors.
                     if (!was_error) {
-                        show_error(
-                            "The connection to the CodeChat server was closed. Re-run the CodeChat extension to restart it."
-                        );
+                        if (hadError) {
+                            show_error(
+                                "The connection to the CodeChat server was closed due to a transmission error. Re-run the CodeChat extension to restart it."
+                            );
+                        } else {
+                            show_error(
+                                "The connection to the CodeChat server was closed. Re-run the CodeChat extension to restart it."
+                            );
+                        }
                     }
                     thrift_connection = undefined;
                     // Since the connection is closed, we can't gracefully shut down the client via ``stop_client()``. Simply mark it as undefined so it will be re-created.
@@ -191,12 +200,13 @@ export function activate(context: vscode.ExtensionContext) {
                 });
 
                 thrift_connection.on("connect", () => {
-                    get_render_client(context, thrift_connection);
+                    assert(thrift_connection !== undefined);
+                    get_render_client(thrift_connection);
                 });
             } else {
                 // If this was invoked while a connection is still pending, let that connection run its course.
                 if (!thrift_connection.connection.connecting) {
-                    get_render_client(context, thrift_connection);
+                    get_render_client(thrift_connection);
                 } else {
                     console.log("CodeChat extension: connection already pending, so a new client wasn't created.");
                 }
@@ -206,55 +216,54 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 // On deactivation, close everything down.
-export function deactivate() {
+export async function deactivate() {
     console.log("CodeChat extension: deactivating.");
+    console.log(thrift_client);
     // Return a promise that shuts down the server or stops the client, then do final cleanup.
-    return new Promise((resolve) => {
+    await new Promise((resolve) => {
         if (thrift_client !== undefined) {
             // If we started the server, request a graceful shutdown.
+            console.log(codechat_terminal?.is_server_running());
             if (codechat_terminal?.is_server_running()) {
                 thrift_client.shutdown_server((err) => {
                     thrift_client = undefined;
                     codechat_client_id = undefined;
                     // Wait for the server to shut down.
                     setTimeout(() => {
+                        console.log("CodeChat extension: timeout for server shutdown complete.");
                         resolve(err);
                     }, 500);
                 });
             } else {
                 // Otherwise, shut down the client.
                 assert(codechat_client_id !== undefined);
-                thrift_client.stop_client(codechat_client_id, (err) => {
+                thrift_client.stop_client(codechat_client_id, (err_1) => {
                     thrift_client = undefined;
                     codechat_client_id = undefined;
-                    resolve(err);
+                    resolve(err_1);
                 });
             }
         } else {
             // With no client, there's nothing to do in this phase of the shutdown.
             resolve("");
         }
-    }).then(() => {
-        // Perform final cleanup. The next line stops the ``idle_timer`` (the client is already stopped).
-        stop_client();
-        webview_panel?.dispose();
-        thrift_connection?.end();
-        thrift_connection = undefined;
-        codechat_terminal?.terminal?.dispose();
-        codechat_terminal = undefined;
-        console.log("CodeChat extension: deactivated.");
     });
+    // Perform final cleanup. The next line stops the ``idle_timer`` (the client is already stopped).
+    stop_client();
+    webview_panel?.dispose();
+    thrift_connection?.end();
+    thrift_connection = undefined;
+    codechat_terminal?.terminal?.dispose();
+    codechat_terminal = undefined;
+    console.log("CodeChat extension: deactivated.");
 }
 
 // CodeChat services
 // =================
 // Get the render client from the CodeChat server and place it in the web view. Then, start a render.
 function get_render_client(
-    context: vscode.ExtensionContext,
-    connection: thrift.Connection | undefined
+    connection: thrift.Connection
 ) {
-    // There must already be a connection before this is called.
-    assert(connection !== undefined);
     // Get a client if needed.
     if (thrift_client === undefined) {
         thrift_client = thrift.createClient(EditorPlugin, connection);
@@ -382,7 +391,6 @@ function show_error(message: string) {
 // Only render if the window and editor are active, we have a valid render client, and the webview is visible.
 function can_render(): boolean {
     return (
-        vscode.window.state.focused &&
         vscode.window.activeTextEditor !== undefined &&
         codechat_client_id !== undefined &&
         thrift_client !== undefined &&
@@ -448,6 +456,7 @@ class CodeChatTerminal {
                     // Indicate the server didn't start.
                     reject(err);
                 });
+
                 this.server_process.on("exit", (code, signal) => {
                     let exit_str = code ? `code ${code}` : `signal ${signal}`;
                     this.writeEmitter.fire(
@@ -457,16 +466,20 @@ class CodeChatTerminal {
                     // Indicate the server exiting; hopefully, this means another instance of the server is already running.
                     resolve(["exit", code, signal]);
                 });
+
+                let found_ready = false;
+                const ready_regex = /\r?\nCODECHAT_READY\r?\n/;
                 assert(this.server_process.stdout !== null);
                 this.server_process.stdout.on("data", (chunk) => {
                     // Scan stdout for the code indicating the server is up.
                     const s = chunk.toString();
                     this.writeEmitter.fire(s);
-                    console.log(s);
-                    if (s.includes("CODECHAT_READY\n")) {
+                    if (!found_ready && ready_regex.test(s)) {
+                        found_ready = true;
                         resolve("ready");
                     }
                 });
+
                 assert(this.server_process.stderr !== null);
                 this.server_process.stderr.on("data", (chunk) =>
                     this.writeEmitter.fire(chunk.toString())
