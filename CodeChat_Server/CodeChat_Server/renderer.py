@@ -874,8 +874,8 @@ class RenderManager:
             self.websocket_handler, "127.0.0.1", WEBSOCKET_PORT
         )
         # Let the user know that the server is now ready -- this is the last piece of it to start.
-        print("Ready.")
-        # For testing, flush this since test code waits for it before running the rest of a test.
+        print("CODECHAT_READY\nThe CodeChat server is ready.")
+        # Flush this since extension and test code waits for it before connecting to the server/running the rest of a test.
         sys.stdout.flush()
         await asyncio.gather(*[self._worker(i) for i in range(num_workers)])
 

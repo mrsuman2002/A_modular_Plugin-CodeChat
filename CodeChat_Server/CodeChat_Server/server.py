@@ -29,6 +29,7 @@
 #
 # Standard library
 # ----------------
+import logging
 import signal
 import socket
 import sys
@@ -64,7 +65,7 @@ from .gen_py.CodeChat_Services.ttypes import (
 
 # Constants
 # =========
-# The port used for and HTTP connection from the CodeChat Client to the CodeChat Server.
+# The port used for an HTTP connection from the CodeChat Client to the CodeChat Server.
 HTTP_PORT = 5000
 # .. _CodeChat service port:
 #
@@ -72,6 +73,8 @@ HTTP_PORT = 5000
 THRIFT_PORT = 9090
 
 UNKNOWN_CLIENT = "Unknown client id {}."
+
+logger = logging.getLogger(__name__)
 
 
 # Service provider
@@ -89,16 +92,16 @@ class CodeChatHandler:
             ]
         except KeyError:
             location_name = "invalid location"
-        print("get_client({})".format(location_name))
+        logger.info("get_client({})".format(location_name))
         id = self.render_manager.threadsafe_create_client()
         # Get the next ID.
         if id is None:
             ret = RenderClientReturn("", -1, "Duplicate id {}".format(id))
-            print("  => {}".format(ret))
+            logger.info("  => {}".format(ret))
             return ret
         if id < 0:
             ret = RenderClientReturn("", -1, "Server is shutting down.")
-            print("  => {}".format(ret))
+            logger.info("  => {}".format(ret))
             return ret
 
         # Return what's requested.
@@ -127,27 +130,27 @@ class CodeChatHandler:
             ret = RenderClientReturn(
                 "", -1, "Invalid location {}".format(codeChat_client_location)
             )
-            print("  => {}".format(ret))
+            logger.info("  => {}".format(ret))
             return ret
 
         ret = RenderClientReturn(ret_str, id, "")
-        print("  => {}".format(ret))
+        logger.info("  => {}".format(ret))
         return ret
 
     # Render the provided text to HTML, then enqueue it for the web view.
     def start_render(self, text: str, path: str, id: int, is_dirty: bool) -> str:
-        print(
+        logger.info(
             "start_render(path={}, id={}, is_dirty={}, html=\n{}...)\n".format(
                 path, id, is_dirty, text[:80]
             )
         )
         if self.render_manager.threadsafe_start_render(text, path, id, is_dirty):
             # Indicate success.
-            print(" => (empty string)")
+            logger.info(" => (empty string)")
             return ""
         else:
             ret = UNKNOWN_CLIENT.format(id)
-            print(" => {}".format(ret))
+            logger.info(" => {}".format(ret))
             return ret
 
     # _`Shut down an editor client`. The sequence is:
@@ -157,19 +160,19 @@ class CodeChatHandler:
     #
     # This method performs the first step; ``get_result`` performs the second.
     def stop_client(self, id: int) -> str:
-        print("stop_client(id={})".format(id))
+        logger.info("stop_client(id={})".format(id))
         ok = self.render_manager.threadsafe_shutdown_client(id)
         if not ok:
             ret = UNKNOWN_CLIENT.format(id)
-            print("  => {}".format(ret))
+            logger.info("  => {}".format(ret))
             return ret
         # Indicate success.
-        print("  => (empty string)")
+        logger.info("  => (empty string)")
         return ""
 
     # Shut down the server.
     def shutdown_server(self) -> str:
-        print("shutdown_server")
+        logger.info("shutdown_server")
         shutdown_event.set()
         return ""
 
@@ -265,6 +268,8 @@ def excepthook(type, value, traceback):
 
 # Run both servers. This does not (usually) return.
 def run_servers() -> int:
+    logging.basicConfig(level=logging.INFO)
+
     # See if the required ports are in use, probably by another instance of this server.
     if (
         is_port_in_use(HTTP_PORT)
@@ -272,7 +277,9 @@ def run_servers() -> int:
         or is_port_in_use(THRIFT_PORT)
     ):
         print(
-            f"Error: ports {HTTP_PORT}, {renderer.WEBSOCKET_PORT}, and/or {THRIFT_PORT} are already in use. Exiting."
+            f"Error: ports {HTTP_PORT}, {renderer.WEBSOCKET_PORT}, and/or {THRIFT_PORT} are already in use.\n"
+            "Hopefully, this means that the CodeChat Server is already running in another process.\n"
+            "Exiting.\n"
         )
         return 1
 

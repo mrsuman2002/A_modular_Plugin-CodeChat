@@ -52,7 +52,8 @@ def editor_plugin():
     # Wait for the server to start.
     out = ""
     line = ""
-    while "Ready.\n" not in line:
+    print("Waiting for the server to start...")
+    while "CODECHAT_READY\n" not in line:
         p.stdout.flush()
         line = p.stdout.readline()
         out += line
@@ -63,6 +64,7 @@ def editor_plugin():
             print(p.stderr.read())
             assert False
         sleep(0.1)
+    print("done.\n")
 
     transport = TSocket.TSocket("localhost", THRIFT_PORT)
     transport = TTransport.TBufferedTransport(transport)

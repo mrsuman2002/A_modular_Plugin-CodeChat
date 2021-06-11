@@ -79,12 +79,25 @@ function run_client(id, ws_address)
     let ws = new ReconnectingWebSocket(ws_address);
 
     // Identify this client on connection.
-    ws.onopen = event => ws.send(JSON.stringify(id))
+    ws.onopen = () => {
+        console.log(`CodeChat client: websocket to CodeChat server open. Sending ID of ${id}.`);
+        ws.send(JSON.stringify(id))
+    };
+
+    // Provide logging to help track down errors.
+    ws.onerror = event => {
+        console.error(`CodeChat client: websocket error ${event}.`);
+    };
+
+    ws.onclose = event => {
+        console.log(`CodeChat client: websocket closed by event ${event}. This should only happen on shutdown.`);
+    }
 
     // Handle messages.
     ws.onmessage = event => {
         result = JSON.parse(event.data);
         if (result.get_result_type === GetResultType.url) {
+            console.log(`CodeChat client: URL ${result.text} received; loading...`);
             // Save and restore scroll location through the content update, if we can.
             let [scrollX, scrollY] = getScroll();
             // See ideas in https://stackoverflow.com/a/16822995. Works for same-domain only.
@@ -92,7 +105,7 @@ function run_client(id, ws_address)
                 // Only run this once, not every time the user navigates in the browser.
                 outputElement.onload = undefined;
                 if (is_user_navigation) {
-                    console.log("TODO: User navigation.");
+                    console.log("CodeChat client: TODO: User navigation.");
                 } else {
                     status_message.innerHTML = "Build complete.";
                     build_progress.style.display = "none";
@@ -108,10 +121,12 @@ function run_client(id, ws_address)
                     // #.   One load stores the x, y coordinates and begins to load a new page. This sets the scroll bars to 0.
                     // #.   Before the load finishes, another request comes. The x, y coordinates are saved as 0.
                     // #.   The first load finishes, but scrolls to 0, 0; the second load finish does the same.
+
+                    console.log("CodeChat client: load complete.");
                 }
             };
 
-            // Set the new src to (re)load content. At startup, the ``srcdoc`` attribute present some welcome text. Remove it so that we can now assign the ``src`` attribute.
+            // Set the new src to (re)load content. At startup, the ``srcdoc`` attribute shows some welcome text. Remove it so that we can now assign the ``src`` attribute.
             outputElement.removeAttribute("srcdoc");
             outputElement.src = window.location.protocol + '//' + window.location.host + window.location.pathname + "/" + id + "/" + result.text;
             // The next build output received will apply to the new build, so set the flag.
@@ -121,6 +136,8 @@ function run_client(id, ws_address)
             // Exit for now; the callbacks above will continue this function's operation.
 
         } else if (result.get_result_type === GetResultType.build) {
+            // Omit this logging, since it's usually obvious from the lines below.
+            ///console.log("CodeChat client: received build output.");
             if (clear_output) {
                 // This is the start of a new build.
                 status_message.innerHTML = "Building...";
@@ -150,6 +167,7 @@ function run_client(id, ws_address)
             scroll_to_bottom(build_contents);
 
         } else if (result.get_result_type === GetResultType.errors) {
+            console.log("CodeChat client: error output received.");
             if (clear_output) {
                 // There was no build output, so just update the errors.
                 build_div.textContent = "";
@@ -169,6 +187,7 @@ function run_client(id, ws_address)
             set_splitter_percent(splitter_size[errors_or_warnings]);
 
         } else if (result.get_result_type === GetResultType.command) {
+            console.log(`CodeChat client: command ${result.text} received.`);
             if (result.text === "shutdown") {
                 // Close this window -- see https://stackoverflow.com/a/54787080. See `close the window`_.
                 outputElement.srcdoc = "<html><body><p>The CodeChat client was shut down. Please close this window.</p></body></html>";
@@ -178,8 +197,8 @@ function run_client(id, ws_address)
                 window.open('', '_self').close();
                 // Stop asking for results.
                 ws.close();
+                console.log("CodeChat client: shutdown complete.");
             } else if (result.text.startsWith("error: unknown client ")) {
-                console.log(result.text);
                 // _`Close the window` -- there's no point in asking for more commands. Note: there are some cases where this fails, although I've only seen this once. From the Chrome console, ``Scripts may close only the windows that were opened by them.`` In this case, leave a message asking the user to close the window.
                 outputElement.srcdoc = "<html><body><p>CodeChat client error: lost connection to the CodeChat server. Close this window and restart the editor plug-in.</p></body></html>";
                 build_div.textContent = "";
@@ -188,12 +207,13 @@ function run_client(id, ws_address)
                 window.open('', '_self').close();
                 // Stop asking for results.
                 ws.close();
+                console.log(`CodeChat client: shutdown complete due to unknown client; saw ${result.text}.`);
             } else {
-                console.log("Unknown command " + result.text);
+                console.log(`CodeChat client: Unknown command ${result.text}.`);
             }
 
         } else {
-            console.log("Unknown GetResultType:", result.get_result_type);
+            console.log(`CodeChat client: Unknown GetResultType: ${result.get_result_type}.`);
         }
     };
 
@@ -210,7 +230,7 @@ function run_client(id, ws_address)
     // The let statement below makes this accessible globally.
     navigate_to_error = function(file_path, line) {
         // TODO.
-        console.log(file_path, line);
+        console.log("CodeChat client: TODO", file_path, line);
     };
 }
 
