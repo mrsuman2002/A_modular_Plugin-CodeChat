@@ -17,7 +17,8 @@ Change Log
     -   Allow the ``codechat_config`` file ``args`` to be a string or a sequence of strings.
     -   Wait until the server has started before connecting to it.
     -   Remove a broken and useless feature: if the server is stopped, a keystroke closes the terminal window. (The GUI already provides a working and well-understood method to do this.)
-    -   Add logging to better track down bugs.
+    -   Add logging to better track down bugs. Fixed problem where some log data wasn't showing in VS Code.
+    -   Fix startup bug -- skipped initial render in some cases.
 
 -   0.0.20, 23-Feb-2021:
 
