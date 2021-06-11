@@ -13,6 +13,10 @@ Change Log
 **********
 -   `Github master <https://github.com/bjones1/CodeChat_system.git>`_:
 
+    -   No changes yet.
+
+-   0.0.21, 11-Jun-2021:
+
     -   Use YAML for ``codechat_config.yaml`` instead of pseudo-JSON.
     -   Allow the ``codechat_config`` file ``args`` to be a string or a sequence of strings.
     -   Wait until the server has started before connecting to it.
