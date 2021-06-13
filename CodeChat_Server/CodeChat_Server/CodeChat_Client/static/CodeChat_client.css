@@ -33,6 +33,8 @@ body {
     /* For box model simplicity, switch the padding and margin. */
     padding: var(--body-padding);
     margin: 0px;
+    /* The default of transparent makes VS Code's black show up and confuse everything. For now, make it white. */
+    background: white;
 }
 
 
