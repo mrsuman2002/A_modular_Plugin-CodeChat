@@ -33,7 +33,7 @@ Use
     #.  Open the Visual Studio Code settings for CodeChat by navigating to ``File`` > ``Preferences`` > ``Settings`` then typing ``CodeChat`` in the search box. Enter this path for the ``Code Chat.Code Chat Server: Command``. **Important**: in Windows, replace ``\`` in the location you determined with either ``\\`` or ``/``.
     #.  Run the extension again (``Ctrl+Shift+P`` then select CodeChat).
 
-At any time, run the CodeChat extension again (``Ctrl+Shift+P``, then ``CodeChat``) to show the CodeChat panel, re-start the CodeChat server if it's not running, then reconnect with the server. Close the CodeChat panel then run the extension for a more complete reset.
+At any time, run the CodeChat extension again (``Ctrl+Shift+P``, then ``CodeChat``) to show the CodeChat panel, re-start the CodeChat Server if it's not running, then reconnect with the server. Close the CodeChat panel then run the extension for a more complete reset.
 
 The CodeChat Server runs in an `integrated terminal <https://code.visualstudio.com/docs/editor/integrated-terminal>`_. You may hide this window (the X button at the top right of the pane) if you wish. To stop the server, either press any key in the terminal or click the trash can icon near the top right of the pane; re-run the CodeChat extension to restart it.
 

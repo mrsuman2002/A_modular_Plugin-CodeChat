@@ -17,9 +17,9 @@
 #   <http://www.gnu.org/licenses/>.
 #
 # *******************************
-# |docname| - The CodeChat server
+# |docname| - The CodeChat Server
 # *******************************
-# The CodeChat server receives requests from the editor/IDE, renders these, then displays them in the CodeChat client; likewise, it listens for CodeChat client requests, processes them, and forwards the results to the editor/IDE.
+# The CodeChat Server receives requests from the editor/IDE, renders these, then displays them in the CodeChat Client; likewise, it listens for CodeChat Client requests, processes them, and forwards the results to the editor/IDE.
 #
 #
 # Imports
@@ -206,19 +206,19 @@ def editor_plugin_server() -> None:
     server.serve()
 
 
-# Server for the CodeChat client
+# Server for the CodeChat Client
 # ------------------------------
 client_app = Flask(
     __name__,
-    # Serve CodeChat client files statically.
+    # Serve CodeChat Client files statically.
     static_url_path="/static",
     static_folder="CodeChat_Client/static",
-    # Serve the CodeChat client HTML as a template.
+    # Serve the CodeChat Client HTML as a template.
     template_folder="CodeChat_Client/templates",
 )
 
 
-# The endpoint to get the HTML for the CodeChat client.
+# The endpoint to get the HTML for the CodeChat Client.
 @client_app.route("/client")
 def client_html() -> str:
     return render_template(

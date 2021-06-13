@@ -17,7 +17,7 @@
 #   <http://www.gnu.org/licenses/>.
 #
 # ***********************************
-# |docname| - Run the CodeChat server
+# |docname| - Run the CodeChat Server
 # ***********************************
 #
 # Imports

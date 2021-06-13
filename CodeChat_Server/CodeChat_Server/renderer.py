@@ -17,7 +17,7 @@
 #   <http://www.gnu.org/licenses/>.
 #
 # *********************************************
-# |docname| - Renderers for the CodeChat server
+# |docname| - Renderers for the CodeChat Server
 # *********************************************
 # These functions convert from a text to HTML for a variety of formats.
 #
@@ -809,7 +809,7 @@ class RenderManager:
                 # Request a client deletion.
                 assert self.delete_client(id)
 
-    # Shut down a CodeChat client.
+    # Shut down a CodeChat Client.
     async def shutdown_client(self, id: int) -> bool:
         q = self.get_queue(id)
         # Fail if the ID is unknown.
@@ -874,7 +874,7 @@ class RenderManager:
             self.websocket_handler, "127.0.0.1", WEBSOCKET_PORT
         )
         # _`CODECHAT_READY`: let the user know that the server is now ready -- this is the last piece of it to start.
-        print("CODECHAT_READY\nThe CodeChat server is ready.")
+        print("CODECHAT_READY\nThe CodeChat Server is ready.")
         # Flush this since extension and test code waits for it before connecting to the server/running the rest of a test.
         sys.stdout.flush()
         await asyncio.gather(*[self._worker(i) for i in range(num_workers)])

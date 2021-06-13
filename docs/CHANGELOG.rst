@@ -51,16 +51,16 @@ Change Log
     -   Correctly return an error message when no renderer is found (another fixed case).
     -   Display percentage in the progress bar when available.
     -   Prevent CodeChat from dying when a laptop goes to sleep then wakes back up.
-    -   Automatically start the CodeChat server when the VSCode extension is run.
+    -   Automatically start the CodeChat Server when the VSCode extension is run.
     -   Correctly return an error message when no renderer is found.
     -   Update the status bar on the first build.
 
 -   0.0.15, 4-Dec-2020:
 
-    -   Provide a more helpful CodeChat client message at startup.
+    -   Provide a more helpful CodeChat Client message at startup.
     -   Correctly handle browsing away from the produced docs.
-    -   Continue operation in the CodeChat client after an error occurs.
-    -   Fix CodeChat renderer error messages so they'll be counted in the CodeChat client's tally of errors.
+    -   Continue operation in the CodeChat Client after an error occurs.
+    -   Fix CodeChat renderer error messages so they'll be counted in the CodeChat Client's tally of errors.
     -   Fix error message processing to support Windows drive letters.
     -   Don't claim focus when revealing the CodeChat panel.
     -   Fix hang on shutdown.
@@ -74,11 +74,11 @@ Change Log
 -   0.0.13, 11-Aug-2020:
 
     -   Improved VSClient error handling.
-    -   CodeChat server can now shut down gracefully.
+    -   CodeChat Server can now shut down gracefully.
 
 -   0.0.12, 29-Jul-2020:
 
-    -   Change method used to load the CodeChat client to work with VSCode 1.47.
+    -   Change method used to load the CodeChat Client to work with VSCode 1.47.
 
 -   0.0.11, 28-Jul-2020:
 

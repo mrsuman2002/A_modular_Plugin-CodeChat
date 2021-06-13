@@ -90,7 +90,7 @@ setup(
     # name requirements.
     name="CodeChat_Server",
     version=get_version("CodeChat_Server/__init__.py"),
-    description="The CodeChat server for software documentation",
+    description="The CodeChat Server for software documentation",
     long_description=long_description,
     # The project's main homepage.
     url="http://codechat.readthedocs.io/en/latest/",

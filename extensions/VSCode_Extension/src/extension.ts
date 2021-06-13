@@ -45,14 +45,14 @@ import ttypes = require("./gen-nodejs/CodeChat_Services_types");
 // =======
 // These globals are truly global: only one is needed for this entire plugin.
 //
-// The Thrift network connection to the CodeChat server.
+// The Thrift network connection to the CodeChat Server.
 let thrift_connection: thrift.Connection | undefined = undefined;
 // The Thrift client using this connection.
 let thrift_client: EditorPlugin.Client | undefined = undefined;
 // Where the webclient resides: ``html`` for a webview panel embedded in VSCode; ``browser`` to use an external browser.
 const codechat_client_location: ttypes.CodeChatClientLocation =
     ttypes.CodeChatClientLocation.html;
-// The subprocess in which the CodeChat server runs.
+// The subprocess in which the CodeChat Server runs.
 let codechat_terminal: CodeChatTerminal | undefined = undefined;
 // True if the subscriptions to IDE change notifications have been registered.
 let subscribed = false;
@@ -61,7 +61,7 @@ let subscribed = false;
 //
 // The id of this render client, assigned by the CodeChat Server.
 let codechat_client_id: number | undefined = undefined;
-// The webview panel used to display the CodeChat client
+// The webview panel used to display the CodeChat Client
 let webview_panel: vscode.WebviewPanel | undefined = undefined;
 // A timer used to wait for additional events (keystrokes, etc.) before performing a render.
 let idle_timer: NodeJS.Timeout | undefined = undefined;
@@ -142,7 +142,7 @@ export function activate(context: vscode.ExtensionContext) {
             if (codechat_terminal === undefined) {
                 codechat_terminal = new CodeChatTerminal();
             }
-            // Run the CodeChat server; this is a no-op if the server is already running.
+            // Run the CodeChat Server; this is a no-op if the server is already running.
             try {
                 await codechat_terminal.run_server();
             } catch (err) {
@@ -158,7 +158,7 @@ export function activate(context: vscode.ExtensionContext) {
                 // The client should never exist if there's no connection.
                 assert(thrift_client === undefined);
 
-                // Try to connect to the CodeChat server. The `createConnection function <https://github.com/apache/thrift/blob/master/lib/nodejs/lib/thrift/connection.js#L258>`_ wraps `net.createConnection <https://nodejs.org/api/net.html#net_net_createconnection_options_connectlistener>`_ then returns a `Connection object <https://github.com/apache/thrift/blob/master/lib/nodejs/lib/thrift/connection.js#L35>`_.
+                // Try to connect to the CodeChat Server. The `createConnection function <https://github.com/apache/thrift/blob/master/lib/nodejs/lib/thrift/connection.js#L258>`_ wraps `net.createConnection <https://nodejs.org/api/net.html#net_net_createconnection_options_connectlistener>`_ then returns a `Connection object <https://github.com/apache/thrift/blob/master/lib/nodejs/lib/thrift/connection.js#L35>`_.
                 //
                 // This must use the `CodeChat service port <CodeChat service port>`.
                 thrift_connection = thrift.createConnection("localhost", 9090, {
@@ -171,7 +171,7 @@ export function activate(context: vscode.ExtensionContext) {
                 thrift_connection.on("error", function (err) {
                     was_error = true;
                     show_error(
-                        `Error communicating with the CodeChat server: ${err.message}. Re-run the CodeChat extension to restart it.`
+                        `Error communicating with the CodeChat Server: ${err.message}. Re-run the CodeChat extension to restart it.`
                     );
                     // The close event will be `emitted next <https://nodejs.org/api/net.html#net_event_error_1>`_; that will handle cleanup.
                 });
@@ -184,11 +184,11 @@ export function activate(context: vscode.ExtensionContext) {
                     if (!was_error) {
                         if (hadError) {
                             show_error(
-                                "The connection to the CodeChat server was closed due to a transmission error. Re-run the CodeChat extension to restart it."
+                                "The connection to the CodeChat Server was closed due to a transmission error. Re-run the CodeChat extension to restart it."
                             );
                         } else {
                             show_error(
-                                "The connection to the CodeChat server was closed. Re-run the CodeChat extension to restart it."
+                                "The connection to the CodeChat Server was closed. Re-run the CodeChat extension to restart it."
                             );
                         }
                     }
@@ -260,7 +260,7 @@ export async function deactivate() {
 
 // CodeChat services
 // =================
-// Get the render client from the CodeChat server and place it in the web view. Then, start a render.
+// Get the render client from the CodeChat Server and place it in the web view. Then, start a render.
 function get_render_client(
     connection: thrift.Connection
 ) {

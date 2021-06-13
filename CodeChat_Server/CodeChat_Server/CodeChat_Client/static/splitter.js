@@ -161,7 +161,7 @@ var splitMe = {
 
 
 
-// BAJ: invoke this manually, since the window load event happens after the CodeChat client initialized and uses the splitter.
+// BAJ: invoke this manually, since the window load event happens after the CodeChat Client initialized and uses the splitter.
 //addEvent(window,'load',function () {
 //    splitMe.init();
 //});

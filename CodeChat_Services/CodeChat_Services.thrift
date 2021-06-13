@@ -56,19 +56,19 @@ struct RenderClientReturn {
 }
 
 
-// Define the location of the CodeChat client.
+// Define the location of the CodeChat Client.
 enum CodeChatClientLocation {
     // A URL, which the CodeChat system will host in its own web browser.
     url,
     // An HTML string, which the CodeChat system will host in its own web browser.
     html,
-    // An external browser, which the CodeChat server should launch.
+    // An external browser, which the CodeChat Server should launch.
     browser
 }
 
 // Provide CodeChat services to editor plugins.
 service EditorPlugin  {
-    // Create a CodeChat client and return HTML for it and its ID.
+    // Create a CodeChat Client and return HTML for it and its ID.
     RenderClientReturn get_client(
         // The location of the client to return.
         1: CodeChatClientLocation codeChat_client_location
@@ -86,12 +86,12 @@ service EditorPlugin  {
         4: bool is_dirty
     ),
 
-    // Release all resources associated with a CodeChat client. Returns an empty string on success, or an error message.
+    // Release all resources associated with a CodeChat Client. Returns an empty string on success, or an error message.
     string stop_client(
         // See id_.
         1:i32 id
     )
 
-    // Shut down the CodeChat server. Returns an empty string on success, or an error message.
+    // Shut down the CodeChat Server. Returns an empty string on success, or an error message.
     string shutdown_server()
  }

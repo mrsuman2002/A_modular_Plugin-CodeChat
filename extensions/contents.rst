@@ -65,6 +65,6 @@ Logging
 =======
 To help track down bugs, each side of a network connection needs to provide logging:
 
--   The server logs all requests from the IDE, web server activity, and CodeChat client activity.
--   The CodeChat client emits ``console.log`` info.
+-   The server logs all requests from the IDE, web server activity, and CodeChat Client activity.
+-   The CodeChat Client emits ``console.log`` info.
 -   Each extension should provide IDE-specific logging capabilities.

@@ -1,6 +1,6 @@
 The CodeChat System
 ===================
-The CodeChat System integrates the capabilities of the `CodeChat renderer <https://codechat.readthedocs.io/>`_ into popular text editors [#]_. To support multiple editors, this program offloads most of the processing to the CodeChat server and display to the CodeChat client, making the editor plugin/extension code shorter and easier to port. The basic architecture:
+The CodeChat System integrates the capabilities of the `CodeChat renderer <https://codechat.readthedocs.io/>`_ into popular text editors [#]_. To support multiple editors, this program offloads most of the processing to the CodeChat Server and display to the CodeChat Client, making the editor plugin/extension code shorter and easier to port. The basic architecture:
 
 .. digraph:: architecture
 
@@ -39,7 +39,7 @@ This approach bridges the services CodeChat provides, which are defined in Pytho
 #.  Develops a `CodeChat Server <CodeChat_Server/contents>` to provide the needed services;
 #.  Provides a `CodeChat Client <CodeChat_Server/CodeChat_Server/CodeChat_Client/contents>`, hosted in a web browser, to display the rendered source code and provide for user input;
 #.  Introduces an `extension for Visual Studio Code <extensions/VSCode_Extension/contents>`, a free and popular cross-platform text editor; and
-#.  Employs `Apache Thrift <https://thrift.apache.org>`_ to define `CodeChat services <CodeChat_Services/contents>`, which allows the CodeChat server to communicate with plugins developed in a `variety of languages <https://thrift.apache.org/docs/Languages>`_.
+#.  Employs `Apache Thrift <https://thrift.apache.org>`_ to define `CodeChat services <CodeChat_Services/contents>`, which allows the CodeChat Server to communicate with plugins developed in a `variety of languages <https://thrift.apache.org/docs/Languages>`_.
 
 Contents
 --------
