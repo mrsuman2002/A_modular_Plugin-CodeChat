@@ -1,6 +1,6 @@
 The CodeChat System
 ===================
-The CodeChat system integrates the capabilities of the `CodeChat renderer <https://codechat.readthedocs.io/>`_ into popular text editors [#]_. To support multiple editors, this program offloads most of the processing to the CodeChat server and display to the CodeChat client, making the editor plugin/extension code shorter and easier to port. The basic architecture:
+The CodeChat System integrates the capabilities of the `CodeChat renderer <https://codechat.readthedocs.io/>`_ into popular text editors [#]_. To support multiple editors, this program offloads most of the processing to the CodeChat server and display to the CodeChat client, making the editor plugin/extension code shorter and easier to port. The basic architecture:
 
 .. digraph:: architecture
 
@@ -77,18 +77,18 @@ To do
 -   Hyperlink the file and line, or perhaps just the line, instead of the entire error message.
 -   Provide way to do a rebuild all.
 -   Add a CodeChat Client GUI to select render language for non-project builds.
+-   Use a better splitter, such as `split.js <https://split.js.org/>`_.
+-   Handle VS Code's themes (dark, high-contrast, etc.) correctly. To do this, we need to inherit CSS from the webview into the iframe. See https://code.visualstudio.com/api/extension-guides/webview#theming-webview-content, and also use the Developer Tools is VS Code to inspect the iframe containing the webview, which provides vars defining all the VS Code styles.
 -   Add in sync.
 -   Monitor iframe location changes and try to sync by loading another file.
 -   Offer an option for VSCode to render in an external browser.
 -   Allow user-defined JSON of mapping from extensions to renderers.
 -   Provide a nicer style for docutils renders.
 -   Support all the pandoc renderers.
--   Improve docs
+-   Improve docs.
 -   Support at least one more editor.
 -   Save and restore scroll position on a per-file basis.
 -   Separate the render manager code from the renderer code.
--   Provide a verbose/non-verbose logging option; use logger instead of print.
--   Use `node-pty <https://github.com/microsoft/node-pty>`_ to allow syntax coloring in the VSCode terminal window.
 -   Provide ``codechat_config.json`` examples for common programs (doxygen, javadoc, mkdocs, etc.)
 -   Define a StrictYAML config file to replace the ``GLOB_TO_CONVERTER`` data structure more flexibly. Add in a bunch of conversions using Pandoc.
 

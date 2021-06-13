@@ -31,7 +31,11 @@ Initial start-up
     -   Make any failures more obvious by showing the terminal window in which the server reports problems, or the subprocess reports a failed run of the binary.
     -   This output should be kept separate from the error notification location, since it would be easy for reported errors to be lost in the voluminous output produced by the server.
 
-#.  Wait a timeout delay for the server to report that it's ready, or for the subprocess to exit. (If the server is already running, the second server will detect that the ports are in use and exit immediately.)
+#.  Wait a timeout delay for the server to report that it's ready, or for the subprocess to exit.
+
+    -   The server writes a `standard string <CODECHAT_READY>` to stdout to indicate it's ready, making it easy for extensions to determine when it's safe to attempt connection to the server.
+    -   If the server is already running, the second server will detect that the ports are in use and exit immediately. This allows extensions to unconditionally run the server at start-up, keeping extension code simpler.
+
 #.  Open a connection to the server. If the connection fails, stop here and report the error.
 #.  Invoke ``get_client``; send the returned HTML/URL to the web browser.
 

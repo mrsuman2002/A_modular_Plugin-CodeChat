@@ -39,11 +39,10 @@
 # The following files also configure the documentation.
 #
 # .. toctree::
-#   :maxdepth: 2
+#   :maxdepth: 1
 #
 #   codechat_config.yaml
 #   readthedocs.yml
-#   docs/docs-requirements.txt
 #
 # Imports
 # =======

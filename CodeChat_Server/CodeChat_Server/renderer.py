@@ -873,7 +873,7 @@ class RenderManager:
         self.websocket_server = await websockets.serve(
             self.websocket_handler, "127.0.0.1", WEBSOCKET_PORT
         )
-        # Let the user know that the server is now ready -- this is the last piece of it to start.
+        # _`CODECHAT_READY`: let the user know that the server is now ready -- this is the last piece of it to start.
         print("CODECHAT_READY\nThe CodeChat server is ready.")
         # Flush this since extension and test code waits for it before connecting to the server/running the rest of a test.
         sys.stdout.flush()
