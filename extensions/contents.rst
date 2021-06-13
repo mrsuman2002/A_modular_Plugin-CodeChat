@@ -11,15 +11,16 @@
 **************************************
 CodeChat editor/IDE extensions/plugins
 **************************************
-This directory contains text editor/IDE extensions/plugins.
+This directory contains documentation for all supported text editor/IDE extensions/plugins.
 
 .. toctree::
     :maxdepth: 2
 
     VSCode_Extension/contents
 
-Sequence of events
-==================
+
+Developer documentation
+=======================
 The typical operation of a plugin/extension is:
 
 Initial start-up

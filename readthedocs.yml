@@ -20,14 +20,14 @@
 # |docname| - ReadTheDocs config file
 # ***********************************
 #
-# Contents
-# ========
+# Supporting files
+# ================
 # .. toctree::
 #
 #   docs/docs-requirements.txt
 #
-# RTD config
-# ==========
+# Configuration
+# =============
 version: 2
 
 python:

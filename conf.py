@@ -46,7 +46,13 @@
 #
 # Imports
 # =======
+import sys
+import os
 import CodeChat.CodeToRest
+
+# Ensure the path to these docs available in order to import the version number.
+sys.path.insert(0, os.path.abspath('CodeChat_Server'))
+from CodeChat_Server import __version__
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -59,7 +65,7 @@ import CodeChat.CodeToRest
 # `copyright <http://sphinx-doc.org/config.html#confval-copyright>`_:
 # General information about the project. **Change this** for your project.
 project = "The CodeChat System"
-copyright = "2020, Bryan A. Jones"
+copyright = "2021, Bryan A. Jones"
 
 # The version info for the project you're documenting, acts as replacement for
 # ``|version|`` and ``|release|``, also used in various other places throughout
@@ -67,10 +73,10 @@ copyright = "2020, Bryan A. Jones"
 #
 # `version <http://sphinx-doc.org/config.html#confval-version>`_: The short X.Y
 # version.
-version = "1.0"
+version = __version__
 # `release <http://sphinx-doc.org/config.html#confval-release>`_: The full
 # version, including alpha/beta/rc tags.
-release = "version 1.0"
+release = __version__
 
 # There are two options for replacing ``|today|``:
 #
@@ -191,6 +197,7 @@ exclude_patterns = [
     "**/.pytest_cache",
     "**/.mypy_cache",
     "CodeChat_Server/.tox",
+    "README.rst",
 
     # Sphinx build output
     "_build",
