@@ -150,7 +150,7 @@ export function activate(context: vscode.ExtensionContext) {
             }
 
             // Show the terminal, in case there are errors. This helps the user understand what's going wrong in case of a failure.
-            assert((codechat_terminal !== undefined) && (codechat_terminal.terminal !== undefined));
+            assert(codechat_terminal.terminal !== undefined);
             codechat_terminal.terminal.show(true);
 
             if (thrift_connection === undefined) {
@@ -382,9 +382,9 @@ function show_error(message: string) {
         if (!webview_panel.webview.html.startsWith("<h1>CodeChat</h1>")) {
             webview_panel.webview.html = "<h1>CodeChat</h1>";
         }
-        webview_panel.webview.html += `<p>${escape(message)}</p>`;
+        webview_panel.webview.html += `<p>${escape(message)}</p><p>See the <a href="https://codechat-system.readthedocs.io/en/latest/docs/common_problems.html" target="_blank" rel="noreferrer noopener">docs</a>.</p>`;
     } else {
-        vscode.window.showErrorMessage(message);
+        vscode.window.showErrorMessage(message + "\nSee https://codechat-system.readthedocs.io/en/latest/docs/common_problems.html.");
     }
 }
 
