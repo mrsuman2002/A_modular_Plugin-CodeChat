@@ -55,7 +55,7 @@ from thrift.protocol import TBinaryProtocol
 
 # Local application imports
 # -------------------------
-from . import renderer
+from . import renderer, __version__
 from .gen_py.CodeChat_Services import EditorPlugin
 from .gen_py.CodeChat_Services.ttypes import (
     RenderClientReturn,
@@ -268,6 +268,7 @@ def excepthook(type, value, traceback):
 
 # Run both servers. This does not (usually) return.
 def run_servers() -> int:
+    print(f"The CodeChat Server, v.{__version__}\n")
     logging.basicConfig(level=logging.INFO)
 
     # See if the required ports are in use, probably by another instance of this server.
