@@ -15,6 +15,12 @@ Change Log
 
     -   No changes yet.
 
+-   0.0.22, 16-Jun-2021:
+
+    -   Enforce a light theme.
+    -   Print server version on startup.
+    -   Improved docs.
+
 -   0.0.21, 11-Jun-2021:
 
     -   Use YAML for ``codechat_config.yaml`` instead of pseudo-JSON.
