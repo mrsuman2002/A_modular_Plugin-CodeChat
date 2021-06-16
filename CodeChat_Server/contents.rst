@@ -14,6 +14,8 @@ The CodeChat Server
 The CodeChat Server receives requests from CodeChat plugins/extensions running in text editors/IDEs to render a file, performs the render, then displays it in the CodeChat Client. It also responds to user input from the CodeChat Client by processing this request then sending the results back to the plugin/extension.
 
 
+.. _install CodeChat Server:
+
 Installation
 ============
 To install the CodeChat Server:
