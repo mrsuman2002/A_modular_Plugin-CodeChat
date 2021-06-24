@@ -125,7 +125,7 @@ setup(
             "markdown",
             "Sphinx",
             "strictyaml",
-            "Thrift",
+            "thrift-unofficial",
             "websockets",
         ]
     ),

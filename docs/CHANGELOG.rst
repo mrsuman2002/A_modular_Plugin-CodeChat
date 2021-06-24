@@ -13,7 +13,7 @@ Change Log
 **********
 -   `Github master <https://github.com/bjones1/CodeChat_system.git>`_:
 
-    -   No changes yet.
+    -   Upgraded to Thrift v. 14.2.
 
 -   0.0.22, 16-Jun-2021:
 
