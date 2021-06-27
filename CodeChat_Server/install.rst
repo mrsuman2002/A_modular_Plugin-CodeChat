@@ -93,3 +93,11 @@ Optionally, install additional external renderers such as:
 Use
 ===
 Install a `CodeChat plugin or extension <../extensions/contents>` to use the CodeChat System (the final step of the installation steps above).
+
+TODO: document creating a ``codechat.yaml`` file for projects; provide example files for the renderers above.
+
+TODO: document how to run the universal extension.
+
+TODO: document using the CodeChat Client.
+
+TODO: document running the server manually.

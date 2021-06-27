@@ -11,7 +11,7 @@
 **************************************
 CodeChat editor/IDE extensions/plugins
 **************************************
-This directory contains documentation for all supported text editor/IDE extensions/plugins.
+This directory contains documentation for all supported text editor/IDE extensions/plugins. TODO: link to documentation for the universal extension.
 
 .. toctree::
     :maxdepth: 2
