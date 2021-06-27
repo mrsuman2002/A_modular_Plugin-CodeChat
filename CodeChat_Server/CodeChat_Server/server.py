@@ -30,11 +30,12 @@
 # Standard library
 # ----------------
 import logging
+from pathlib import Path
 import signal
 import socket
 import sys
 import threading
-from typing import Union
+from typing import Sequence, Union
 import webbrowser
 
 # Third-party imports
@@ -51,6 +52,8 @@ from thrift.server import TServer
 from thrift.transport import TTransport
 from thrift.transport import TSocket
 from thrift.protocol import TBinaryProtocol
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEvent, PatternMatchingEventHandler
 
 
 # Local application imports
@@ -249,6 +252,62 @@ def client_data(id: int, url_path: str) -> Union[str, Response]:
     return response
 
 
+# Universal client
+# ================
+# Provide a simple class to invoke a build when the file system watcher sends an event. TODO: if the user closes the CodeChat Client, what should this program do?
+class UniversalClient:
+    # This takes the same parameters as ``run_servers``.
+    def __init__(
+        self,
+        directories: Sequence[str] = None,
+        patterns: Sequence[str] = None,
+        ignore_patterns: Sequence[str] = None,
+    ):
+        # Only start the watcher if directories are provided.
+        if not directories:
+            self.observer = None
+            return
+
+        self.observer = Observer()
+        # Wait until the renderer is ready before submitting jobs.
+        renderer.render_manager_ready_event.wait()
+
+        # Request a client ID.
+        ret = handler.get_client(CodeChatClientLocation.browser)
+        assert ret.error == ""
+        assert ret.html == ""
+        self.client_id = ret.id
+
+        # See the `docs <https://watchdog.readthedocs.io/en/latest/api.html#watchdog.events.PatternMatchingEventHandler>`__. Rather than derive a separate class, just add a method to this instance.
+        self.event_handler = PatternMatchingEventHandler(patterns, ignore_patterns)
+        self.event_handler.on_any_event = self.on_any_event
+
+        for pathname in set(directories):
+            # See the `docs <https://watchdog.readthedocs.io/en/latest/api.html#watchdog.observers.api.BaseObserver.schedule>`__.
+            self.observer.schedule(self.event_handler, pathname, recursive=True)
+        self.observer.start()
+        print("Watcher started.")
+
+    # See the `docs <https://watchdog.readthedocs.io/en/latest/api.html#watchdog.events.FileSystemEventHandler.on_any_event>`__.
+    def on_any_event(self, event: FileSystemEvent):
+        if not event.is_directory:
+            print(event, event.src_path)
+            src_path = Path(event.src_path).absolute()
+            with open(src_path, encoding="utf-8", errors="backslashreplace") as f:
+                # TODO: check the return value, then do what on failure?
+                handler.start_render(
+                    f.read(), str(src_path), self.client_id, False
+                )
+
+    def shutdown(self):
+        if self.observer:
+            print("Watcher shutting down...")
+            handler.stop_client(self.client_id)
+            self.observer.stop()
+            self.observer.join()
+            print("Watcher shut down.")
+
+
 # Main code
 # =========
 # When this event is ``set``, ``run_servers`` will shut down the servers and return.
@@ -267,7 +326,15 @@ def excepthook(type, value, traceback):
 
 
 # Run both servers. This does not (usually) return.
-def run_servers() -> int:
+def run_servers(
+    # A list of directories to monitor for changes.
+    directories: Sequence[str] = None,
+    # A list of patterns for files in these directories to monitor for changes.
+    patterns: Sequence[str] = None,
+    # A list of patterns for files in these directories to ignore when monitoring.
+    ignore_patterns: Sequence[str] = None,
+) -> int:
+
     print(f"The CodeChat Server, v.{__version__}\n")
     logging.basicConfig(level=logging.INFO)
 
@@ -287,7 +354,7 @@ def run_servers() -> int:
     # Shut down if any unhandled exception occurs.
     sys.excepthook = excepthook
 
-    # Both servers block when run, so place them in a thread. Mark the Thrift server as a daemon, so it will be killed when the program shuts down.
+    # Both servers block when run, so place them in a thread. Mark the servers as a daemon, so they will be killed when the program shuts down.
     editor_plugin_thread = threading.Thread(
         target=editor_plugin_server, name="Editor plugin server", daemon=True
     )
@@ -305,6 +372,9 @@ def run_servers() -> int:
     render_manager_thread = threading.Thread(target=render_manager.run, name="asyncio")
     render_manager_thread.start()
 
+    # Watch for file system changes if requested.
+    universal_client = UniversalClient(directories, patterns, ignore_patterns)
+
     # On a signal, shut down gracefully.
     signal.signal(signal.SIGTERM, signal_handler)
     signal.signal(signal.SIGINT, signal_handler)
@@ -318,6 +388,7 @@ def run_servers() -> int:
             break
 
     print("Shutting down...")
+    universal_client.shutdown()
     # This will prevent future editor or web requests from being serviced.
     render_manager.threadsafe_shutdown()
     # When this is done, the Flask server and editor plugin sever can be shut down, since they're idle. Since they're daemons, they'll be shut down by exiting main.

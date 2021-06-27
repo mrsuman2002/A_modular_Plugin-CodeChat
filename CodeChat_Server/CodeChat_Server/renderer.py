@@ -36,6 +36,7 @@ import io
 from pathlib import Path
 import sys
 from tempfile import NamedTemporaryFile
+import threading
 from typing import Any, cast, Callable, Dict, Generator, List, Optional, Tuple, Union
 import urllib.parse
 
@@ -649,6 +650,10 @@ async def convert_file(text: str, file_path: str, cs: ClientState) -> None:
 
 # RenderManager / render thread
 # ==============================
+# The render manager sets this event when it is ready.
+render_manager_ready_event = threading.Event()
+
+
 class RenderManager:
     # Provide a way to perform thread-safe access of methods in this class.
     def __getattr__(self, name: str) -> Callable:
@@ -875,6 +880,7 @@ class RenderManager:
         )
         # _`CODECHAT_READY`: let the user know that the server is now ready -- this is the last piece of it to start.
         print("CODECHAT_READY\nThe CodeChat Server is ready.")
+        render_manager_ready_event.set()
         # Flush this since extension and test code waits for it before connecting to the server/running the rest of a test.
         sys.stdout.flush()
         await asyncio.gather(*[self._worker(i) for i in range(num_workers)])

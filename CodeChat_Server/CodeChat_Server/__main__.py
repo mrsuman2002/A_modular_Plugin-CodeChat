@@ -53,6 +53,7 @@ def parse_patterns(patterns_spec, ignore_patterns_spec, separator=";"):
 
 # Main
 # ====
+# The command-line parsing is copied from `watchmedo <https://github.com/gorakhargosh/watchdog/blob/master/src/watchdog/watchmedo.py#L383>`_.
 @arg("directories", nargs="*", default=".", help="directories to watch")
 @arg(
     "-p",
