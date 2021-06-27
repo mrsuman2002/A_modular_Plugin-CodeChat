@@ -74,6 +74,21 @@ Mac
 
 To update the CodeChat Server, repeat steps 1, 5, and 6.
 
+Optional installs
+-----------------
+Optionally, install additional external renderers such as:
+
+-   `Daux.io <https://daux.io/>`_
+-   `Doxygen <https://www.doxygen.nl/>`_
+-   `Gitbook <https://github.com/GitbookIO/gitbook-cli>`_
+-   `Javadoc <https://en.wikipedia.org/wiki/Javadoc>`_
+-   `Mdbook <https://rust-lang.github.io/mdBook/>`_
+-   `Mkdocs <https://www.mkdocs.org/>`_
+-   `Pandoc <https://pandoc.org/>`_
+-   `Runestone Components <https://runestone.academy/>`_
+-   `Skydocs <https://skydocs.skyost.eu/en/>`_
+-   `Sphinx <https://www.sphinx-doc.org/en/master/>`_
+
 
 Use
 ===
