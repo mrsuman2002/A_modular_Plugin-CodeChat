@@ -1,12 +1,12 @@
 .. Copyright (C) 2012-2020 Bryan A. Jones.
 
-    This file is part of the CodeChat system.
+    This file is part of the CodeChat System.
 
-    The CodeChat system is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+    The CodeChat System is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
-    The CodeChat system is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+    The CodeChat System is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-    You should have received a `copy of the GNU General Public License </docs/LICENSE>` along with the CodeChat system.  If not, see http://www.gnu.org/licenses/.
+    You should have received a `copy of the GNU General Public License </docs/LICENSE>` along with the CodeChat System.  If not, see http://www.gnu.org/licenses/.
 
 **************************************
 CodeChat editor/IDE extensions/plugins
@@ -26,7 +26,7 @@ The typical operation of a plugin/extension is:
 Initial start-up
 ----------------
 #.  Open an in-editor/in-IDE web browser if possible. Use this to report status and errors during the following steps. Otherwise, fall back to in-editor/IDE notifications.
-#.  Use this reporter to tell the user that the CodeChat system is starting.
+#.  Use this reporter to tell the user that the CodeChat System is starting.
 #.  Run the CodeChat Server. Show output from the server in a terminal window/text box; reveal this if it's hidden. Reasoning:
 
     -   Make any failures more obvious by showing the terminal window in which the server reports problems, or the subprocess reports a failed run of the binary.
@@ -42,7 +42,7 @@ Initial start-up
 
 Main loop
 ---------
-At this point, the CodeChat system is up and running. Now, the system should:
+At this point, the CodeChat System is up and running. Now, the system should:
 
 -   Watch for IDE events, then send render requests to the server.
 -   Respond to and report connection errors.
