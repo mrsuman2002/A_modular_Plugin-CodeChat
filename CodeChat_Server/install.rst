@@ -7,10 +7,12 @@ Installation and use
     :depth: 2
 
 
+To install the CodeChat System, install the CodeChat Server and a CodeChat extension or plugin, along with optional external renders you desire.
+
 .. _install CodeChat Server:
 
-Installation
-============
+CodeChat Server Installation
+============================
 To install the CodeChat Server:
 
 Windows
@@ -74,6 +76,11 @@ Mac
 
 To update the CodeChat Server, repeat steps 1, 5, and 6.
 
+
+CodeChat extension/plugin installation
+======================================
+Install a `CodeChat plugin or extension <../extensions/contents>` to use the CodeChat System (the final step of the installation steps above).
+
 Optional installs
 -----------------
 Optionally, install additional external renderers such as:
@@ -92,12 +99,12 @@ Optionally, install additional external renderers such as:
 
 Use
 ===
-Install a `CodeChat plugin or extension <../extensions/contents>` to use the CodeChat System (the final step of the installation steps above).
+See the `home page <../index>` for a brief overview of the CodeChat Client GUI.
+
+The CodeChat Server includes built-in renderers for `reStructuredText <https://docutils.sourceforge.io/rst.html>`_, `Markdown <https://www.markdownguide.org/>`_, and HTML; simply open any ``.rst``, ``.md``,  ``.html``, or ``.htm`` document and see it rendered live! In addition, the built-in `CodeChat <https://codechat.readthedocs.io/>`_ renderer allows you to transform source code in `many languages <https://codechat.readthedocs.io/en/master/CodeChat/CommentDelimiterInfo.py.html#supported-languages>`_ to a beautifully-formatted web page.
 
 TODO: document creating a ``codechat.yaml`` file for projects; provide example files for the renderers above.
 
 TODO: document how to run the universal extension.
-
-TODO: document using the CodeChat Client.
 
 TODO: document running the server manually.

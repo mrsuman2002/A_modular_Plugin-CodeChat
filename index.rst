@@ -1,8 +1,9 @@
 .. include:: README.rst
 
+
 Getting started
 ===============
-`Install the CodeChat Server <CodeChat_Server/contents>`, then install a `CodeChat extension or plugin <extensions/contents>` in a supported editor.
+To get started, follow the `CodeChat_Server/install` instructions.
 
 
 Help
