@@ -199,6 +199,9 @@ exclude_patterns = [
     "CodeChat_Server/.tox",
     "README.rst",
 
+    # Templates, which are rendered separately.
+    "CodeChat_Server/templates",
+
     # Sphinx build output
     "_build",
 

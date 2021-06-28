@@ -20,8 +20,8 @@
 # ********************************************************
 # |docname| - Non-source files to include in setup package
 # ********************************************************
-# CSS and template files must also be included.
-include CodeChat_Server/rst_templates/*
 # Include the CodeChat client.
-recursive-include CodeChat_Server/CodeChat_Client/static *
+include CodeChat_Server/CodeChat_Client/static/*
 include CodeChat_Server/CodeChat_Client/templates/*
+# Include templates for external renderers.
+recursive-include templates *

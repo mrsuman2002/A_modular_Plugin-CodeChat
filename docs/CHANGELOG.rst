@@ -15,6 +15,7 @@ Change Log
 
     -   Upgraded to Thrift v. 14.2.
     -   Added the universal client.
+    -   Added a Sphinx template.
 
 -   0.0.22, 16-Jun-2021:
 

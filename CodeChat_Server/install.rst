@@ -96,15 +96,25 @@ Optionally, install additional external renderers such as:
 -   `Skydocs <https://skydocs.skyost.eu/en/>`_
 -   `Sphinx <https://www.sphinx-doc.org/en/master/>`_
 
+.. toctree::
+    :maxdepth: 1
+    :hidden:
+
+    ../docs/templates
+
+.. TODO: The linked templates above provide both the files needed for that external renderer to operate along with the CodeChat System configuration file for the renderer.
+
 
 Use
 ===
 See the `home page <../index>` for a brief overview of the CodeChat Client GUI.
 
-The CodeChat Server includes built-in renderers for `reStructuredText <https://docutils.sourceforge.io/rst.html>`_, `Markdown <https://www.markdownguide.org/>`_, and HTML; simply open any ``.rst``, ``.md``,  ``.html``, or ``.htm`` document and see it rendered live! In addition, the built-in `CodeChat <https://codechat.readthedocs.io/>`_ renderer allows you to transform source code in `many languages <https://codechat.readthedocs.io/en/master/CodeChat/CommentDelimiterInfo.py.html#supported-languages>`_ to a beautifully-formatted web page.
+The CodeChat Server includes built-in renderers for `reStructuredText <https://docutils.sourceforge.io/rst.html>`_, `Markdown <https://www.markdownguide.org/>`_, and (x)HTML; simply open any ``.rst``, ``.md``,  or ``.(x)htm(l)`` document and see it rendered live! In addition, the built-in `CodeChat <https://codechat.readthedocs.io/>`_ renderer allows you to transform source code in `many languages <https://codechat.readthedocs.io/en/master/CodeChat/CommentDelimiterInfo.py.html#supported-languages>`_ to a beautifully-formatted web page.
 
-TODO: document creating a ``codechat.yaml`` file for projects; provide example files for the renderers above.
+To use an external renderer, such as those listed `above <optional installs>`_, provide `../docs/templates`.
 
-TODO: document how to run the universal extension.
+.. TODO: document creating a ``codechat.yaml`` file for projects; provide example files for the renderers above.
 
-TODO: document running the server manually.
+.. TODO: document how to run the universal extension.
+
+.. TODO: document running the server manually.
