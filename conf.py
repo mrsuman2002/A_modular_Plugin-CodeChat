@@ -199,9 +199,6 @@ exclude_patterns = [
     "CodeChat_Server/.tox",
     "README.rst",
 
-    # Templates, which are rendered separately.
-    "CodeChat_Server/templates",
-
     # Sphinx build output
     "_build",
 
@@ -278,7 +275,7 @@ html_theme = "alabaster"
 # relative to this directory. They are copied after the builtin static files, so
 # a file named ``default.css`` will overwrite the builtin ``default.css``.
 # **CodeChat note:** Include the path to CodeChat's static files.
-html_static_path = CodeChat.CodeToRest.html_static_path()
+html_static_path = CodeChat.CodeToRest.html_static_path() + ["CodeChat_Server/templates"]
 
 # `html_last_updated_fmt <http://sphinx-doc.org/config.html#confval-html_last_updated_fmt>`_:
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,

@@ -94,7 +94,7 @@ Optionally, install additional external renderers such as:
 -   `Pandoc <https://pandoc.org/>`_
 -   `Runestone Components <https://runestone.academy/>`_
 -   `Skydocs <https://skydocs.skyost.eu/en/>`_
--   `Sphinx <https://www.sphinx-doc.org/en/master/>`_ (CodeChat `template <templates/sphinx/index.html>`_)
+-   `Sphinx <https://www.sphinx-doc.org/en/master/>`_ (CodeChat `template <../_static/sphinx/_build/index.html>`_)
 
 CodeChat Server configuration file
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -117,7 +117,7 @@ External renderers
 ------------------
 To use an external renderer, such as those listed `above <optional installs>`_, provide a `CodeChat Server configuration file`_.
 
-.. TODO: Provide example files for the renderers above, plus a script to build all docs (run Sphinx, run builders on all templates, copy the output files to a single HTML location). I need a way to upload these to readthedocs -- perhaps a github branch that is force-pushed with each docs build, then rtd pulls from? Dropbox? Some other way to push the built HTML?
+.. TODO: Provide example files for the renderers above, plus multiple invocations of  ``subprocess.call`` in ``conf.py`` to run builders on all the templates. For builders not installed on readthedocs, I'll need to manually commit these to git.
 
 .. TODO: document how to run the universal extension.
 
