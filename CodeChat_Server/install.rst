@@ -94,26 +94,30 @@ Optionally, install additional external renderers such as:
 -   `Pandoc <https://pandoc.org/>`_
 -   `Runestone Components <https://runestone.academy/>`_
 -   `Skydocs <https://skydocs.skyost.eu/en/>`_
--   `Sphinx <https://www.sphinx-doc.org/en/master/>`_
+-   `Sphinx <https://www.sphinx-doc.org/en/master/>`_ (CodeChat `template <templates/sphinx/index.html>`_)
 
-.. toctree::
-    :maxdepth: 1
-    :hidden:
+CodeChat Server configuration file
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-    ../docs/templates
-
-.. TODO: The linked templates above provide both the files needed for that external renderer to operate along with the CodeChat System configuration file for the renderer.
+The linked templates above include the correct CodeChat Server configuration file along with the files needed by that external renderer to create a basic project. The `configuration file for this project <../codechat_config.yaml>` documents the format of this file and provides a working example.
 
 
 Use
 ===
+
+CodeChat Client
+---------------
 See the `home page <../index>` for a brief overview of the CodeChat Client GUI.
 
+Included renderers
+------------------
 The CodeChat Server includes built-in renderers for `reStructuredText <https://docutils.sourceforge.io/rst.html>`_, `Markdown <https://www.markdownguide.org/>`_, and (x)HTML; simply open any ``.rst``, ``.md``,  or ``.(x)htm(l)`` document and see it rendered live! In addition, the built-in `CodeChat <https://codechat.readthedocs.io/>`_ renderer allows you to transform source code in `many languages <https://codechat.readthedocs.io/en/master/CodeChat/CommentDelimiterInfo.py.html#supported-languages>`_ to a beautifully-formatted web page.
 
-To use an external renderer, such as those listed `above <optional installs>`_, provide `../docs/templates`.
+External renderers
+------------------
+To use an external renderer, such as those listed `above <optional installs>`_, provide a `CodeChat Server configuration file`_.
 
-.. TODO: document creating a ``codechat.yaml`` file for projects; provide example files for the renderers above.
+.. TODO: Provide example files for the renderers above, plus a script to build all docs (run Sphinx, run builders on all templates, copy the output files to a single HTML location). I need a way to upload these to readthedocs -- perhaps a github branch that is force-pushed with each docs build, then rtd pulls from? Dropbox? Some other way to push the built HTML?
 
 .. TODO: document how to run the universal extension.
 
