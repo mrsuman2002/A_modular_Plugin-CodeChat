@@ -295,9 +295,7 @@ class UniversalClient:
             src_path = Path(event.src_path).absolute()
             with open(src_path, encoding="utf-8", errors="backslashreplace") as f:
                 # TODO: check the return value, then do what on failure?
-                handler.start_render(
-                    f.read(), str(src_path), self.client_id, False
-                )
+                handler.start_render(f.read(), str(src_path), self.client_id, False)
 
     def shutdown(self):
         if self.observer:

@@ -10,3 +10,4 @@ max-line-length = 50000
 exclude =
     gen_py
     .tox
+    templates
