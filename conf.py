@@ -333,7 +333,23 @@ html_sourcelink_suffix = ""
 # `html_file_suffix <http://sphinx-doc.org/config.html#confval-html_file_suffix>`_:
 # This is the file name suffix for HTML files (e.g. ".xhtml").
 ##html_file_suffix = None
-#
+
+
+# Intersphinx
+# ===========
+# `intersphinx_mapping <https://www.sphinx-doc.org/en/master/usage/extensions/intersphinx.html#confval-intersphinx_mapping>`_:
+# This config value contains the locations and names of other projects that should be linked to in this documentation.
+intersphinx_mapping = {
+    "CodeChat": (
+        "https://codechat.readthedocs.io/en/latest/", (
+            None,
+            # An optional local file location -- useful when updating both Sphinx builds before the updates are pushed to the server.
+            "../CodeChat/_build/objects.inv",
+        ),
+    )
+}
+
+
 # Options for `Graphviz output <https://www.sphinx-doc.org/master/usage/extensions/graphviz.html>`_
 # ===========================================================================================================
 # The output format for Graphviz when building HTML files.
