@@ -30,17 +30,18 @@ The CodeChat System integrates the capabilities of the `CodeChat renderer <https
         JavaScript;
     }
 
-    CodeChat_plugin -> thrift_server [label = <Thrift>, dir = both, lhead = cluster_server];
-    websocket_server -> JavaScript [label = <websocket>, dir = both, lhead = cluster_client, ltail = cluster_server];
-    web_server -> JavaScript [label = <HTTP>, dir = both, lhead = cluster_client, ltail = cluster_server];
+    CodeChat_plugin -> thrift_server [label = <Thrift>, dir = both];
+    websocket_server -> JavaScript [label = <websocket>, dir = both];
+    web_server -> JavaScript [label = <HTTP>, dir = both, lhead = cluster_client];
     renderers -> external_renderers [label = <subprocess>, ltail = cluster_server, dir = both];
 
 This approach bridges the services CodeChat provides, which are defined in Python, to the variety of programming languages which various text editors require. To accomplish these goals, this project:
 
 #.  Develops a `CodeChat Server <../CodeChat_Server/contents>` to provide the needed services;
 #.  Provides a `CodeChat Client <../CodeChat_Server/CodeChat_Server/CodeChat_Client/contents>`, hosted in a web browser, to display the rendered source code and provide for user input;
-#.  Introduces an `extension for Visual Studio Code <../extensions/VSCode_Extension/contents>`, a free and popular cross-platform text editor; and
-#.  Employs `Apache Thrift <https://thrift.apache.org>`_ to define `CodeChat services <../CodeChat_Services/contents>`, which allows the CodeChat Server to communicate with plugins developed in a `variety of languages <https://thrift.apache.org/docs/Languages>`_.
+#.  Introduces an `extensions for various text editors/IDEs <../extensions/contents>`; and
+#.  Employs `Apache Thrift <https://thrift.apache.org>`_ to define `CodeChat Services <../CodeChat_Services/contents>`, which allows the CodeChat Server to communicate with extension/plugins developed in a `variety of languages <https://thrift.apache.org/docs/Languages>`_.
+
 
 Contents
 ========
@@ -80,12 +81,14 @@ To do
 -   Separate the render manager code from the renderer code.
 -   Provide ``codechat_config.json`` examples for common programs (doxygen, javadoc, mkdocs, etc.)
 -   Define a StrictYAML config file to replace the ``GLOB_TO_CONVERTER`` data structure more flexibly. Add in a bunch of conversions using Pandoc.
+-   Would it be easier for extension authors if the server could be invoked from the command line in client mode to communicate with the server via stdio? For example, send render requests as JSON and receive replies as JSON, or something like that? For now, wait until more extensions are developed.
+-   Should I rewrite the universal client to truly run in client mode, so that a server can be run as a separate process? If so, it should auto-start the server just as any other client would.
 
 
 Ideas:
 
--   At the core of the design is a wrapped StringIO class that allows reads/writes from/to (dest, str) [e.g. (build_output, "...rendered x as JavaScript...")]. Opening this stream for reading returns an object that does blocking reads and remembers its location in the stream. It also offers a close_open method that, given an existing stream to close and a new stream to open, switches the blocking read being performed from the old to the new stream. StringIO also implements universal newlines
--   The editor requests a render. The render manager either finds an existing render or creates a new render. For new renders, the render is enqueued. The render manager close_opens the web client's current render stream, replacing it with the new, resulting render stream; as a result, the web client then beings to read from this stream.
+-   At the core of the design is a wrapped StringIO class that allows reads/writes from/to (dest, str) [e.g. (build_output, "...rendered x as JavaScript...")]. Opening this stream for reading returns an object that does blocking reads and remembers its location in the stream. It also offers a close_open method that, given an existing stream to close and a new stream to open, switches the blocking read being performed from the old to the new stream. StringIO also implements universal newlines.
+-   The editor requests a render. The render manager either finds an existing render or creates a new render. For new renders, the render is enqueued. The render manager close_opens the web client's current render stream, replacing it with the new, resulting render stream; as a result, the web client then begins to read from this stream.
 -   The render manager worker eventually dequeues the render then starts writing to it. The renderer writes output, then errors, then html.
 -   The web client blocks on read until data is ready, then returns as much data as it can for each read.
 
