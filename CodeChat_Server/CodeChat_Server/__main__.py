@@ -39,7 +39,7 @@ from argh import arg, expects_obj
 # None. Delay the import below until after print runs, since the import takes a while to complete.
 
 
-# This is copied from `watchmedo <https://github.com/gorakhargosh/watchdog/blob/master/src/watchdog/watchmedo.py#L84>`_.
+# This is copied from `watchmedo <https://github.com/gorakhargosh/watchdog/blob/master/src/watchdog/watchmedo.py#L84>`__.
 def parse_patterns(patterns_spec, ignore_patterns_spec, separator=";"):
     """
     Parses pattern argument specs and returns a two-tuple of
@@ -54,7 +54,7 @@ def parse_patterns(patterns_spec, ignore_patterns_spec, separator=";"):
 
 # Main
 # ====
-# The command-line parsing is based on `watchmedo <https://github.com/gorakhargosh/watchdog/blob/master/src/watchdog/watchmedo.py#L383>`_.
+# The command-line parsing is based on `watchmedo <https://github.com/gorakhargosh/watchdog/blob/master/src/watchdog/watchmedo.py#L383>`__.
 @arg(
     "-w",
     "--watch",
