@@ -39,6 +39,7 @@ from argh import arg, expects_obj
 # None. Delay the import below until after print runs, since the import takes a while to complete.
 
 
+# This is copied from `watchmedo <https://github.com/gorakhargosh/watchdog/blob/master/src/watchdog/watchmedo.py#L84>`_.
 def parse_patterns(patterns_spec, ignore_patterns_spec, separator=";"):
     """
     Parses pattern argument specs and returns a two-tuple of
@@ -53,8 +54,15 @@ def parse_patterns(patterns_spec, ignore_patterns_spec, separator=";"):
 
 # Main
 # ====
-# The command-line parsing is copied from `watchmedo <https://github.com/gorakhargosh/watchdog/blob/master/src/watchdog/watchmedo.py#L383>`_.
-@arg("directories", nargs="*", default=".", help="directories to watch")
+# The command-line parsing is based on `watchmedo <https://github.com/gorakhargosh/watchdog/blob/master/src/watchdog/watchmedo.py#L383>`_.
+@arg(
+    "-w",
+    "--watch",
+    dest="watch_directories",
+    nargs="*",
+    default="",
+    help="directories to watch",
+)
 @arg(
     "-p",
     "--pattern",
@@ -79,7 +87,7 @@ def _main(args):
     print("Loading...")
     from .server import run_servers
 
-    sys.exit(run_servers(args.directories, patterns, ignore_patterns))
+    sys.exit(run_servers(args.watch_directories, patterns, ignore_patterns))
 
 
 def main():
