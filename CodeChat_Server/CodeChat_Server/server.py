@@ -58,7 +58,7 @@ from watchdog.events import FileSystemEvent, PatternMatchingEventHandler
 
 # Local application imports
 # -------------------------
-from . import renderer, __version__
+from . import render_manager, __version__
 from .gen_py.CodeChat_Services import EditorPlugin
 from .gen_py.CodeChat_Services.ttypes import (
     RenderClientReturn,
@@ -85,7 +85,7 @@ logger = logging.getLogger(__name__)
 # This class implements the EditorPlugin service.
 class CodeChatHandler:
     def __init__(self):
-        self.render_manager: renderer.RenderManager
+        self.render_manager: render_manager.RenderManager
 
     # _`get_client`: Return the HTML for a web client.
     def get_client(self, codeChat_client_location: int) -> RenderClientReturn:
@@ -225,7 +225,7 @@ client_app = Flask(
 @client_app.route("/client")
 def client_html() -> str:
     return render_template(
-        "CodeChat_client.html", WEBSOCKET_PORT=renderer.WEBSOCKET_PORT
+        "CodeChat_client.html", WEBSOCKET_PORT=render_manager.WEBSOCKET_PORT
     )
 
 
@@ -270,7 +270,7 @@ class UniversalClient:
 
         self.observer = Observer()
         # Wait until the renderer is ready before submitting jobs.
-        renderer.render_manager_ready_event.wait()
+        render_manager.render_manager_ready_event.wait()
 
         # Request a client ID.
         ret = handler.get_client(CodeChatClientLocation.browser)
@@ -339,11 +339,11 @@ def run_servers(
     # See if the required ports are in use, probably by another instance of this server.
     if (
         is_port_in_use(HTTP_PORT)
-        or is_port_in_use(renderer.WEBSOCKET_PORT)
+        or is_port_in_use(render_manager.WEBSOCKET_PORT)
         or is_port_in_use(THRIFT_PORT)
     ):
         print(
-            f"Error: ports {HTTP_PORT}, {renderer.WEBSOCKET_PORT}, and/or {THRIFT_PORT} are already in use.\n"
+            f"Error: ports {HTTP_PORT}, {render_manager.WEBSOCKET_PORT}, and/or {THRIFT_PORT} are already in use.\n"
             "Hopefully, this means that the CodeChat Server is already running in another process.\n"
             "Exiting.\n"
         )
@@ -365,9 +365,10 @@ def run_servers(
     flask_server_thread.start()
 
     # Start the render loop in another thread.
-    render_manager = renderer.RenderManager()
-    handler.render_manager = render_manager
-    render_manager_thread = threading.Thread(target=render_manager.run, name="asyncio")
+    handler.render_manager = render_manager.RenderManager()
+    render_manager_thread = threading.Thread(
+        target=handler.render_manager.run, name="asyncio"
+    )
     render_manager_thread.start()
 
     # Watch for file system changes if requested.
@@ -388,7 +389,7 @@ def run_servers(
     print("Shutting down...")
     universal_client.shutdown()
     # This will prevent future editor or web requests from being serviced.
-    render_manager.threadsafe_shutdown()
+    handler.render_manager.threadsafe_shutdown()
     # When this is done, the Flask server and editor plugin sever can be shut down, since they're idle. Since they're daemons, they'll be shut down by exiting main.
     render_manager_thread.join()
     return 0

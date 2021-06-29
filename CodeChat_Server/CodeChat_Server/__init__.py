@@ -30,5 +30,6 @@ __version__ = "0.0.22"
 #   :maxdepth: 2
 #
 #   server.py
+#   render_manager.py
 #   renderer.py
 #   __main__.py

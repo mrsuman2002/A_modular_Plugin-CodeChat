@@ -26,7 +26,11 @@ from thrift.protocol import TBinaryProtocol
 # Local imports
 # -------------
 from CodeChat_Server.server import HTTP_PORT, THRIFT_PORT
-from CodeChat_Server.renderer import WEBSOCKET_PORT, GetResultType, GetResultReturn
+from CodeChat_Server.render_manager import (
+    WEBSOCKET_PORT,
+    GetResultType,
+    GetResultReturn,
+)
 from CodeChat_Server.gen_py.CodeChat_Services import EditorPlugin
 from CodeChat_Server.gen_py.CodeChat_Services.ttypes import RenderClientReturn
 import websockets
