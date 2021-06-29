@@ -21,6 +21,11 @@
 # *********************************************
 # These functions render a document to HTML for a variety of formats.
 #
+# .. contents:: Table of Contents
+#   :local:
+#   :depth: 2
+#
+#
 # Imports
 # =======
 # Library imports
@@ -55,13 +60,14 @@ import docutils.writers.html4css1
 import markdown  # type: ignore
 import strictyaml
 
+
 # Local imports
 # -------------
 # None
-
-
-# Renderers
-# =========
+#
+# Internal renderers
+# ==================
+# These renderers are invoked via function calls to 3rd party Python libraries.
 #
 # Markdown
 # --------
@@ -137,7 +143,7 @@ def _render_ReST(
 
 
 # CodeChat
-# ========
+# --------
 # Convert source code to HTML.
 def _render_CodeChat(text: str, filePath: str) -> Tuple[str, str]:
     try:
@@ -154,14 +160,30 @@ def _render_CodeChat(text: str, filePath: str) -> Tuple[str, str]:
     return _render_ReST(rest_string, filePath, True)
 
 
+# Fake renderers
+# --------------
+# "Render" (pass through) the provided text.
+def _pass_through(text: str, file_path: str) -> Tuple[str, str]:
+    return text, ""
+
+
+# The "error renderer" when a renderer can't be found.
+def _error_renderer(text: str, file_path: str) -> Tuple[str, str]:
+    return "", "{}:: ERROR: No converter found for this file.".format(file_path)
+
+
+# External renderers
+# ==================
+# These renderers run in an external program and are all invoked as a subprocess.
+#
 # Provide a type alias for the ``co_build`` function.
 Co_Build = Callable[[str], Coroutine[Any, Any, None]]
 
 
-# External tools/projects
-# =======================
-# Convert a file using an external program.
-async def _render_external(
+# Single-file
+# -----------
+# Convert a single file using an external program.
+async def _render_external_file(
     text: str,
     file_path: str,
     tool_or_project_path: List[Union[bool, str]],
@@ -208,41 +230,9 @@ async def _render_external(
     return stdout, stderr
 
 
-# _`_checkModificationTime`: Return False if source_file is newer than output_file; otherwise, return string with an error message.
-def _checkModificationTime(
-    source_file: Path, base_html_file: Path, html_ext: str
-) -> Tuple[str, str]:
-
-    # Look for the resulting HTML.
-    possible_html_file = base_html_file.with_suffix(html_ext)
-    html_file = (
-        possible_html_file
-        if possible_html_file.exists()
-        else Path(str(base_html_file) + html_ext)
-    )
-
-    # Recall that time is measured in seconds since the epoch,
-    # so that larger = newer.
-    try:
-        if html_file.stat().st_mtime > source_file.stat().st_mtime:
-            return str(html_file), ""
-        else:
-            return (
-                str(html_file),
-                "{}:: ERROR: CodeChat renderer - source file older than the html file {}.".format(
-                    source_file, html_file
-                ),
-            )
-    except OSError as e:
-        return (
-            str(html_file),
-            "{}:: ERROR: CodeChat renderer - unable to check modification time of the html file {}: {}.".format(
-                source_file, html_file, e
-            ),
-        )
-
-
-# Convert an external project.
+# Project
+# -------
+# Convert an project using an external renderer.
 async def _render_external_project(
     text: str, file_path_: str, _tool_or_project_path: str, co_build: Co_Build
 ) -> Tuple[str, str]:
@@ -375,6 +365,57 @@ async def _render_external_project(
     return html_file, stderr
 
 
+# Support
+# -------
+# These functions support external renderers.
+# If need_temp_file is True, provide a NamedTemporaryFile; otherwise, return a dummy context manager.
+def _optional_temp_file(need_temp_file: bool) -> Any:
+    return (
+        NamedTemporaryFile(mode="w", encoding="utf-8")
+        if need_temp_file
+        else _dummy_context_manager()
+    )
+
+
+@contextmanager
+def _dummy_context_manager() -> Generator:
+    yield
+
+
+# _`_checkModificationTime`: Return False if source_file is newer than output_file; otherwise, return string with an error message.
+def _checkModificationTime(
+    source_file: Path, base_html_file: Path, html_ext: str
+) -> Tuple[str, str]:
+
+    # Look for the resulting HTML.
+    possible_html_file = base_html_file.with_suffix(html_ext)
+    html_file = (
+        possible_html_file
+        if possible_html_file.exists()
+        else Path(str(base_html_file) + html_ext)
+    )
+
+    # Recall that time is measured in seconds since the epoch,
+    # so that larger = newer.
+    try:
+        if html_file.stat().st_mtime > source_file.stat().st_mtime:
+            return str(html_file), ""
+        else:
+            return (
+                str(html_file),
+                "{}:: ERROR: CodeChat renderer - source file older than the html file {}.".format(
+                    source_file, html_file
+                ),
+            )
+    except OSError as e:
+        return (
+            str(html_file),
+            "{}:: ERROR: CodeChat renderer - unable to check modification time of the html file {}: {}.".format(
+                source_file, html_file, e
+            ),
+        )
+
+
 # Run a subprocess, optionally streaming the stdout.
 async def _run_subprocess(
     args: List[str],
@@ -454,32 +495,6 @@ async def _run_subprocess(
     )
 
 
-@contextmanager
-def _dummy_context_manager() -> Generator:
-    yield
-
-
-# If need_temp_file is True, provide a NamedTemporaryFile; otherwise, return a dummy context manager.
-def _optional_temp_file(need_temp_file: bool) -> Any:
-    return (
-        NamedTemporaryFile(mode="w", encoding="utf-8")
-        if need_temp_file
-        else _dummy_context_manager()
-    )
-
-
-# Fake renderers
-# ==============
-# "Convert" (pass through) the provided text.
-def _pass_through(text: str, file_path: str) -> Tuple[str, str]:
-    return text, ""
-
-
-# The "error renderer" when a renderer can't be found.
-def _error_renderer(text: str, file_path: str) -> Tuple[str, str]:
-    return "", "{}:: ERROR: No converter found for this file.".format(file_path)
-
-
 # Select and invoke a renderer
 # ============================
 # Build a map of file names/extensions to the converter to use.
@@ -504,7 +519,7 @@ GLOB_TO_RENDERER.update(
         #
         # `Textile <https://www.promptworks.com/textile>`_:
         "*.textile": (
-            _render_external,
+            _render_external_file,
             [
                 # Does this tool read the input file from stdin?
                 True,
