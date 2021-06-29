@@ -37,7 +37,18 @@ from pathlib import Path
 import sys
 from tempfile import NamedTemporaryFile
 import threading
-from typing import Any, cast, Callable, Dict, Generator, List, Optional, Tuple, Union
+from typing import (
+    Any,
+    cast,
+    Callable,
+    Coroutine,
+    Dict,
+    Generator,
+    List,
+    Optional,
+    Tuple,
+    Union,
+)
 import urllib.parse
 
 # Third-party imports
@@ -180,6 +191,10 @@ def _convertCodeChat(text: str, filePath: str) -> Tuple[str, str]:
     return _convertReST(rest_string, filePath, True)
 
 
+# Provide a type alias for the ``co_build`` function.
+Co_Build = Callable[[str], Coroutine[Any, Any, None]]
+
+
 # External tools/projects
 # =======================
 # Convert a file using an external program.
@@ -187,7 +202,7 @@ async def _convert_external(
     text: str,
     file_path: str,
     tool_or_project_path: List[Union[bool, str]],
-    q: asyncio.Queue,
+    co_build: Co_Build,
 ) -> Tuple[str, str]:
     # Split the provided tool path.
     uses_stdin, uses_stdout, *args_ = tool_or_project_path
@@ -219,7 +234,7 @@ async def _convert_external(
         ]
 
         stdout, stderr = await _run_subprocess(
-            args, cwd, None if input_file else text, bool(output_file), q
+            args, cwd, None if input_file else text, bool(output_file), co_build
         )
 
         # Gather the output from the file if necessary.
@@ -266,16 +281,13 @@ def _checkModificationTime(
 
 # Convert an external project.
 async def _convert_external_project(
-    text: str, file_path_: str, _tool_or_project_path: str, q: asyncio.Queue
+    text: str, file_path_: str, _tool_or_project_path: str, co_build: Co_Build
 ) -> Tuple[str, str]:
     # Run from the directory containing the project file.
     tool_or_project_path = Path(_tool_or_project_path)
     project_path = tool_or_project_path.parent
-    await q.put(
-        GetResultReturn(
-            GetResultType.build,
-            "Loading project file {}.\n".format(tool_or_project_path),
-        )
+    await co_build(
+        "Loading project file {}.\n".format(tool_or_project_path),
     )
 
     # Read the project configuration.
@@ -389,7 +401,7 @@ async def _convert_external_project(
             else [args_format(arg) for arg in args]
         )
         # Render.
-        stdout, stderr = await _run_subprocess(args, project_path, None, True, q)
+        stdout, stderr = await _run_subprocess(args, project_path, None, True, co_build)
         html_file, error = _checkModificationTime(file_path, base_html_file, html_ext)
     else:
         stderr = ""
@@ -406,12 +418,10 @@ async def _run_subprocess(
     cwd: Path,
     input_text: Optional[str],
     stream_stdout: bool,
-    q: asyncio.Queue,
+    co_build: Co_Build,
 ) -> Tuple[str, str]:
     # Explain what's going on.
-    await q.put(
-        GetResultReturn(GetResultType.build, "{} > {}\n".format(cwd, " ".join(args)))
-    )
+    await co_build("{} > {}\n".format(cwd, " ".join(args)))
 
     # Start the process.
     try:
@@ -451,12 +461,12 @@ async def _run_subprocess(
         while True:
             ret = await stdout_stream.read(80)
             if ret:
-                await q.put(GetResultReturn(GetResultType.build, decoder.decode(ret)))
+                await co_build(decoder.decode(ret))
             else:
                 # Tell the decoder the stream is done and collect any last output.
                 s = decoder.decode(b"", True)
                 if s:
-                    await q.put(GetResultReturn(GetResultType.build, s))
+                    await co_build(s)
                 break
 
     # An awaitable sequence to interact with the subprocess.
@@ -617,10 +627,19 @@ async def convert_file(text: str, file_path: str, cs: ClientState) -> None:
     if is_project and cs._to_render_is_dirty:
         return
 
+    # Provide a coroutine used by converters to write build results.
+    def co_build(_str: str) -> Coroutine[Any, Any, None]:
+        return cs.q.put(
+            GetResultReturn(
+                GetResultType.build,
+                _str,
+            )
+        )
+
     if asyncio.iscoroutinefunction(converter):
         # Coroutines get the queue, so they can report progress during the build.
         html_string_or_file_path, err_string = await converter(
-            text, file_path, tool_or_project_path, cs.q
+            text, file_path, tool_or_project_path, co_build
         )
     else:
         assert tool_or_project_path is None
