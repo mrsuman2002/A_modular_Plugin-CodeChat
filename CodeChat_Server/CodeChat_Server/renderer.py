@@ -66,37 +66,6 @@ import websockets
 # None
 
 
-# Constants
-# =========
-# The port used by a websocket connection between the CodeChat Server and the CodeChat Client.
-WEBSOCKET_PORT = 5001
-
-
-# .. _GetResultType Py:
-#
-# These must match the `constants in the client <GetResultType JS>`.
-class GetResultType(Enum):
-    # A URL indicating that new rendered content is available.
-    url = 0
-    # A build output message.
-    build = 1
-    # Errors from the build.
-    errors = 2
-    # A command, such as ``shutdown```.
-    command = 3
-
-
-# Utilities
-# =========
-def GetResultReturn(get_result_type: GetResultType, text: str):
-    return {"get_result_type": get_result_type.value, "text": text}
-
-
-# Convert a path to a URI component: make it absolute and use forward (POSIX) slashes. If the provided ``file_path`` is falsey, just return it.
-def path_to_uri(file_path: str):
-    return Path(file_path).resolve().as_posix() if file_path else file_path
-
-
 # Renderers
 # =========
 #
@@ -631,6 +600,37 @@ async def render_file(
 
 # RenderManager / render thread
 # ==============================
+# Constants
+# =========
+# The port used by a websocket connection between the CodeChat Server and the CodeChat Client.
+WEBSOCKET_PORT = 5001
+
+
+# .. _GetResultType Py:
+#
+# These must match the `constants in the client <GetResultType JS>`.
+class GetResultType(Enum):
+    # A URL indicating that new rendered content is available.
+    url = 0
+    # A build output message.
+    build = 1
+    # Errors from the build.
+    errors = 2
+    # A command, such as ``shutdown```.
+    command = 3
+
+
+# Utilities
+# =========
+def GetResultReturn(get_result_type: GetResultType, text: str):
+    return {"get_result_type": get_result_type.value, "text": text}
+
+
+# Convert a path to a URI component: make it absolute and use forward (POSIX) slashes. If the provided ``file_path`` is falsey, just return it.
+def path_to_uri(file_path: str):
+    return Path(file_path).resolve().as_posix() if file_path else file_path
+
+
 # Store data for about each client.
 class ClientState:
     def __init__(self):
