@@ -19,6 +19,7 @@
 # ***********************************
 # |docname| - Run the CodeChat Server
 # ***********************************
+# This parses command-line parameters then invokes the requested CodeChat System functionality.
 #
 # Imports
 # =======

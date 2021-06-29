@@ -152,7 +152,7 @@ def _render_CodeChat(text: str, filePath: str) -> Tuple[str, str]:
         # Although the file extension may be in the list of supported
         # extensions, CodeChat may not support the lexer chosen by Pygments.
         # For example, a ``.v`` file may be Verilog (supported by CodeChat)
-        # or Coq (not supported). In this case, provide an error message
+        # or Coq (not supported). In this case, provide an error message.
         return (
             "",
             "{}:: ERROR: this file is not supported by CodeChat.".format(filePath),
@@ -503,9 +503,16 @@ async def _run_subprocess(
 #
 # #.    Read this from a StrictYAML file instead.
 # #.    Use Pandoc to offer lots of other format conversions.
-GLOB_TO_RENDERER: Dict[str, Tuple[Callable, Optional[List[Union[bool, str]]]]] = {
-    glob: (_render_CodeChat, None) for glob in SUPPORTED_GLOBS
-}
+GLOB_TO_RENDERER: Dict[
+    # glob: The glob which accepts files this renderer can process.
+    str,
+    Tuple[
+        # The `renderer`_.
+        Callable,
+        # An list of parameters used to invoke the renderer.
+        Optional[List[Union[bool, str]]],
+    ],
+] = {glob: (_render_CodeChat, None) for glob in SUPPORTED_GLOBS}
 GLOB_TO_RENDERER.update(
     {
         # Leave (X)HTML unchanged.
@@ -542,7 +549,18 @@ GLOB_TO_RENDERER.update(
 # Return the converter for the provided file.
 def _select_renderer(
     file_path: str,
-) -> Tuple[Callable, Union[None, str, List[Union[bool, str]]], bool]:
+) -> Tuple[
+    # _`renderer`: a function or coroutine which will perform the render.
+    Callable,
+    # tool_or_project_path:
+    #
+    # - The path to the CodeChat System configuration file if this is a project.
+    # - A sequence of parameters used to invoke a single-file renderer if one was found.
+    # - None if no renderer was found for ``file_path``.
+    Union[str, List[Union[bool, str]], None],
+    # is_project: True if this is a project; False if not.
+    bool,
+]:
     # Search for an external builder configuration file.
     for project_path in Path(file_path).parents:
         project_file = project_path / "codechat_config.json"
@@ -570,16 +588,16 @@ async def render_file(
     # True if the provided text hasn't been saved to disk.
     is_dirty: bool,
 ) -> Tuple[
-    # ``is_performed``: True if the render was performed. False if this is a project and the source file is dirty; in this case, the render is skipped.
+    # was_performed: True if the render was performed. False if this is a project and the source file is dirty; in this case, the render is skipped.
     bool,
-    # ``rendered_file_path``: A path to the rendered file.
+    # rendered_file_path: A path to the rendered file.
     #
     # - If this is a project, the rendered file is different from ``file_path``, since it points to the location on disk where the external renderer wrote the HTML. In this case, the ``html`` return value is ``None``, since the HTMl should be read from the disk instead.
     # - Otherwise, it's the same as the ``file_path``, and the resulting rendered HTMl is returned in ``html``.
     str,
-    # ``html`` -- ``None`` for projects, or the resulting HTML otherwise; see the ``rendered_file_path`` return value.
+    # html: ``None`` for projects, or the resulting HTML otherwise; see the ``rendered_file_path`` return value.
     Optional[str],
-    # ``err_string`` -- A string containing error messages produced by the render.
+    # err_string: A string containing error messages produced by the render.
     str,
 ]:
     # Determine the renderer for this file/project.
