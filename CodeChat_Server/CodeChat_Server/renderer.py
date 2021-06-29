@@ -114,7 +114,7 @@ class _StrikeThroughExtension(markdown.Extension):
 
 
 # Convert Markdown to HTML
-def _convertMarkdown(text: str, filePath: str) -> Tuple[str, str]:
+def _render_markdown(text: str, filePath: str) -> Tuple[str, str]:
     return (
         markdown.markdown(
             text,
@@ -132,7 +132,7 @@ def _convertMarkdown(text: str, filePath: str) -> Tuple[str, str]:
 # reStructuredText (reST)
 # -----------------------
 # Convert reStructuredText (reST) to HTML.
-def _convertReST(
+def _render_ReST(
     text: str, filePath: str, use_codechat: bool = False
 ) -> Tuple[str, str]:
 
@@ -176,7 +176,7 @@ def _convertReST(
 # CodeChat
 # ========
 # Convert source code to HTML.
-def _convertCodeChat(text: str, filePath: str) -> Tuple[str, str]:
+def _render_CodeChat(text: str, filePath: str) -> Tuple[str, str]:
     try:
         rest_string = code_to_rest_string(text, filename=filePath)
     except KeyError:
@@ -188,7 +188,7 @@ def _convertCodeChat(text: str, filePath: str) -> Tuple[str, str]:
             "",
             "{}:: ERROR: this file is not supported by CodeChat.".format(filePath),
         )
-    return _convertReST(rest_string, filePath, True)
+    return _render_ReST(rest_string, filePath, True)
 
 
 # Provide a type alias for the ``co_build`` function.
@@ -198,7 +198,7 @@ Co_Build = Callable[[str], Coroutine[Any, Any, None]]
 # External tools/projects
 # =======================
 # Convert a file using an external program.
-async def _convert_external(
+async def _render_external(
     text: str,
     file_path: str,
     tool_or_project_path: List[Union[bool, str]],
@@ -280,7 +280,7 @@ def _checkModificationTime(
 
 
 # Convert an external project.
-async def _convert_external_project(
+async def _render_external_project(
     text: str, file_path_: str, _tool_or_project_path: str, co_build: Co_Build
 ) -> Tuple[str, str]:
     # Run from the directory containing the project file.
@@ -512,8 +512,8 @@ def _pass_through(text: str, file_path: str) -> Tuple[str, str]:
     return text, ""
 
 
-# The "error converter" when a converter can't be found.
-def _error_converter(text: str, file_path: str) -> Tuple[str, str]:
+# The "error renderer" when a renderer can't be found.
+def _error_renderer(text: str, file_path: str) -> Tuple[str, str]:
     return "", "{}:: ERROR: No converter found for this file.".format(file_path)
 
 
@@ -525,23 +525,23 @@ def _error_converter(text: str, file_path: str) -> Tuple[str, str]:
 #
 # #.    Read this from a StrictYAML file instead.
 # #.    Use Pandoc to offer lots of other format conversions.
-GLOB_TO_CONVERTER: Dict[str, Tuple[Callable, Optional[List[Union[bool, str]]]]] = {
-    glob: (_convertCodeChat, None) for glob in SUPPORTED_GLOBS
+GLOB_TO_RENDERER: Dict[str, Tuple[Callable, Optional[List[Union[bool, str]]]]] = {
+    glob: (_render_CodeChat, None) for glob in SUPPORTED_GLOBS
 }
-GLOB_TO_CONVERTER.update(
+GLOB_TO_RENDERER.update(
     {
         # Leave (X)HTML unchanged.
         "*.xhtml": (_pass_through, None),
         "*.html": (_pass_through, None),
         "*.htm": (_pass_through, None),
         # Use the integrated Python libraries for these.
-        "*.md": (_convertMarkdown, None),
-        "*.rst": (_convertReST, None),
+        "*.md": (_render_markdown, None),
+        "*.rst": (_render_ReST, None),
         # External tools
         #
         # `Textile <https://www.promptworks.com/textile>`_:
         "*.textile": (
-            _convert_external,
+            _render_external,
             [
                 # Does this tool read the input file from stdin?
                 True,
@@ -562,27 +562,27 @@ GLOB_TO_CONVERTER.update(
 
 
 # Return the converter for the provided file.
-def _select_converter(
+def _select_renderer(
     file_path: str,
 ) -> Tuple[Callable, Union[None, str, List[Union[bool, str]]], bool]:
     # Search for an external builder configuration file.
     for project_path in Path(file_path).parents:
         project_file = project_path / "codechat_config.json"
         if project_file.exists():
-            return _convert_external_project, str(project_file), True
+            return _render_external_project, str(project_file), True
         project_file = project_path / "codechat_config.yaml"
         if project_file.exists():
-            return _convert_external_project, str(project_file), True
+            return _render_external_project, str(project_file), True
 
     # Otherwise, look for a single-file converter.
-    for glob, (converter, tool_or_project_path) in GLOB_TO_CONVERTER.items():
+    for glob, (converter, tool_or_project_path) in GLOB_TO_RENDERER.items():
         if fnmatch.fnmatch(file_path, glob):
             return converter, tool_or_project_path, False
-    return _error_converter, None, False
+    return _error_renderer, None, False
 
 
 # Run the appropriate converter for the provided file or return an error.
-async def _convert_file(
+async def render_file(
     # The text to be converted. If this is a project, the text will be loaded from the disk by the external renderer instead.
     text: str,
     # The path to the file which (mostly -- see ``is_dirty``) contains this text.
@@ -605,20 +605,20 @@ async def _convert_file(
     str,
 ]:
     # Determine the renderer for this file/project.
-    converter, tool_or_project_path, is_project = _select_converter(file_path)
+    renderer, tool_or_project_path, is_project = _select_renderer(file_path)
 
     # Projects require a clean file in order to render.
     if is_project and is_dirty:
         return False, "", None, ""
 
-    if asyncio.iscoroutinefunction(converter):
+    if asyncio.iscoroutinefunction(renderer):
         # Coroutines get the queue, so they can report progress during the build.
-        html_string_or_file_path, err_string = await converter(
+        html_string_or_file_path, err_string = await renderer(
             text, file_path, tool_or_project_path, co_build
         )
     else:
         assert tool_or_project_path is None
-        html_string_or_file_path, err_string = converter(text, file_path)
+        html_string_or_file_path, err_string = renderer(text, file_path)
 
     # Update the client's state, now that the rendering is complete.
     if is_project:
@@ -672,7 +672,8 @@ class ClientState:
 render_manager_ready_event = threading.Event()
 
 
-async def convert_file(text: str, file_path: str, cs: ClientState) -> None:
+# Use the contents of the provided ClientState to perform a render.
+async def render_client_state(cs: ClientState) -> None:
     # Provide a coroutine used by converters to write build results.
     def co_build(_str: str) -> Coroutine[Any, Any, None]:
         return cs.q.put(
@@ -682,8 +683,11 @@ async def convert_file(text: str, file_path: str, cs: ClientState) -> None:
             )
         )
 
-    is_converted, rendered_file_path, html, err_string = await _convert_file(
-        text, file_path, co_build, cs._to_render_is_dirty
+    is_converted, rendered_file_path, html, err_string = await render_file(
+        cs._to_render_editor_text,
+        cs._to_render_file_path,
+        co_build,
+        cs._to_render_is_dirty,
     )
 
     if not is_converted:
@@ -691,7 +695,7 @@ async def convert_file(text: str, file_path: str, cs: ClientState) -> None:
 
     cs._file_path = rendered_file_path
     cs._html = html
-    cs._editor_text = text
+    cs._editor_text = cs._to_render_editor_text
 
     # Send any errors. An empty error string will clear any errors from a previous build, and should still be sent.
     await cs.q.put(GetResultReturn(GetResultType.errors, err_string))
@@ -810,7 +814,7 @@ class RenderManager:
             else False
         )
 
-    # Communicate with a client via a websocket.
+    # Communicate with a CodeChat Client via a websocket.
     async def websocket_handler(
         self, websocket: websockets.WebSocketServerProtocol, path: str
     ):
@@ -877,7 +881,7 @@ class RenderManager:
         # Indicate success.
         return True
 
-    # Delete the client after a delay.
+    # Delete a CodeChat Client after a delay.
     async def _delete_client_later(self, id: int):
         await asyncio.sleep(1)
         if self.delete_client(id):
@@ -963,9 +967,7 @@ class RenderManager:
                 # TODO: sync.
 
                 # Render next.
-                await convert_file(
-                    cs._to_render_editor_text, cs._to_render_file_path, cs
-                )
+                await render_client_state(cs)
 
                 # If this client received more work to do while working on the current job, add it back to the queue -- it can't safely be added to the queue while in the job is in process. Otherwise, we would potentially allow two workers to render the same job in parallel, which would confuse the renderer.
                 if cs._needs_processing:
