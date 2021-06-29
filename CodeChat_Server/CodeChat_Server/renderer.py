@@ -517,45 +517,6 @@ def _error_converter(text: str, file_path: str) -> Tuple[str, str]:
     return "", "{}:: ERROR: No converter found for this file.".format(file_path)
 
 
-# ClientState
-# ===========
-# Store data for about each client.
-class ClientState:
-    def __init__(self):
-        # A queue of messages for the client.
-        self.q = asyncio.Queue()
-
-        # The remaining data in this class should only be accessed by rendering thread.
-        #
-        # The most recent HTML and editor text after rendering the specified file_path.
-        self._html = None
-        self._editor_text = None
-        self._file_path = None
-
-        # A flag to indicate if this has been placed in the renderer's job queue.
-        self._in_job_q = False
-        # A flag to indicate that this client has work to perform.
-        self._needs_processing = True
-
-        # A bucket to hold text and the associated file to render.
-        self._to_render_editor_text = None
-        self._to_render_file_path = None
-        self._to_render_is_dirty = None
-
-        # A bucket to hold a sync request.
-        #
-        # The index into either the editor text or HTML converted to text.
-        self._to_sync_index = None
-        self._to_sync_from_editor = None
-        # The HTML converted to text.
-        self._html_as_text = None
-
-        # Shutdown is tricky; see `this discussion <shut down an editor client>`_.
-        #
-        # A flag to request the worker to delete this client.
-        self._is_deleting = False
-
-
 # Select and invoke a renderer
 # ============================
 # Build a map of file names/extensions to the converter to use.
@@ -621,20 +582,34 @@ def _select_converter(
 
 
 # Run the appropriate converter for the provided file or return an error.
-async def convert_file(text: str, file_path: str, cs: ClientState) -> None:
+async def _convert_file(
+    # The text to be converted. If this is a project, the text will be loaded from the disk by the external renderer instead.
+    text: str,
+    # The path to the file which (mostly -- see ``is_dirty``) contains this text.
+    file_path: str,
+    # A coroutine that an external renderer should call to stream build output.
+    co_build: Co_Build,
+    # True if the provided text hasn't been saved to disk.
+    is_dirty: bool,
+) -> Tuple[
+    # ``is_performed``: True if the render was performed. False if this is a project and the source file is dirty; in this case, the render is skipped.
+    bool,
+    # ``rendered_file_path``: A path to the rendered file.
+    #
+    # - If this is a project, the rendered file is different from ``file_path``, since it points to the location on disk where the external renderer wrote the HTML. In this case, the ``html`` return value is ``None``, since the HTMl should be read from the disk instead.
+    # - Otherwise, it's the same as the ``file_path``, and the resulting rendered HTMl is returned in ``html``.
+    str,
+    # ``html`` -- ``None`` for projects, or the resulting HTML otherwise; see the ``rendered_file_path`` return value.
+    Optional[str],
+    # ``err_string`` -- A string containing error messages produced by the render.
+    str,
+]:
+    # Determine the renderer for this file/project.
     converter, tool_or_project_path, is_project = _select_converter(file_path)
-    # Projects require a clean file in order to render.
-    if is_project and cs._to_render_is_dirty:
-        return
 
-    # Provide a coroutine used by converters to write build results.
-    def co_build(_str: str) -> Coroutine[Any, Any, None]:
-        return cs.q.put(
-            GetResultReturn(
-                GetResultType.build,
-                _str,
-            )
-        )
+    # Projects require a clean file in order to render.
+    if is_project and is_dirty:
+        return False, "", None, ""
 
     if asyncio.iscoroutinefunction(converter):
         # Coroutines get the queue, so they can report progress during the build.
@@ -646,15 +621,77 @@ async def convert_file(text: str, file_path: str, cs: ClientState) -> None:
         html_string_or_file_path, err_string = converter(text, file_path)
 
     # Update the client's state, now that the rendering is complete.
-    cs._editor_text = text
     if is_project:
         # For projects, the rendered HTML is already on disk; a path to this rendered file is returned.
-        cs._file_path = html_string_or_file_path
-        cs._html = None
+        return True, html_string_or_file_path, None, err_string
     else:
         # Otherwise, the rendered HTML is returned as a string and can be directly used. Provide a path to the source file which was just rendered.
-        cs._file_path = file_path
-        cs._html = html_string_or_file_path
+        return True, file_path, html_string_or_file_path, err_string
+
+
+# RenderManager / render thread
+# ==============================
+# Store data for about each client.
+class ClientState:
+    def __init__(self):
+        # A queue of messages for the client.
+        self.q = asyncio.Queue()
+
+        # The remaining data in this class should only be accessed by rendering thread.
+        #
+        # The most recent HTML and editor text after rendering the specified file_path.
+        self._html = None
+        self._editor_text = None
+        self._file_path = None
+
+        # A flag to indicate if this has been placed in the renderer's job queue.
+        self._in_job_q = False
+        # A flag to indicate that this client has work to perform.
+        self._needs_processing = True
+
+        # A bucket to hold text and the associated file to render.
+        self._to_render_editor_text = None
+        self._to_render_file_path = None
+        self._to_render_is_dirty = None
+
+        # A bucket to hold a sync request.
+        #
+        # The index into either the editor text or HTML converted to text.
+        self._to_sync_index = None
+        self._to_sync_from_editor = None
+        # The HTML converted to text.
+        self._html_as_text = None
+
+        # Shutdown is tricky; see `this discussion <shut down an editor client>`_.
+        #
+        # A flag to request the worker to delete this client.
+        self._is_deleting = False
+
+
+# The render manager sets this event when it is ready.
+render_manager_ready_event = threading.Event()
+
+
+async def convert_file(text: str, file_path: str, cs: ClientState) -> None:
+    # Provide a coroutine used by converters to write build results.
+    def co_build(_str: str) -> Coroutine[Any, Any, None]:
+        return cs.q.put(
+            GetResultReturn(
+                GetResultType.build,
+                _str,
+            )
+        )
+
+    is_converted, rendered_file_path, html, err_string = await _convert_file(
+        text, file_path, co_build, cs._to_render_is_dirty
+    )
+
+    if not is_converted:
+        return
+
+    cs._file_path = rendered_file_path
+    cs._html = html
+    cs._editor_text = text
 
     # Send any errors. An empty error string will clear any errors from a previous build, and should still be sent.
     await cs.q.put(GetResultReturn(GetResultType.errors, err_string))
@@ -665,12 +702,6 @@ async def convert_file(text: str, file_path: str, cs: ClientState) -> None:
     uri = path_to_uri(cs._file_path)
     # Encode this, for Windows paths which contain a colon (or unusual Linux paths).
     await cs.q.put(GetResultReturn(GetResultType.url, urllib.parse.quote(uri)))
-
-
-# RenderManager / render thread
-# ==============================
-# The render manager sets this event when it is ready.
-render_manager_ready_event = threading.Event()
 
 
 class RenderManager:
