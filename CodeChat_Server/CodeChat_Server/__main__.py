@@ -28,13 +28,14 @@
 #
 # Standard library
 # ----------------
+import argparse
+from pathlib import Path
 import sys
 
 # Third-party imports
 # -------------------
-import argh
-from argh import arg, expects_obj
-
+# None.
+#
 # Local application imports
 # -------------------------
 # None. Delay the import below until after print runs, since the import takes a while to complete.
@@ -55,44 +56,64 @@ def parse_patterns(patterns_spec, ignore_patterns_spec, separator=";"):
 
 # Main
 # ====
-# The command-line parsing is based on `watchmedo <https://github.com/gorakhargosh/watchdog/blob/master/src/watchdog/watchmedo.py#L383>`__.
-@arg(
-    "-w",
-    "--watch",
-    dest="watch_directories",
-    nargs="*",
-    default="",
-    help="directories to watch",
-)
-@arg(
-    "-p",
-    "--pattern",
-    "--patterns",
-    dest="patterns",
-    default="*",
-    help="matches event paths with these patterns (separated by ;).",
-)
-@arg(
-    "-i",
-    "--ignore-pattern",
-    "--ignore-patterns",
-    dest="ignore_patterns",
-    default="",
-    help="ignores event paths with these patterns (separated by ;).",
-)
-@expects_obj
-def _main(args):
-    patterns, ignore_patterns = parse_patterns(args.patterns, args.ignore_patterns)
+def parse_args(args=None):
+    # TODO: This should instead be a CLI using Click with two groups: serve (the default -- use ``click-default-group``) and watch. At some later point, have the watch command start its own client and also run the server; this would allow multiple instances of the client to run. Then, there would be three groups: serve (the default), watch, and build.
+    parser = argparse.ArgumentParser(description="The CodeChat Server works with editor/IDE extensions/plugin to transform source code and textual documents to beautiful web pages. See https://codechat-system.readthedocs.io/.")
+    parser.add_argument(
+        "--watch", "-w",
+        nargs="*",
+        # For user-friendliness, allow users to either specify a list of directories, or multiple sets of this option with one (or more) directories.
+        action="extend",
+        help="One or more directories to watch for changes; a change triggers a render of that file or project. If a directory is not provided, defaults to the current directory."
+    )
+    parser.add_argument(
+        "--patterns",
+        "--pattern",
+        "-p",
+        nargs="*",
+        default=[],
+        action="extend",
+        help="A list of globs which list files to monitor for changes in the specified --watch directories; defaults to montoring all files.",
+    )
+    parser.add_argument(
+        "--ignore-patterns",
+        "--ignore-pattern",
+        "-i",
+        nargs="*",
+        default=[],
+        action="extend",
+        help="A list of globs of files which will not trigger a build if they change when using --watch.",
+    )
+    parser.add_argument(
+        "--build",
+        "-b",
+        nargs="*",
+        default=[],
+        action="extend",
+        help="One or more paths of files/projects to build."
+    )
+
+    # If the ``--watch`` option was provided with no arguments, assume the current directory. If the option wasn't provided, make it an empty list.
+    parsed_args = parser.parse_args(args)
+    if parsed_args.watch == []:
+        parsed_args.watch = [str(Path(".").absolute())]
+    if parsed_args.watch is None:
+        parsed_args.watch = []
+    # If a pattern wasn't specified, assume ``*``.
+    if not parsed_args.patterns:
+        parsed_args.patterns = ["*"]
+
+    return parsed_args
+
+
+def main():
+    args = parse_args()
 
     # This file takes a long time to load and run. Print a status message as it starts.
     print("Loading...")
     from .server import run_servers
 
-    sys.exit(run_servers(args.watch_directories, patterns, ignore_patterns))
-
-
-def main():
-    argh.dispatch_command(_main)
+    sys.exit(run_servers(args.watch, args.patterns, args.ignore_patterns))
 
 
 if __name__ == "__main__":

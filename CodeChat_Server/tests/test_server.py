@@ -10,6 +10,7 @@
 # ----------------
 import asyncio
 import json
+from pathlib import Path
 from time import sleep
 import socketserver
 import subprocess
@@ -25,6 +26,7 @@ from thrift.protocol import TBinaryProtocol
 
 # Local imports
 # -------------
+from CodeChat_Server.__main__ import parse_args
 from CodeChat_Server.server import HTTP_PORT, THRIFT_PORT
 from CodeChat_Server.render_manager import (
     WEBSOCKET_PORT,
@@ -154,3 +156,61 @@ async def atest_5():
 
 def test_5(editor_plugin):
     asyncio.run(atest_5())
+
+
+# Command line parsing
+# --------------------
+def test_6():
+    assert vars(parse_args([])) == dict(
+        watch=[],
+        patterns=["*"],
+        ignore_patterns=[],
+        build=[],
+    )
+
+    assert vars(parse_args(["--watch"])) == dict(
+        watch=[str(Path(".").absolute())],
+        patterns=["*"],
+        ignore_patterns=[],
+        build=[],
+    )
+
+    assert vars(parse_args(["--watch", "1"])) == dict(
+        watch=["1"],
+        patterns=["*"],
+        ignore_patterns=[],
+        build=[],
+    )
+
+    assert vars(parse_args(["--watch", "--watch", "1"])) == dict(
+        watch=["1"],
+        patterns=["*"],
+        ignore_patterns=[],
+        build=[],
+    )
+
+    assert vars(
+        parse_args(
+            [
+                "--watch",
+                "1",
+                "--pattern",
+                "*.txt",
+                "*.rst",
+                "--ignore-pattern",
+                "*.html",
+            ]
+        )
+    ) == dict(
+        watch=["1"],
+        patterns=["*.txt", "*.rst"],
+        ignore_patterns=["*.html"],
+        build=[],
+    )
+
+    assert vars(parse_args(["--build", "5"])) == dict(
+        watch=[],
+        patterns=["*"],
+        ignore_patterns=[],
+        build=["5"],
+    )
