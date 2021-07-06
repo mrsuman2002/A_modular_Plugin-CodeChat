@@ -58,13 +58,16 @@ def parse_patterns(patterns_spec, ignore_patterns_spec, separator=";"):
 # ====
 def parse_args(args=None):
     # TODO: This should instead be a CLI using Click with two groups: serve (the default -- use ``click-default-group``) and watch. At some later point, have the watch command start its own client and also run the server; this would allow multiple instances of the client to run. Then, there would be three groups: serve (the default), watch, and build.
-    parser = argparse.ArgumentParser(description="The CodeChat Server works with editor/IDE extensions/plugin to transform source code and textual documents to beautiful web pages. See https://codechat-system.readthedocs.io/.")
+    parser = argparse.ArgumentParser(
+        description="The CodeChat Server works with editor/IDE extensions/plugin to transform source code and textual documents to beautiful web pages. See https://codechat-system.readthedocs.io/."
+    )
     parser.add_argument(
-        "--watch", "-w",
+        "--watch",
+        "-w",
         nargs="*",
         # For user-friendliness, allow users to either specify a list of directories, or multiple sets of this option with one (or more) directories.
         action="extend",
-        help="One or more directories to watch for changes; a change triggers a render of that file or project. If a directory is not provided, defaults to the current directory."
+        help="One or more directories to watch for changes; a change triggers a render of that file or project. If a directory is not provided, defaults to the current directory.",
     )
     parser.add_argument(
         "--patterns",
@@ -90,7 +93,7 @@ def parse_args(args=None):
         nargs="*",
         default=[],
         action="extend",
-        help="One or more paths of files/projects to build."
+        help="One or more paths of files/projects to build.",
     )
 
     # If the ``--watch`` option was provided with no arguments, assume the current directory. If the option wasn't provided, make it an empty list.

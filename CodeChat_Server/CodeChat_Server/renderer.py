@@ -37,6 +37,8 @@ from contextlib import contextmanager
 import fnmatch
 import io
 from pathlib import Path
+import shlex
+import sys
 from tempfile import NamedTemporaryFile
 from typing import (
     Any,
@@ -69,6 +71,8 @@ import strictyaml
 # ==================
 # These renderers are invoked via function calls to 3rd party Python libraries.
 #
+# They all return ``(html, errors)``.
+#
 # Markdown
 # --------
 # A handy Markdown extension.
@@ -83,7 +87,7 @@ class _StrikeThroughExtension(markdown.Extension):
 
 
 # Convert Markdown to HTML
-def _render_markdown(text: str, filePath: str) -> Tuple[str, str]:
+def _render_markdown(text: str, file_path: str) -> Tuple[str, str]:
     return (
         markdown.markdown(
             text,
@@ -367,6 +371,10 @@ async def _render_external_project(
 
 # Support
 # -------
+# OS detection: This follows the `Python recommendations <https://docs.python.org/3/library/sys.html#sys.platform>`_.
+is_win = sys.platform == "win32"
+
+
 # These functions support external renderers.
 # If need_temp_file is True, provide a NamedTemporaryFile; otherwise, return a dummy context manager.
 def _optional_temp_file(need_temp_file: bool) -> Any:
@@ -418,12 +426,16 @@ def _checkModificationTime(
 
 # Run a subprocess, optionally streaming the stdout.
 async def _run_subprocess(
-    args: List[str],
+    args: Union[List[str], str],
     cwd: Path,
     input_text: Optional[str],
     stream_stdout: bool,
     co_build: Co_Build,
 ) -> Tuple[str, str]:
+    # If the args were provided a single string, split it since the asyncio subprocess doesn't accept a string (the standard subprocess does).
+    if isinstance(args, str):
+        args = shlex.split(args, posix=not is_win)
+
     # Explain what's going on.
     await co_build("{} > {}\n".format(cwd, " ".join(args)))
 
