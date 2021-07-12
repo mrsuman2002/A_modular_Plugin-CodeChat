@@ -121,3 +121,11 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+# Subcommands:
+#
+# - start: start the server; kill a hung instance if necessary before starting a new server. Return 0 if the server is now up. Options: none.
+# - serve: run the server; prints logging data to stdout. Options: loglevel.
+# - build: perform a build based on a CodeChat project file, but don't open the results in a browser. Arguments: a list of paths to build.
+# - render: like start_render from CodeChat Services -- build then display the results in a browser. This would be good for vim, for example. How can we associate a PID with a render ID? We should also provide a second parameter to support rendering more than one open file. I'm guessing that psutil would work; if vim executes in a subshell, I'll need to find the grandparent's PID. For this, provide a new CodeChat service called start_render_pid, and store a dict of {(pid, id): render_id} on the server.
+# - watch: perform a render on any changed file in the watched locations. Parameters: see above. TODO: implement using CodeChat Services.
