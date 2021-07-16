@@ -75,27 +75,14 @@ import strictyaml
 #
 # Markdown
 # --------
-# A handy Markdown extension.
-class _StrikeThroughExtension(markdown.Extension):
-    DEL_RE = r"(~~)(.*?)~~"
-
-    def extendMarkdown(self, md, md_globals):
-        # Create the del pattern
-        delTag = markdown.inlinepatterns.SimpleTagPattern(self.DEL_RE, "del")
-        # Insert del pattern into markdown parser
-        md.inlinePatterns.add("del", delTag, ">not_strong")
-
-
 # Convert Markdown to HTML
 def _render_markdown(text: str, file_path: str) -> Tuple[str, str]:
     return (
         markdown.markdown(
             text,
+            # See https://python-markdown.github.io/extensions/. Enable a few by default.
             extensions=[
-                "markdown.extensions.fenced_code",
-                "markdown.extensions.nl2br",
-                "markdown.extensions.tables",
-                _StrikeThroughExtension(),
+                "markdown.extensions.extra",
             ],
         ),
         "",
