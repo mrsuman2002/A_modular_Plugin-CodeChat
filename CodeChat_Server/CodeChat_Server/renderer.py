@@ -60,6 +60,7 @@ from CodeChat.CommentDelimiterInfo import SUPPORTED_GLOBS  # type: ignore
 import docutils.core
 import docutils.writers.html4css1
 import markdown  # type: ignore
+import pygments.util
 import strictyaml
 
 
@@ -139,7 +140,7 @@ def _render_ReST(
 def _render_CodeChat(text: str, filePath: str) -> Tuple[str, str]:
     try:
         rest_string = code_to_rest_string(text, filename=filePath)
-    except KeyError:
+    except (KeyError, ValueError, pygments.util.ClassNotFound):
         # Although the file extension may be in the list of supported
         # extensions, CodeChat may not support the lexer chosen by Pygments.
         # For example, a ``.v`` file may be Verilog (supported by CodeChat)
@@ -154,12 +155,12 @@ def _render_CodeChat(text: str, filePath: str) -> Tuple[str, str]:
 # Fake renderers
 # --------------
 # "Render" (pass through) the provided text.
-def _pass_through(text: str, file_path: str) -> Tuple[str, str]:
+def _pass_through(text: str, file_path: str) -> Tuple[str, str]:  # pragma: no cover
     return text, ""
 
 
 # The "error renderer" when a renderer can't be found.
-def _error_renderer(text: str, file_path: str) -> Tuple[str, str]:
+def _error_renderer(text: str, file_path: str) -> Tuple[str, str]:  # pragma: no cover
     return "", "{}:: ERROR: No converter found for this file.".format(file_path)
 
 
