@@ -11,30 +11,24 @@
 import asyncio
 import json
 from pathlib import Path
-from time import sleep
 import socketserver
 import subprocess
-import sys
 
 # Third-party imports
 # -------------------
-import pytest
 import requests
-from thrift.transport import TSocket
-from thrift.transport import TTransport
-from thrift.protocol import TBinaryProtocol
 
 # Local imports
 # -------------
 from CodeChat_Server.__main__ import parse_args
-from CodeChat_Server.server import HTTP_PORT, THRIFT_PORT
+from CodeChat_Server.server import HTTP_PORT
 from CodeChat_Server.render_manager import (
     WEBSOCKET_PORT,
     GetResultType,
     GetResultReturn,
 )
-from CodeChat_Server.gen_py.CodeChat_Services import EditorPlugin
 from CodeChat_Server.gen_py.CodeChat_Services.ttypes import RenderClientReturn
+from conftest import SUBPROCESS_SERVER_ARGS, SUBPROCESS_SERVER_KWARGS
 import websockets
 
 
@@ -42,53 +36,6 @@ import websockets
 # =========
 HTTP_ADDRESS = f"http://localhost:{HTTP_PORT}/"
 WEBSOCKET_ADDRESS = f"ws://localhost:{WEBSOCKET_PORT}"
-
-
-# Fixtures
-# ========
-SUBPROCESS_SERVER_ARGS = ([sys.executable, "-m", "CodeChat_Server"],)
-SUBPROCESS_SERVER_KWARGS = dict(
-    stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
-)
-
-
-@pytest.fixture
-def editor_plugin():
-    p = subprocess.Popen(*SUBPROCESS_SERVER_ARGS, **SUBPROCESS_SERVER_KWARGS)
-    # Wait for the server to start.
-    out = ""
-    line = ""
-    print("Waiting for the server to start...")
-    while "CODECHAT_READY\n" not in line:
-        p.stdout.flush()
-        line = p.stdout.readline()
-        out += line
-        print(line, end="")
-        if p.poll() is not None:
-            # The server shut down.
-            print(p.stdout.read())
-            print(p.stderr.read())
-            assert False
-        sleep(0.1)
-    print("done.\n")
-
-    transport = TSocket.TSocket("localhost", THRIFT_PORT)
-    transport = TTransport.TBufferedTransport(transport)
-    protocol = TBinaryProtocol.TBinaryProtocol(transport)
-    client = EditorPlugin.Client(protocol)
-    transport.open()
-
-    # Provide the subprocess.
-    client.subprocess = p
-    yield client
-
-    # If tests already shut down the server, skip telling it to shut down.
-    if p.poll() is None:
-        client.shutdown_server()
-        p.wait()
-    print(p.stdout.read())
-    print(p.stderr.read())
-    transport.close()
 
 
 # Tests

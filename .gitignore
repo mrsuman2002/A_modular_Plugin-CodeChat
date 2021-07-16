@@ -41,3 +41,5 @@ dist/
 .tox/
 thrift*.exe
 node_modules/
+CodeChat_Server/.coverage
+CodeChat_Server/htmlcov/

@@ -172,6 +172,8 @@ CodeChat_lexer_for_glob = {
     "*.js": "JavaScript",
     # The ``codechat_config.json`` file is actually Python.
     "codechat_config.json": "Python",
+    # The coverage config files is INI.
+    ".coveragerc": "INI",
 }
 
 # `source_encoding <http://sphinx-doc.org/config.html#confval-source_encoding>`_:
@@ -198,6 +200,7 @@ exclude_patterns = [
     "**/.mypy_cache",
     "CodeChat_Server/.tox",
     "README.rst",
+    "CodeChat_Server/htmlcov",
 
     # Sphinx build output
     "_build",

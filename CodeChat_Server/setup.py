@@ -135,7 +135,7 @@ setup(
     # for example:
     #
     #    ``$ pip install -e .[test]``
-    extras_require={"test": ["mypy", "pytest", "requests", "tox"]},
+    extras_require={"test": ["coverage", "mypy", "pytest", "requests", "tox"]},
     # To package data files, I'm using ``include_package_data=True`` then
     # putting the files in :doc:`MANIFEST.in <MANIFEST.in>`. See `including data
     # files <http://pythonhosted.org/setuptools/setuptools.html#including-data-files>`_.

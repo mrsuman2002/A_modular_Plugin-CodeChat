@@ -10,7 +10,9 @@ Contents:
 
     pre_commit_check.py
     test_server.py
+    conftest.py
     ci_utils.py
     ../mypy.ini
     ../.flake8
     ../pyproject.toml
+    ../.coveragerc
