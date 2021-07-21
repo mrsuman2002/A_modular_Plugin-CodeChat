@@ -24,6 +24,7 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
     print('Usage: ' + sys.argv[0] + ' [-h host[:port]] [-u url] [-f[ramed]] [-s[sl]] [-novalidate] [-ca_certs certs] [-keyfile keyfile] [-certfile certfile] function [arg1 [arg2...]]')
     print('')
     print('Functions:')
+    print('  string ping()')
     print('  RenderClientReturn get_client(CodeChatClientLocation codeChat_client_location)')
     print('  string start_render(string text, string path, i32 id, bool is_dirty)')
     print('  string stop_client(i32 id)')
@@ -107,7 +108,13 @@ protocol = TBinaryProtocol(transport)
 client = EditorPlugin.Client(protocol)
 transport.open()
 
-if cmd == 'get_client':
+if cmd == 'ping':
+    if len(args) != 0:
+        print('ping requires 0 args')
+        sys.exit(1)
+    pp.pprint(client.ping())
+
+elif cmd == 'get_client':
     if len(args) != 1:
         print('get_client requires 1 args')
         sys.exit(1)

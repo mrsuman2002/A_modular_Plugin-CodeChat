@@ -68,11 +68,14 @@ enum CodeChatClientLocation {
 
 // Provide CodeChat services to editor plugins.
 service EditorPlugin  {
+    // See if the server is running. It returns an empty string on success.
+    string ping()
+
     // Create a CodeChat Client and return HTML for it and its ID.
     RenderClientReturn get_client(
         // The location of the client to return.
         1: CodeChatClientLocation codeChat_client_location
-    ),
+    )
 
     // Render the provided text as html. Returns an empty string on success, or an error message.
     string start_render(
@@ -84,7 +87,7 @@ service EditorPlugin  {
         3: i32 id,
         // True if the document is dirty (modified), false if clean.
         4: bool is_dirty
-    ),
+    )
 
     // Release all resources associated with a CodeChat Client. Returns an empty string on success, or an error message.
     string stop_client(

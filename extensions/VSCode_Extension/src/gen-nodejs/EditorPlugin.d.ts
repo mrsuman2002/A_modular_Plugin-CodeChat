@@ -20,6 +20,10 @@ declare class Client {
 
   constructor(output: thrift.TTransport, pClass: { new(trans: thrift.TTransport): thrift.TProtocol });
 
+  ping(): string;
+
+  ping(callback?: (error: void, response: string)=>void): void;
+
   get_client(codeChat_client_location: CodeChatClientLocation): RenderClientReturn;
 
   get_client(codeChat_client_location: CodeChatClientLocation, callback?: (error: void, response: RenderClientReturn)=>void): void;
@@ -42,6 +46,7 @@ declare class Processor {
 
   constructor(handler: object);
   process(input: thrift.TProtocol, output: thrift.TProtocol): void;
+  process_ping(seqid: number, input: thrift.TProtocol, output: thrift.TProtocol): void;
   process_get_client(seqid: number, input: thrift.TProtocol, output: thrift.TProtocol): void;
   process_start_render(seqid: number, input: thrift.TProtocol, output: thrift.TProtocol): void;
   process_stop_client(seqid: number, input: thrift.TProtocol, output: thrift.TProtocol): void;

@@ -140,6 +140,11 @@ class CodeChatHandler:
         logger.info("  => {}".format(ret))
         return ret
 
+    # Indicate the server is alive.
+    def ping(self) -> str:
+        logger.info(f"ping(id={id})\n")
+        return ""
+
     # Render the provided text to HTML, then enqueue it for the web view.
     def start_render(self, text: str, path: str, id: int, is_dirty: bool) -> str:
         logger.info(
