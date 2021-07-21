@@ -55,7 +55,9 @@ def pytest_terminal_summary(terminalreporter):
 
 # Fixtures
 # ========
-SUBPROCESS_SERVER_ARGS = ([sys.executable, "-m", "coverage", "run", "-m", "CodeChat_Server"],)
+SUBPROCESS_SERVER_ARGS = (
+    [sys.executable, "-m", "coverage", "run", "-m", "CodeChat_Server"],
+)
 SUBPROCESS_SERVER_KWARGS = dict(
     stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
 )

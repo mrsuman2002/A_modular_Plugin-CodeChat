@@ -123,9 +123,11 @@ setup(
             "CodeChat",
             "Flask",
             "markdown",
+            "psutil",
             "Sphinx",
             "strictyaml",
             "thrift-unofficial",
+            "typer",
             "watchdog",
             "websockets",
         ]
@@ -143,6 +145,6 @@ setup(
     python_requires=">=3.6",
     # Make it easy to run the server.
     entry_points={
-        "console_scripts": ["CodeChat_Server = CodeChat_Server.__main__:main"]
+        "console_scripts": ["CodeChat_Server = CodeChat_Server.__main__:app"]
     },
 )

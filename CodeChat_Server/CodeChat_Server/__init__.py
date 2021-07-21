@@ -33,3 +33,13 @@ __version__ = "0.0.22"
 #   render_manager.py
 #   renderer.py
 #   __main__.py
+#
+#
+# Constants
+# =========
+# The port used for an HTTP connection from the CodeChat Client to the CodeChat Server.
+HTTP_PORT = 5000
+# .. _CodeChat service port:
+#
+# The port used for the Thrift connection between text editor/IDE extensions/plugins and the CodeChat Server. All editor/IDE plugins must use this port to access CodeChat services.
+THRIFT_PORT = 9090

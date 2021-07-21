@@ -28,104 +28,216 @@
 #
 # Standard library
 # ----------------
-import argparse
+import os
 from pathlib import Path
-import sys
+import subprocess
+from time import sleep
+from typing import List, Sequence
 
 # Third-party imports
 # -------------------
-# None.
-#
+import psutil
+from thrift.transport import TSocket
+from thrift.transport import TTransport
+from thrift.protocol import TBinaryProtocol
+import typer
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEvent, PatternMatchingEventHandler
+
 # Local application imports
 # -------------------------
-# None. Delay the import below until after print runs, since the import takes a while to complete.
+from . import THRIFT_PORT
+from .gen_py.CodeChat_Services import EditorPlugin
+from .gen_py.CodeChat_Services.ttypes import (
+    CodeChatClientLocation,
+)
 
 
-# This is copied from `watchmedo <https://github.com/gorakhargosh/watchdog/blob/master/src/watchdog/watchmedo.py#L84>`__.
-def parse_patterns(patterns_spec, ignore_patterns_spec, separator=";"):
-    """
-    Parses pattern argument specs and returns a two-tuple of
-    (patterns, ignore_patterns).
-    """
-    patterns = patterns_spec.split(separator)
-    ignore_patterns = ignore_patterns_spec.split(separator)
-    if ignore_patterns == [""]:
-        ignore_patterns = []
-    return (patterns, ignore_patterns)
+# CLI interface
+# =============
+app = typer.Typer()
 
 
-# Main
-# ====
-def parse_args(args=None):
-    # TODO: This should instead be a CLI using Click with two groups: serve (the default -- use ``click-default-group``) and watch. At some later point, have the watch command start its own client and also run the server; this would allow multiple instances of the client to run. Then, there would be three groups: serve (the default), watch, and build.
-    parser = argparse.ArgumentParser(
-        description="The CodeChat Server works with editor/IDE extensions/plugin to transform source code and textual documents to beautiful web pages. See https://codechat-system.readthedocs.io/."
+@app.command()
+def start():
+    "Start the server."
+
+    print("Starting the server -- searching for an already-running instance...")
+
+    # Try pinging the server to see if it's up.
+    try:
+        client = get_client()
+        assert client.ping() == ""
+        print("A running CodeChat Server instance was found.")
+        return 0
+    except Exception:
+        print("No running CodeChat Server instances found.")
+
+    # The server isn't up or has crashed. Stop any existing instances in case it crashed.
+    stop()
+
+    # Start the server, now that any hung instances are terminated.
+    p = subprocess.Popen(
+        ["CodeChat_Server", "serve"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
     )
-    parser.add_argument(
-        "--watch",
-        "-w",
-        nargs="*",
-        # For user-friendliness, allow users to either specify a list of directories, or multiple sets of this option with one (or more) directories.
-        action="extend",
-        help="One or more directories to watch for changes; a change triggers a render of that file or project. If a directory is not provided, defaults to the current directory.",
-    )
-    parser.add_argument(
-        "--patterns",
-        "--pattern",
-        "-p",
-        nargs="*",
-        default=[],
-        action="extend",
-        help="A list of globs which list files to monitor for changes in the specified --watch directories; defaults to montoring all files.",
-    )
-    parser.add_argument(
-        "--ignore-patterns",
-        "--ignore-pattern",
-        "-i",
-        nargs="*",
-        default=[],
-        action="extend",
-        help="A list of globs of files which will not trigger a build if they change when using --watch.",
-    )
-    parser.add_argument(
-        "--build",
-        "-b",
-        nargs="*",
-        default=[],
-        action="extend",
-        help="One or more paths of files/projects to build.",
-    )
-
-    # If the ``--watch`` option was provided with no arguments, assume the current directory. If the option wasn't provided, make it an empty list.
-    parsed_args = parser.parse_args(args)
-    if parsed_args.watch == []:
-        parsed_args.watch = [str(Path(".").absolute())]
-    if parsed_args.watch is None:
-        parsed_args.watch = []
-    # If a pattern wasn't specified, assume ``*``.
-    if not parsed_args.patterns:
-        parsed_args.patterns = ["*"]
-
-    return parsed_args
+    # Wait for the server to start.
+    out = ""
+    line = ""
+    print("Waiting for the server to start...")
+    while "CODECHAT_READY\n" not in line:
+        p.stdout.flush()
+        line = p.stdout.readline()
+        out += line
+        print(line, end="")
+        if p.poll() is not None:
+            # The server shut down.
+            print(p.stdout.read())
+            print(p.stderr.read())
+            print("The server failed to start.")
+            return 1
+        sleep(0.1)
+    print("done.")
+    return 0
 
 
-def main():
-    args = parse_args()
+@app.command()
+def stop():
+    "Stop the server."
+
+    print("Stopping all CodeChat Server instances...")
+    # Look for the server. TODO: should I avoid hard-coding this?
+    server_name = "CodeChat_Server"
+    # This code was copied from the `psutil docs <https://psutil.readthedocs.io/en/latest/#find-process-by-name>`_ then lightly modified.
+    for p in psutil.process_iter(["cmdline", "exe", "name", "pid"]):
+        if (
+            server_name == p.info["name"]
+            or p.info["exe"]
+            and os.path.basename(p.info["exe"]) == server_name
+            or p.info["cmdline"]
+            and server_name in p.info["cmdline"]
+        ) and (
+            # Don't kill the current process (it's parent is often a Python launcher).
+            p.pid != os.getpid()
+            and p.pid != os.getppid()
+        ):
+            print(
+                f"Killing server process {p.pid} named {p.info['name']}   with command line {p.info['cmdline']}."
+            )
+            # Killing the parent of a CodeChat Server process will kill the child; ignore the exception in this case.
+            try:
+                p.kill()
+            except psutil.NoSuchProcess:
+                pass
+
+    return 0
+
+
+@app.command()
+def serve():
+    "Run the server in the current terminal/console."
 
     # This file takes a long time to load and run. Print a status message as it starts.
     print("Loading...")
     from .server import run_servers
 
-    sys.exit(run_servers(args.watch, args.patterns, args.ignore_patterns))
+    return run_servers()
+
+
+@app.command()
+def build(path_to_build: List[Path]):
+    "Build the specified CodeChat project(s)."
+    # TODO
+    print(f"Building {path_to_build}...")
+
+
+@app.command()
+def render(path_to_build: Path, id: int):
+    "Render the specified CodeChat project in a web browser."
+    # TODO
+    print(f"Rendering {path_to_build} using ID {id}.")
+
+
+@app.command()
+def watch(
+    paths: List[Path] = typer.Option(
+        [Path(".")], help="Directory(s) to watch for changes."
+    ),
+    patterns: List[str] = typer.Option(
+        ["*"], help="Patterns of files to watch in the provided directory(s)."
+    ),
+    ignore_patterns: List[str] = typer.Option(
+        [], help="Patterns of files to ignore in the provided directory(s)."
+    ),
+):
+    "Watch the specified directories; perform a render when a matching file is changed."
+
+    start()
+
+    print(f"Watching {paths} for {patterns}, ignoring {ignore_patterns}.")
 
 
 if __name__ == "__main__":
-    main()
+    app()
 
-# Subcommands:
-#
-# - start: start the server; kill a hung instance if necessary before starting a new server. Return 0 if the server is now up. Options: none.
-# - serve: run the server; prints logging data to stdout. Options: loglevel.
-# - build: perform a build based on a CodeChat project file, but don't open the results in a browser. Arguments: a list of paths to build.
-# - render: like start_render from CodeChat Services -- build then display the results in a browser. This would be good for vim, for example. How can we associate a PID with a render ID? We should also provide a second parameter to support rendering more than one open file. I'm guessing that psutil would work; if vim executes in a subshell, I'll need to find the grandparent's PID. For this, provide a new CodeChat service called start_render_pid, and store a dict of {(pid, id): render_id} on the server.
-# - watch: perform a render on any changed file in the watched locations. Parameters: see above. TODO: implement using CodeChat Services.
+
+# Utilities
+# =========
+def get_client():
+    transport = TSocket.TSocket("localhost", THRIFT_PORT)
+    transport = TTransport.TBufferedTransport(transport)
+    protocol = TBinaryProtocol.TBinaryProtocol(transport)
+    client = EditorPlugin.Client(protocol)
+    transport.open()
+    return client
+
+
+# Watcher client
+# ==============
+# Provide a simple class to invoke a build when the file system watcher sends an event.
+class WatcherClient:
+    def __init__(
+        self,
+        directories: Sequence[str],
+        patterns: Sequence[str],
+        ignore_patterns: Sequence[str],
+    ):
+        self.observer = Observer()
+        self.thrift_client = get_client()
+
+        # Request a client ID.
+        ret = self.thrift_client.get_client(CodeChatClientLocation.browser)
+        assert ret.error == ""
+        assert ret.html == ""
+        self.client_id = ret.id
+
+        # See the `docs <https://watchdog.readthedocs.io/en/latest/api.html#watchdog.events.PatternMatchingEventHandler>`__. Rather than derive a separate class, just add a method to this instance.
+        self.event_handler = PatternMatchingEventHandler(patterns, ignore_patterns)
+        self.event_handler.on_any_event = self.on_any_event
+
+        for pathname in set(directories):
+            # See the `docs <https://watchdog.readthedocs.io/en/latest/api.html#watchdog.observers.api.BaseObserver.schedule>`__.
+            self.observer.schedule(self.event_handler, pathname, recursive=True)
+        self.observer.start()
+        print("Watcher started.")
+
+    # See the `docs <https://watchdog.readthedocs.io/en/latest/api.html#watchdog.events.FileSystemEventHandler.on_any_event>`__.
+    def on_any_event(self, event: FileSystemEvent):
+        if not event.is_directory:
+            print(event, event.src_path)
+            src_path = Path(event.src_path).absolute()
+            with open(src_path, encoding="utf-8", errors="backslashreplace") as f:
+                # TODO: check the return value, then do what on failure?
+                self.thrift_client.start_render(
+                    f.read(), str(src_path), self.client_id, False
+                )
+
+    def shutdown(self):
+        if self.observer:
+            print("Watcher shutting down...")
+            self.thrift_client.stop_client(self.client_id)
+            self.observer.stop()
+            self.observer.join()
+            print("Watcher shut down.")

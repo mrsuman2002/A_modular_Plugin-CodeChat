@@ -16,6 +16,11 @@ Change Log
     -   Upgraded to Thrift v. 14.2.
     -   Added the universal client.
     -   Added a Sphinx template.
+    -   Add code coverage support.
+    -   Changed Markdown support to a more standard subset.
+    -   Corrected command-line parsing in CodeChat project files.
+    -   Added a number of CLI subcommands.
+    -   Added the ping service.
 
 -   0.0.22, 16-Jun-2021:
 

@@ -30,12 +30,11 @@
 # Standard library
 # ----------------
 import logging
-from pathlib import Path
 import signal
 import socket
 import sys
 import threading
-from typing import Sequence, Union
+from typing import Union
 import webbrowser
 
 # Third-party imports
@@ -52,8 +51,6 @@ from thrift.server import TServer
 from thrift.transport import TTransport
 from thrift.transport import TSocket
 from thrift.protocol import TBinaryProtocol
-from watchdog.observers import Observer
-from watchdog.events import FileSystemEvent, PatternMatchingEventHandler
 
 
 # Local application imports
@@ -64,17 +61,11 @@ from .gen_py.CodeChat_Services.ttypes import (
     RenderClientReturn,
     CodeChatClientLocation,
 )
+from . import HTTP_PORT, THRIFT_PORT
 
 
 # Constants
 # =========
-# The port used for an HTTP connection from the CodeChat Client to the CodeChat Server.
-HTTP_PORT = 5000
-# .. _CodeChat service port:
-#
-# The port used for the Thrift connection between text editor/IDE extensions/plugins and the CodeChat Server. All editor/IDE plugins must use this port to access CodeChat services.
-THRIFT_PORT = 9090
-
 UNKNOWN_CLIENT = "Unknown client id {}."
 
 logger = logging.getLogger(__name__)
@@ -257,60 +248,6 @@ def client_data(id: int, url_path: str) -> Union[str, Response]:
     return response
 
 
-# Universal client
-# ================
-# Provide a simple class to invoke a build when the file system watcher sends an event. TODO: if the user closes the CodeChat Client, what should this program do?
-class UniversalClient:
-    # This takes the same parameters as ``run_servers``.
-    def __init__(
-        self,
-        directories: Sequence[str] = None,
-        patterns: Sequence[str] = None,
-        ignore_patterns: Sequence[str] = None,
-    ):
-        # Only start the watcher if directories are provided.
-        if not directories:
-            self.observer = None
-            return
-
-        self.observer = Observer()
-        # Wait until the renderer is ready before submitting jobs.
-        render_manager.render_manager_ready_event.wait()
-
-        # Request a client ID.
-        ret = handler.get_client(CodeChatClientLocation.browser)
-        assert ret.error == ""
-        assert ret.html == ""
-        self.client_id = ret.id
-
-        # See the `docs <https://watchdog.readthedocs.io/en/latest/api.html#watchdog.events.PatternMatchingEventHandler>`__. Rather than derive a separate class, just add a method to this instance.
-        self.event_handler = PatternMatchingEventHandler(patterns, ignore_patterns)
-        self.event_handler.on_any_event = self.on_any_event
-
-        for pathname in set(directories):
-            # See the `docs <https://watchdog.readthedocs.io/en/latest/api.html#watchdog.observers.api.BaseObserver.schedule>`__.
-            self.observer.schedule(self.event_handler, pathname, recursive=True)
-        self.observer.start()
-        print("Watcher started.")
-
-    # See the `docs <https://watchdog.readthedocs.io/en/latest/api.html#watchdog.events.FileSystemEventHandler.on_any_event>`__.
-    def on_any_event(self, event: FileSystemEvent):
-        if not event.is_directory:
-            print(event, event.src_path)
-            src_path = Path(event.src_path).absolute()
-            with open(src_path, encoding="utf-8", errors="backslashreplace") as f:
-                # TODO: check the return value, then do what on failure?
-                handler.start_render(f.read(), str(src_path), self.client_id, False)
-
-    def shutdown(self):
-        if self.observer:
-            print("Watcher shutting down...")
-            handler.stop_client(self.client_id)
-            self.observer.stop()
-            self.observer.join()
-            print("Watcher shut down.")
-
-
 # Main code
 # =========
 # When this event is ``set``, ``run_servers`` will shut down the servers and return.
@@ -329,14 +266,7 @@ def excepthook(type, value, traceback):
 
 
 # Run both servers. This does not (usually) return.
-def run_servers(
-    # A list of directories to monitor for changes.
-    directories: Sequence[str] = None,
-    # A list of patterns for files in these directories to monitor for changes.
-    patterns: Sequence[str] = None,
-    # A list of patterns for files in these directories to ignore when monitoring.
-    ignore_patterns: Sequence[str] = None,
-) -> int:
+def run_servers() -> int:
 
     print(f"The CodeChat Server, v.{__version__}\n")
     logging.basicConfig(level=logging.INFO)
@@ -376,9 +306,6 @@ def run_servers(
     )
     render_manager_thread.start()
 
-    # Watch for file system changes if requested.
-    universal_client = UniversalClient(directories, patterns, ignore_patterns)
-
     # On a signal, shut down gracefully.
     signal.signal(signal.SIGTERM, signal_handler)
     signal.signal(signal.SIGINT, signal_handler)
@@ -392,7 +319,6 @@ def run_servers(
             break
 
     print("Shutting down...")
-    universal_client.shutdown()
     # This will prevent future editor or web requests from being serviced.
     handler.render_manager.threadsafe_shutdown()
     # When this is done, the Flask server and editor plugin sever can be shut down, since they're idle. Since they're daemons, they'll be shut down by exiting main.
