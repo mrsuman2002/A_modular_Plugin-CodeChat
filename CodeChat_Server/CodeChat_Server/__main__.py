@@ -117,9 +117,10 @@ def stop():
             or p.info["exe"]
             and os.path.basename(p.info["exe"]) == server_name
             or p.info["cmdline"]
-            and server_name in p.info["cmdline"]
+            # On Windows, sometimes the process cmdline contains ``C:\...\venv\Scripts\CodeChat_Server-script.py``. So, we need to search inside each of the cmdline strings.
+            and any([server_name in x for x in p.info["cmdline"]])
         ) and (
-            # Don't kill the current process (it's parent is often a Python launcher).
+            # Don't kill the current process (its parent is often a Python launcher).
             p.pid != os.getpid()
             and p.pid != os.getppid()
         ):

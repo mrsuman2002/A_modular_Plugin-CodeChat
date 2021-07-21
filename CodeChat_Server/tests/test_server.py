@@ -12,10 +12,13 @@ import asyncio
 import json
 import socketserver
 import subprocess
+from time import sleep
 
 # Third-party imports
 # -------------------
+import pytest
 import requests
+from thrift.transport.TTransport import TTransportException
 
 # Local imports
 # -------------
@@ -26,8 +29,8 @@ from CodeChat_Server.render_manager import (
     GetResultType,
     GetResultReturn,
 )
-from CodeChat_Server.server import HTTP_PORT
-from conftest import SUBPROCESS_SERVER_ARGS, SUBPROCESS_SERVER_KWARGS
+from CodeChat_Server import HTTP_PORT
+from conftest import SUBPROCESS_SERVER_ARGS
 import websockets
 
 
@@ -44,12 +47,13 @@ WEBSOCKET_ADDRESS = f"ws://localhost:{WEBSOCKET_PORT}"
 # Editor plug-in
 # --------------
 def test_1():
+    subprocess.run(SUBPROCESS_SERVER_ARGS + ["stop"], check=True)
     # Open a port, so that it's in use.
     with socketserver.TCPServer(
         ("localhost", HTTP_PORT), socketserver.BaseRequestHandler
     ):
         # Run the server.
-        cp = subprocess.run(*SUBPROCESS_SERVER_ARGS, **SUBPROCESS_SERVER_KWARGS)
+        cp = subprocess.run(SUBPROCESS_SERVER_ARGS + ["serve"], capture_output=True, text=True)
         # Check that it reported the ports were in use.
         assert "Error: ports " in cp.stdout
 
@@ -68,13 +72,17 @@ def test_2(editor_plugin):
 # Test the plugin shutdown.
 def test_3(editor_plugin):
     assert editor_plugin.shutdown_server() == ""
-    editor_plugin.subprocess.wait()
+    # Wait for the server to finish shutting down.
+    sleep(1)
+    # Make sure the server no longer responds to pings to verify it shut down.
+    with pytest.raises(TTransportException):
+        editor_plugin.ping()
 
 
 # CodeChat Client HTTP
 # --------------------
 # Make a request of a non-existent ID.
-def test_4(editor_plugin):
+def test_4(run_server):
     # Test on a file that doesn't exist.
     r = requests.get(HTTP_ADDRESS + "client/1/a file that does not exist")
     assert r.status_code == 404
@@ -100,7 +108,7 @@ async def atest_5():
         )
 
 
-def test_5(editor_plugin):
+def test_5(run_server):
     asyncio.run(atest_5())
 
 
@@ -125,7 +133,8 @@ def test_8():
     assert "<em>hello</em>" in rst
 
 
-def test_9():
+# Requires updated CodeChat for this test to pass.
+def xtest_9():
     # Make sure the zero-input case works.
     _render_CodeChat("", "")
 

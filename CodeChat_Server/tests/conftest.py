@@ -9,7 +9,6 @@
 #
 # Standard library
 # ----------------
-from time import sleep
 import subprocess
 import sys
 import io
@@ -18,9 +17,6 @@ import io
 # -------------------
 import coverage
 import pytest
-from thrift.transport import TSocket
-from thrift.transport import TTransport
-from thrift.protocol import TBinaryProtocol
 
 # Local imports
 # -------------
@@ -28,8 +24,7 @@ from thrift.protocol import TBinaryProtocol
 cov = coverage.Coverage()
 cov.start()
 
-from CodeChat_Server.server import THRIFT_PORT  # noqa: E402
-from CodeChat_Server.gen_py.CodeChat_Services import EditorPlugin  # noqa: E402
+from CodeChat_Server.__main__ import get_client  # noqa: E402
 
 
 # .. _code_coverage:
@@ -55,48 +50,23 @@ def pytest_terminal_summary(terminalreporter):
 
 # Fixtures
 # ========
-SUBPROCESS_SERVER_ARGS = (
-    [sys.executable, "-m", "coverage", "run", "-m", "CodeChat_Server"],
-)
-SUBPROCESS_SERVER_KWARGS = dict(
-    stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
-)
+SUBPROCESS_SERVER_ARGS = [
+    sys.executable,
+    "-m",
+    "coverage",
+    "run",
+    "-m",
+    "CodeChat_Server",
+]
 
 
 @pytest.fixture
-def editor_plugin():
-    p = subprocess.Popen(*SUBPROCESS_SERVER_ARGS, **SUBPROCESS_SERVER_KWARGS)
-    # Wait for the server to start.
-    out = ""
-    line = ""
-    print("Waiting for the server to start...")
-    while "CODECHAT_READY\n" not in line:
-        p.stdout.flush()
-        line = p.stdout.readline()
-        out += line
-        print(line, end="")
-        if p.poll() is not None:
-            # The server shut down.
-            print(p.stdout.read())
-            print(p.stderr.read())
-            assert False
-        sleep(0.1)
-    print("done.\n")
+def run_server():
+    subprocess.run(SUBPROCESS_SERVER_ARGS + ["start"], check=True)
+    yield
+    subprocess.run(SUBPROCESS_SERVER_ARGS + ["stop"], check=True)
 
-    transport = TSocket.TSocket("localhost", THRIFT_PORT)
-    transport = TTransport.TBufferedTransport(transport)
-    protocol = TBinaryProtocol.TBinaryProtocol(transport)
-    client = EditorPlugin.Client(protocol)
-    transport.open()
 
-    # Provide the subprocess.
-    client.subprocess = p
-    yield client
-
-    # If tests already shut down the server, skip telling it to shut down.
-    if p.poll() is None:
-        client.shutdown_server()
-        p.wait()
-    print(p.stdout.read())
-    print(p.stderr.read())
-    transport.close()
+@pytest.fixture
+def editor_plugin(run_server):
+    return get_client()
