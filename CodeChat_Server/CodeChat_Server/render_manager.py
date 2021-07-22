@@ -25,6 +25,7 @@
 # =======
 # Library imports
 # ---------------
+from CodeChat_Server.CodeChat_Server import LOCALHOST
 import asyncio
 from enum import Enum
 import json
@@ -385,7 +386,7 @@ class RenderManager:
         self._is_shutdown = False
 
         self.websocket_server = await websockets.serve(
-            self.websocket_handler, "127.0.0.1", WEBSOCKET_PORT
+            self.websocket_handler, LOCALHOST, WEBSOCKET_PORT
         )
         # _`CODECHAT_READY`: let the user know that the server is now ready -- this is the last piece of it to start.
         print("The CodeChat Server is ready.\nCODECHAT_READY", file=sys.stderr)
@@ -413,10 +414,9 @@ class RenderManager:
             # If the client should be deleted, ignore all other requests.
             if cs._is_deleting:
                 del self._client_state_dict[id]
-                # When shutdown is complete, end all the workers.
-                if self._is_shutdown and len(self._client_state_dict) == 0:
-                    for i in range(self._num_workers):
-                        await self._job_q.put(None)
+                # If there are no more clients, shut down.
+                if len(self._client_state_dict) == 0:
+                    self.shutdown()
             else:
                 # Sync first.
                 # TODO: sync.

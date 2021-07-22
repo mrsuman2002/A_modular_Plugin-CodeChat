@@ -55,7 +55,7 @@ from thrift.protocol import TBinaryProtocol
 
 # Local application imports
 # -------------------------
-from . import render_manager, __version__
+from . import LOCALHOST, render_manager, __version__
 from .gen_py.CodeChat_Services import EditorPlugin
 from .gen_py.CodeChat_Services.ttypes import (
     RenderClientReturn,
@@ -99,7 +99,7 @@ class CodeChatHandler:
             return ret
 
         # Return what's requested.
-        url = "http://127.0.0.1:{}/client?id={}".format(HTTP_PORT, id)
+        url = "http://{}:{}/client?id={}".format(LOCALHOST, HTTP_PORT, id)
         if codeChat_client_location == CodeChatClientLocation.url:
             # Just return the URL.
             ret_str = url
@@ -133,7 +133,7 @@ class CodeChatHandler:
 
     # Indicate the server is alive.
     def ping(self) -> str:
-        logger.info(f"ping()\n")
+        logger.info("ping()\n")
         return ""
 
     # Render the provided text to HTML, then enqueue it for the web view.
@@ -157,7 +157,7 @@ class CodeChatHandler:
                 else:
                     # Since we just created this id, start the CodeChat Client in an external browser.
                     webbrowser.open(
-                        "http://127.0.0.1:{}/client?id={}".format(HTTP_PORT, id),
+                        "http://{}:{}/client?id={}".format(LOCALHOST, HTTP_PORT, id),
                         new=1,
                         autoraise=True,
                     )
@@ -208,7 +208,7 @@ handler = CodeChatHandler()
 # Server for the CodeChat editor plugin
 # -------------------------------------
 def editor_plugin_server() -> None:
-    transport = TSocket.TServerSocket(host="127.0.0.1", port=THRIFT_PORT)
+    transport = TSocket.TServerSocket(host=LOCALHOST, port=THRIFT_PORT)
     tfactory = TTransport.TBufferedTransportFactory()
     pfactory = TBinaryProtocol.TBinaryProtocolFactory()
     processor = EditorPlugin.Processor(handler)
@@ -247,8 +247,8 @@ def client_html() -> str:
     )
 
 
-# The endpoint for files requested by a specific client, including rendered source files.
-@client_app.route("/client/<int:id>/<path:url_path>")
+# The endpoint for files requested by a specific client, including rendered source files. Note that ``int`` by default is `positive only <https://werkzeug.palletsprojects.com/en/2.0.x/routing/#werkzeug.routing.IntegerConverter>`_.
+@client_app.route("/client/<int(signed=True):id>/<path:url_path>")
 def client_data(id: int, url_path: str) -> Union[str, Response]:
     # See if we rendered this file.
     html = handler.render_manager.threadsafe_get_render_results(id, url_path)
@@ -352,7 +352,7 @@ def run_servers() -> int:
 def is_port_in_use(port):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         try:
-            s.bind(("localhost", port))
+            s.bind((LOCALHOST, port))
         except OSError:
             return True
         return False

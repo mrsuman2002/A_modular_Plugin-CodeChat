@@ -48,7 +48,7 @@ from watchdog.events import FileSystemEvent, PatternMatchingEventHandler
 
 # Local application imports
 # -------------------------
-from . import THRIFT_PORT
+from . import LOCALHOST, THRIFT_PORT
 from .gen_py.CodeChat_Services import EditorPlugin
 from .gen_py.CodeChat_Services.ttypes import (
     CodeChatClientLocation,
@@ -58,7 +58,7 @@ from .gen_py.CodeChat_Services.ttypes import (
 # Utilities
 # =========
 def get_client() -> EditorPlugin.Client:
-    socket = TSocket.TSocket("localhost", THRIFT_PORT)
+    socket = TSocket.TSocket(LOCALHOST, THRIFT_PORT)
     transport = TTransport.TBufferedTransport(socket)
     protocol = TBinaryProtocol.TBinaryProtocol(transport)
     client = EditorPlugin.Client(protocol)
@@ -81,7 +81,7 @@ def file_text(path_to_file: Path) -> str:
 class WatcherClient:
     def __init__(
         self,
-        directories: Sequence[str],
+        directories: Sequence[Path],
         patterns: Sequence[str],
         ignore_patterns: Sequence[str],
     ):
@@ -210,7 +210,7 @@ def stop():
             and p.pid != os.getppid()
         ):
             print(
-                f"Killing server process {p.pid} named {p.info['name']}   with command line {p.info['cmdline']}.",
+                f"Killing server process {p.pid} named {p.info['name']} with command line {p.info['cmdline']}.",
                 file=sys.stderr,
             )
             # Killing the parent of a CodeChat Server process will kill the child; ignore the exception in this case.
@@ -249,7 +249,7 @@ def build(path_to_build: List[Path]):
         ptb = ptb.resolve()
         print(f"Building {ptb}...", file=sys.stderr)
         was_performed, rendered_file_path, html, err_string = asyncio.run(
-            render_file(file_text(ptb), ptb, aprint, False)
+            render_file(file_text(ptb), str(ptb), aprint, False)
         )
         assert was_performed
         # Print all errors produced by the render.
@@ -281,6 +281,7 @@ def render(path_to_build: Path, id: int):
     id = -abs(id) - 1
 
     # Request a render.
+    path_to_build = path_to_build.resolve()
     thrift_client = get_client()
     thrift_client.start_render(file_text(path_to_build), str(path_to_build), id, False)
 

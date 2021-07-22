@@ -43,3 +43,5 @@ HTTP_PORT = 5000
 #
 # The port used for the Thrift connection between text editor/IDE extensions/plugins and the CodeChat Server. All editor/IDE plugins must use this port to access CodeChat services.
 THRIFT_PORT = 9090
+
+LOCALHOST = "127.0.0.1"
