@@ -140,7 +140,7 @@ app = typer.Typer()
 
 
 @app.command()
-def start():
+def start(coverage: bool = typer.Option(False, help="Run with code coverage enabled.")):
     "Start the server."
 
     print(
@@ -154,16 +154,16 @@ def start():
         assert client.ping() == ""
         print("A running CodeChat Server instance was found.", file=sys.stderr)
         return 0
-    except Exception as e:
-        print(e)
+    except Exception:
         print("No running CodeChat Server instances found.", file=sys.stderr)
 
     # The server isn't up or has crashed. Stop any existing instances in case it crashed.
     stop()
 
     # Start the server, now that any hung instances are terminated.
+    cov_args = ["-m", "coverage", "run"] if coverage else []
     p = subprocess.Popen(
-        [sys.executable, "-m", "CodeChat_Server", "serve"],
+        [sys.executable, *cov_args, "-m", "CodeChat_Server", "serve"],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,

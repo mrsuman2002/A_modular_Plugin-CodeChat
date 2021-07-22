@@ -62,7 +62,7 @@ SUBPROCESS_SERVER_ARGS = [
 
 @pytest.fixture
 def run_server():
-    subprocess.run(SUBPROCESS_SERVER_ARGS + ["start"], check=True)
+    subprocess.run(SUBPROCESS_SERVER_ARGS + ["start", "--coverage"], check=True)
     yield
     subprocess.run(SUBPROCESS_SERVER_ARGS + ["stop"], check=True)
 
