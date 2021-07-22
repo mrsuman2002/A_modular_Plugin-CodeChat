@@ -28,7 +28,6 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
     print('  RenderClientReturn get_client(CodeChatClientLocation codeChat_client_location)')
     print('  string start_render(string text, string path, i32 id, bool is_dirty)')
     print('  string stop_client(i32 id)')
-    print('  string shutdown_server()')
     print('')
     sys.exit(0)
 
@@ -131,12 +130,6 @@ elif cmd == 'stop_client':
         print('stop_client requires 1 args')
         sys.exit(1)
     pp.pprint(client.stop_client(eval(args[0]),))
-
-elif cmd == 'shutdown_server':
-    if len(args) != 0:
-        print('shutdown_server requires 0 args')
-        sys.exit(1)
-    pp.pprint(client.shutdown_server())
 
 else:
     print('Unrecognized method %s' % cmd)

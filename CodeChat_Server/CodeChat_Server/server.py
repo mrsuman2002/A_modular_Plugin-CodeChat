@@ -191,12 +191,6 @@ class CodeChatHandler:
         logger.info("  => (empty string)")
         return ""
 
-    # Shut down the server.
-    def shutdown_server(self) -> str:
-        logger.info("shutdown_server")
-        shutdown_event.set()
-        return ""
-
 
 # Instantiate this class, which will be used by both servers.
 handler = CodeChatHandler()
