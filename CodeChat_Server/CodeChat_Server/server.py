@@ -118,7 +118,7 @@ class CodeChatHandler:
             )
         elif codeChat_client_location == CodeChatClientLocation.browser:
             # Open in an external browser.
-            webbrowser.open(url, 1)
+            webbrowser.open(url, new=1, autoraise=True)
             ret_str = ""
         else:
             ret = RenderClientReturn(
@@ -133,7 +133,7 @@ class CodeChatHandler:
 
     # Indicate the server is alive.
     def ping(self) -> str:
-        logger.info(f"ping(id={id})\n")
+        logger.info(f"ping()\n")
         return ""
 
     # Render the provided text to HTML, then enqueue it for the web view.
@@ -148,6 +148,28 @@ class CodeChatHandler:
             logger.info(" => (empty string)")
             return ""
         else:
+            # If the client specified an non-existant ID, create it.
+            if id < 0:
+                if self.render_manager.threadsafe_create_client(id) != id:
+                    ret = f"Duplicate id {id}."
+                    logger.info(f" => {ret}")
+                    return ret
+                else:
+                    # Since we just created this id, start the CodeChat Client in an external browser.
+                    webbrowser.open(
+                        "http://127.0.0.1:{}/client?id={}".format(HTTP_PORT, id),
+                        new=1,
+                        autoraise=True,
+                    )
+                    # Try the render again.
+                    if self.render_manager.threadsafe_start_render(
+                        text, path, id, is_dirty
+                    ):
+                        # Indicate success.
+                        logger.info(" => (empty string)")
+                        return ""
+
+            # Indicate an error.
             ret = UNKNOWN_CLIENT.format(id)
             logger.info(" => {}".format(ret))
             return ret

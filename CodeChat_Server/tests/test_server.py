@@ -53,7 +53,9 @@ def test_1():
         ("localhost", HTTP_PORT), socketserver.BaseRequestHandler
     ):
         # Run the server.
-        cp = subprocess.run(SUBPROCESS_SERVER_ARGS + ["serve"], capture_output=True, text=True)
+        cp = subprocess.run(
+            SUBPROCESS_SERVER_ARGS + ["serve"], capture_output=True, text=True
+        )
         # Check that it reported the ports were in use.
         assert "Error: ports " in cp.stdout
 

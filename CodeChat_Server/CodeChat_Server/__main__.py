@@ -28,8 +28,10 @@
 #
 # Standard library
 # ----------------
+import asyncio
 import os
 from pathlib import Path
+import sys
 import subprocess
 from time import sleep
 from typing import List, Sequence
@@ -53,146 +55,24 @@ from .gen_py.CodeChat_Services.ttypes import (
 )
 
 
-# CLI interface
-# =============
-app = typer.Typer()
-
-
-@app.command()
-def start():
-    "Start the server."
-
-    print("Starting the server -- searching for an already-running instance...")
-
-    # Try pinging the server to see if it's up.
-    try:
-        client = get_client()
-        assert client.ping() == ""
-        print("A running CodeChat Server instance was found.")
-        return 0
-    except Exception:
-        print("No running CodeChat Server instances found.")
-
-    # The server isn't up or has crashed. Stop any existing instances in case it crashed.
-    stop()
-
-    # Start the server, now that any hung instances are terminated.
-    p = subprocess.Popen(
-        ["CodeChat_Server", "serve"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True,
-    )
-    # Wait for the server to start.
-    out = ""
-    line = ""
-    print("Waiting for the server to start...")
-    while "CODECHAT_READY\n" not in line:
-        p.stdout.flush()
-        line = p.stdout.readline()
-        out += line
-        print(line, end="")
-        if p.poll() is not None:
-            # The server shut down.
-            print(p.stdout.read())
-            print(p.stderr.read())
-            print("The server failed to start.")
-            return 1
-        sleep(0.1)
-    print("done.")
-    return 0
-
-
-@app.command()
-def stop():
-    "Stop the server."
-
-    print("Stopping all CodeChat Server instances...")
-    # Look for the server. TODO: should I avoid hard-coding this?
-    server_name = "CodeChat_Server"
-    # This code was copied from the `psutil docs <https://psutil.readthedocs.io/en/latest/#find-process-by-name>`_ then lightly modified.
-    for p in psutil.process_iter(["cmdline", "exe", "name", "pid"]):
-        if (
-            server_name == p.info["name"]
-            or p.info["exe"]
-            and os.path.basename(p.info["exe"]) == server_name
-            or p.info["cmdline"]
-            # On Windows, sometimes the process cmdline contains ``C:\...\venv\Scripts\CodeChat_Server-script.py``. So, we need to search inside each of the cmdline strings.
-            and any([server_name in x for x in p.info["cmdline"]])
-        ) and (
-            # Don't kill the current process (its parent is often a Python launcher).
-            p.pid != os.getpid()
-            and p.pid != os.getppid()
-        ):
-            print(
-                f"Killing server process {p.pid} named {p.info['name']}   with command line {p.info['cmdline']}."
-            )
-            # Killing the parent of a CodeChat Server process will kill the child; ignore the exception in this case.
-            try:
-                p.kill()
-            except psutil.NoSuchProcess:
-                pass
-
-    return 0
-
-
-@app.command()
-def serve():
-    "Run the server in the current terminal/console."
-
-    # This file takes a long time to load and run. Print a status message as it starts.
-    print("Loading...")
-    from .server import run_servers
-
-    return run_servers()
-
-
-@app.command()
-def build(path_to_build: List[Path]):
-    "Build the specified CodeChat project(s)."
-    # TODO
-    print(f"Building {path_to_build}...")
-
-
-@app.command()
-def render(path_to_build: Path, id: int):
-    "Render the specified CodeChat project in a web browser."
-    # TODO
-    print(f"Rendering {path_to_build} using ID {id}.")
-
-
-@app.command()
-def watch(
-    paths: List[Path] = typer.Option(
-        [Path(".")], help="Directory(s) to watch for changes."
-    ),
-    patterns: List[str] = typer.Option(
-        ["*"], help="Patterns of files to watch in the provided directory(s)."
-    ),
-    ignore_patterns: List[str] = typer.Option(
-        [], help="Patterns of files to ignore in the provided directory(s)."
-    ),
-):
-    "Watch the specified directories; perform a render when a matching file is changed."
-
-    start()
-
-    print(f"Watching {paths} for {patterns}, ignoring {ignore_patterns}.")
-
-
-if __name__ == "__main__":
-    app()
-
-
 # Utilities
 # =========
-def get_client():
-    transport = TSocket.TSocket("localhost", THRIFT_PORT)
-    transport = TTransport.TBufferedTransport(transport)
+def get_client() -> EditorPlugin.Client:
+    socket = TSocket.TSocket("localhost", THRIFT_PORT)
+    transport = TTransport.TBufferedTransport(socket)
     protocol = TBinaryProtocol.TBinaryProtocol(transport)
     client = EditorPlugin.Client(protocol)
     transport.open()
     return client
+
+
+# Return the file's contents if it exists, or an empty string if not.
+def file_text(path_to_file: Path) -> str:
+    try:
+        with open(path_to_file, encoding="utf-8") as f:
+            return f.read()
+    except Exception:
+        return ""
 
 
 # Watcher client
@@ -222,7 +102,10 @@ class WatcherClient:
             # See the `docs <https://watchdog.readthedocs.io/en/latest/api.html#watchdog.observers.api.BaseObserver.schedule>`__.
             self.observer.schedule(self.event_handler, pathname, recursive=True)
         self.observer.start()
-        print("Watcher started.")
+        print(
+            f"Watcher started, monitoring the path(s) {directories} containing patterns {patterns} but ignoring {ignore_patterns}.",
+            file=sys.stderr,
+        )
 
     # See the `docs <https://watchdog.readthedocs.io/en/latest/api.html#watchdog.events.FileSystemEventHandler.on_any_event>`__.
     def on_any_event(self, event: FileSystemEvent):
@@ -235,10 +118,192 @@ class WatcherClient:
                     f.read(), str(src_path), self.client_id, False
                 )
 
+    def run(self):
+        try:
+            while True:
+                sleep(1)
+        except KeyboardInterrupt:
+            pass
+        self.shutdown()
+
     def shutdown(self):
-        if self.observer:
-            print("Watcher shutting down...")
-            self.thrift_client.stop_client(self.client_id)
-            self.observer.stop()
-            self.observer.join()
-            print("Watcher shut down.")
+        print("Watcher shutting down...", file=sys.stderr)
+        self.thrift_client.stop_client(self.client_id)
+        self.observer.stop()
+        self.observer.join()
+        print("Watcher shut down.", file=sys.stderr)
+
+
+# CLI interface
+# =============
+app = typer.Typer()
+
+
+@app.command()
+def start():
+    "Start the server."
+
+    print(
+        "Starting the server -- searching for an already-running instance...",
+        file=sys.stderr,
+    )
+
+    # Try pinging the server to see if it's up.
+    try:
+        client = get_client()
+        assert client.ping() == ""
+        print("A running CodeChat Server instance was found.", file=sys.stderr)
+        return 0
+    except Exception as e:
+        print(e)
+        print("No running CodeChat Server instances found.", file=sys.stderr)
+
+    # The server isn't up or has crashed. Stop any existing instances in case it crashed.
+    stop()
+
+    # Start the server, now that any hung instances are terminated.
+    p = subprocess.Popen(
+        [sys.executable, "-m", "CodeChat_Server", "serve"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    # Wait for the server to start.
+    out = ""
+    line = ""
+    print("Waiting for the server to start...", file=sys.stderr)
+    while "CODECHAT_READY\n" not in line:
+        p.stderr.flush()
+        line = p.stderr.readline()
+        out += line
+        print(line, end="")
+        if p.poll() is not None:
+            # The server shut down.
+            print(p.stdout.read())
+            print(p.stderr.read())
+            print("The server failed to start.", file=sys.stderr)
+            return 1
+        sleep(0.1)
+    print("done.", file=sys.stderr)
+    return 0
+
+
+@app.command()
+def stop():
+    "Stop the server."
+
+    print("Stopping all CodeChat Server instances...", file=sys.stderr)
+    # Look for the server. TODO: should I avoid hard-coding this?
+    server_name = "CodeChat_Server"
+    # This code was copied from the `psutil docs <https://psutil.readthedocs.io/en/latest/#find-process-by-name>`_ then lightly modified.
+    for p in psutil.process_iter(["cmdline", "exe", "name", "pid"]):
+        if (
+            server_name == p.info["name"]
+            or p.info["exe"]
+            and os.path.basename(p.info["exe"]) == server_name
+            or p.info["cmdline"]
+            # On Windows, sometimes the process cmdline contains ``C:\...\venv\Scripts\CodeChat_Server-script.py``. So, we need to search inside each of the cmdline strings.
+            and any([server_name in x for x in p.info["cmdline"]])
+        ) and (
+            # Don't kill the current process (its parent is often a Python launcher).
+            p.pid != os.getpid()
+            and p.pid != os.getppid()
+        ):
+            print(
+                f"Killing server process {p.pid} named {p.info['name']}   with command line {p.info['cmdline']}.",
+                file=sys.stderr,
+            )
+            # Killing the parent of a CodeChat Server process will kill the child; ignore the exception in this case.
+            try:
+                p.kill()
+            except psutil.NoSuchProcess:
+                pass
+
+    return 0
+
+
+@app.command()
+def serve():
+    "Run the server in the current terminal/console."
+
+    # This file takes a long time to load and run. Print a status message as it starts.
+    print("Loading...", file=sys.stderr)
+    from .server import run_servers
+
+    return run_servers()
+
+
+@app.command()
+def build(path_to_build: List[Path]):
+    "Build the specified CodeChat project(s)."
+
+    # TODO: stdout from here makes getting put HTML from a render hard.
+    start()
+    from .renderer import render_file
+
+    async def aprint(_str):
+        print(_str)
+
+    # Build each path provided.
+    for ptb in path_to_build:
+        ptb = ptb.resolve()
+        print(f"Building {ptb}...", file=sys.stderr)
+        was_performed, rendered_file_path, html, err_string = asyncio.run(
+            render_file(file_text(ptb), ptb, aprint, False)
+        )
+        assert was_performed
+        # Print all errors produced by the render.
+        print(err_string, file=sys.stderr)
+        # Dump the HTML produced.
+        if html is None:
+            print(
+                f"The rendered result is stored in {rendered_file_path}.",
+                file=sys.stderr,
+            )
+        else:
+            if ptb.is_file():
+                print(html)
+            else:
+                print(
+                    f"Error: file {ptb} not found, and no containing project to render was found.",
+                    file=sys.stderr,
+                )
+
+
+@app.command()
+def render(path_to_build: Path, id: int):
+    "Render the specified CodeChat project in a web browser."
+
+    print(f"Rendering {path_to_build} using ID {id}.", file=sys.stderr)
+    start()
+
+    # Ensure the ID is negative.
+    id = -abs(id) - 1
+
+    # Request a render.
+    thrift_client = get_client()
+    thrift_client.start_render(file_text(path_to_build), str(path_to_build), id, False)
+
+
+@app.command()
+def watch(
+    paths: List[Path] = typer.Option(
+        [Path(".")], help="Directory(s) to watch for changes."
+    ),
+    patterns: List[str] = typer.Option(
+        ["*"], help="Patterns of files to watch in the provided directory(s)."
+    ),
+    ignore_patterns: List[str] = typer.Option(
+        [], help="Patterns of files to ignore in the provided directory(s)."
+    ),
+):
+    "Watch the specified directories; perform a render when a matching file is changed."
+
+    start()
+    wc = WatcherClient(paths, patterns, ignore_patterns)
+    wc.run()
+    return 0
+
+
+if __name__ == "__main__":
+    app()
