@@ -25,7 +25,7 @@
 # =======
 # Library imports
 # ---------------
-from CodeChat_Server.CodeChat_Server import LOCALHOST
+from . import LOCALHOST
 import asyncio
 from enum import Enum
 import json
