@@ -55,14 +55,14 @@ from thrift.protocol import TBinaryProtocol
 
 # Local application imports
 # -------------------------
-from . import LOCALHOST, render_manager, __version__
+from . import __version__
+from . import render_manager
+from .constants import HTTP_PORT, LOCALHOST, THRIFT_PORT, WEBSOCKET_PORT
 from .gen_py.CodeChat_Services import EditorPlugin
 from .gen_py.CodeChat_Services.ttypes import (
     RenderClientReturn,
     CodeChatClientLocation,
 )
-from . import HTTP_PORT, THRIFT_PORT
-
 
 # Constants
 # =========
@@ -236,9 +236,7 @@ client_app = Flask(
 # The endpoint to get the HTML for the CodeChat Client.
 @client_app.route("/client")
 def client_html() -> str:
-    return render_template(
-        "CodeChat_client.html", WEBSOCKET_PORT=render_manager.WEBSOCKET_PORT
-    )
+    return render_template("CodeChat_client.html", WEBSOCKET_PORT=WEBSOCKET_PORT)
 
 
 # The endpoint for files requested by a specific client, including rendered source files. Note that ``int`` by default is `positive only <https://werkzeug.palletsprojects.com/en/2.0.x/routing/#werkzeug.routing.IntegerConverter>`_.
@@ -290,11 +288,11 @@ def run_servers() -> int:
     # See if the required ports are in use, probably by another instance of this server.
     if (
         is_port_in_use(HTTP_PORT)
-        or is_port_in_use(render_manager.WEBSOCKET_PORT)
+        or is_port_in_use(WEBSOCKET_PORT)
         or is_port_in_use(THRIFT_PORT)
     ):
         print(
-            f"Error: ports {HTTP_PORT}, {render_manager.WEBSOCKET_PORT}, and/or {THRIFT_PORT} are already in use.\n"
+            f"Error: ports {HTTP_PORT}, {WEBSOCKET_PORT}, and/or {THRIFT_PORT} are already in use.\n"
             "Hopefully, this means that the CodeChat Server is already running in another process.\n"
             "Exiting.\n"
         )
@@ -316,7 +314,7 @@ def run_servers() -> int:
     flask_server_thread.start()
 
     # Start the render loop in another thread.
-    handler.render_manager = render_manager.RenderManager()
+    handler.render_manager = render_manager.RenderManager(shutdown_event)
     render_manager_thread = threading.Thread(
         target=handler.render_manager.run, name="asyncio"
     )

@@ -29,7 +29,7 @@ from CodeChat_Server.render_manager import (
     GetResultType,
     GetResultReturn,
 )
-from CodeChat_Server import HTTP_PORT
+from CodeChat_Server.constants import HTTP_PORT
 from conftest import SUBPROCESS_SERVER_ARGS
 import websockets
 

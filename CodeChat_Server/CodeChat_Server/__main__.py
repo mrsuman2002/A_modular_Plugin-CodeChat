@@ -29,11 +29,11 @@
 # Standard library
 # ----------------
 import asyncio
-from datetime import datetime, timedelta
 import os
 from pathlib import Path
 import sys
 import subprocess
+import threading
 from time import sleep
 from typing import List, Sequence
 
@@ -49,7 +49,7 @@ from watchdog.events import FileSystemEvent, PatternMatchingEventHandler
 
 # Local application imports
 # -------------------------
-from . import LOCALHOST, THRIFT_PORT
+from .constants import LOCALHOST, THRIFT_PORT
 from .gen_py.CodeChat_Services import EditorPlugin
 from .gen_py.CodeChat_Services.ttypes import (
     CodeChatClientLocation,
@@ -169,29 +169,46 @@ def start(coverage: bool = typer.Option(False, help="Run with code coverage enab
         stderr=subprocess.PIPE,
         text=True,
     )
+
+    # Terminate the server after 5 seconds if it doesn't start.
+    server_starting = True
+
+    def timeout():
+        sleep(5)
+        if server_starting:
+            p.terminate()
+            print(
+                "The server failed to start before the timeout expired.",
+                file=sys.stderr,
+            )
+
+    # Make this a daemon thread, so it will exit when the main thread finishes.
+    timeout_thread = threading.Thread(target=timeout, daemon=True)
+    timeout_thread.start()
+
     # Wait for the server to start.
     print("Waiting for the server to start...", file=sys.stderr)
     out = ""
     line = ""
-    start_time = datetime.utcnow()
     while "CODECHAT_READY\n" not in line:
+        # To make mypy happy.
+        assert p.stderr is not None
         p.stderr.flush()
         line = p.stderr.readline()
         out += line
         print(line, end="")
         if p.poll() is not None:
-            # The server shut down.
+            # The server shut down. Print the output collected to help the user understand what went wrong.
+            #
+            # Make mypy happy.
+            assert p.stdout is not None
             print(p.stdout.read())
             print(p.stderr.read())
-            print("The server failed to start.", file=sys.stderr)
-            return 1
-        if datetime.utcnow() - start_time > timedelta(seconds=5):
-            print(
-                "The server failed to start before the timeout expired.",
-                file=sys.stderr,
-            )
+            print("The server exited unexpectedly.", file=sys.stderr)
             return 1
         sleep(0.1)
+    # Indicate the server started to the timeout thread, so the timeout won't kill the server now that it's started.
+    server_starting = False
     return 0
 
 

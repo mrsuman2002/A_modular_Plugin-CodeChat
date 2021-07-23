@@ -25,7 +25,6 @@
 # =======
 # Library imports
 # ---------------
-from . import LOCALHOST
 import asyncio
 from enum import Enum
 import json
@@ -49,17 +48,12 @@ import websockets
 
 # Local imports
 # -------------
+from .constants import LOCALHOST, WEBSOCKET_PORT
 from .renderer import render_file
 
 
 # RenderManager / render thread
 # ==============================
-# Constants
-# =========
-# The port used by a websocket connection between the CodeChat Server and the CodeChat Client.
-WEBSOCKET_PORT = 5001
-
-
 # .. _GetResultType Py:
 #
 # These must match the `constants in the client <GetResultType JS>`.
@@ -163,6 +157,9 @@ async def render_client_state(cs: ClientState) -> None:
 
 
 class RenderManager:
+    def __init__(self, shutdown_event):
+        self.shutdown_event = shutdown_event
+
     # Provide a way to perform thread-safe access of methods in this class.
     def __getattr__(self, name: str) -> Callable:
         if name.startswith("threadsafe_"):
@@ -416,7 +413,7 @@ class RenderManager:
                 del self._client_state_dict[id]
                 # If there are no more clients, shut down.
                 if len(self._client_state_dict) == 0:
-                    self.shutdown()
+                    self.shutdown_event.set()
             else:
                 # Sync first.
                 # TODO: sync.
