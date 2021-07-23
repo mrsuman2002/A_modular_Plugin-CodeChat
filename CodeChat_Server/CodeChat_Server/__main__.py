@@ -70,7 +70,7 @@ def get_client() -> EditorPlugin.Client:
 # Return the file's contents if it exists, or an empty string if not.
 def file_text(path_to_file: Path) -> str:
     try:
-        with open(path_to_file, encoding="utf-8") as f:
+        with open(path_to_file, encoding="utf-8", errors="backslashreplace") as f:
             return f.read()
     except Exception:
         return ""
@@ -186,7 +186,10 @@ def start(coverage: bool = typer.Option(False, help="Run with code coverage enab
             print("The server failed to start.", file=sys.stderr)
             return 1
         if datetime.utcnow() - start_time > timedelta(seconds=5):
-            print("The server failed to start before the timeout expired.", file=sys.stderr)
+            print(
+                "The server failed to start before the timeout expired.",
+                file=sys.stderr,
+            )
             return 1
         sleep(0.1)
     return 0
