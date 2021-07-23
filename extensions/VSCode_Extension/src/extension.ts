@@ -52,8 +52,6 @@ let thrift_client: EditorPlugin.Client | undefined = undefined;
 // Where the webclient resides: ``html`` for a webview panel embedded in VSCode; ``browser`` to use an external browser.
 const codechat_client_location: ttypes.CodeChatClientLocation =
     ttypes.CodeChatClientLocation.html;
-// The subprocess in which the CodeChat Server runs.
-let codechat_terminal: CodeChatTerminal | undefined = undefined;
 // True if the subscriptions to IDE change notifications have been registered.
 let subscribed = false;
 
@@ -139,19 +137,13 @@ export function activate(context: vscode.ExtensionContext) {
                 );
             }
 
-            if (codechat_terminal === undefined) {
-                codechat_terminal = new CodeChatTerminal();
-            }
-            // Run the CodeChat Server; this is a no-op if the server is already running.
+            // Start the server.
             try {
-                await codechat_terminal.run_server();
+                await start_server();
             } catch (err) {
-                console.log(`CodeChat extension: running server failed with ${err}.`);
+                show_error(err);
+                return;
             }
-
-            // Show the terminal, in case there are errors. This helps the user understand what's going wrong in case of a failure.
-            assert(codechat_terminal.terminal !== undefined);
-            codechat_terminal.terminal.show(true);
 
             if (thrift_connection === undefined) {
                 console.log("CodeChat extension: creating Thrift client.");
@@ -218,31 +210,16 @@ export function activate(context: vscode.ExtensionContext) {
 // On deactivation, close everything down.
 export async function deactivate() {
     console.log("CodeChat extension: deactivating.");
-    console.log(thrift_client);
     // Return a promise that shuts down the server or stops the client, then do final cleanup.
     await new Promise((resolve) => {
         if (thrift_client !== undefined) {
-            // If we started the server, request a graceful shutdown.
-            console.log(codechat_terminal?.is_server_running());
-            if (codechat_terminal?.is_server_running()) {
-                thrift_client.shutdown_server((err) => {
-                    thrift_client = undefined;
-                    codechat_client_id = undefined;
-                    // Wait for the server to shut down.
-                    setTimeout(() => {
-                        console.log("CodeChat extension: timeout for server shutdown complete.");
-                        resolve(err);
-                    }, 500);
-                });
-            } else {
-                // Otherwise, shut down the client.
-                assert(codechat_client_id !== undefined);
-                thrift_client.stop_client(codechat_client_id, (err_1) => {
-                    thrift_client = undefined;
-                    codechat_client_id = undefined;
-                    resolve(err_1);
-                });
-            }
+            // Otherwise, shut down the client.
+            assert(codechat_client_id !== undefined);
+            thrift_client.stop_client(codechat_client_id, (err) => {
+                thrift_client = undefined;
+                codechat_client_id = undefined;
+                resolve(err);
+            });
         } else {
             // With no client, there's nothing to do in this phase of the shutdown.
             resolve("");
@@ -253,8 +230,6 @@ export async function deactivate() {
     webview_panel?.dispose();
     thrift_connection?.end();
     thrift_connection = undefined;
-    codechat_terminal?.terminal?.dispose();
-    codechat_terminal = undefined;
     console.log("CodeChat extension: deactivated.");
 }
 
@@ -400,121 +375,46 @@ function can_render(): boolean {
     );
 }
 
-// This runs the CodeChat Server in a pseudo-terminal, imitating the way VSCode runs a build. Specifically, it opens a terminal, then runs the server there. Before the server starts, it displays a message in the terminal showing what command is being run. When the server exits, it also displays an exit message in the terminal.
-class CodeChatTerminal {
-    // These emitters allow us to fire events (write and close) programmatically.
-    writeEmitter = new vscode.EventEmitter<string>();
-    closeEmitter = new vscode.EventEmitter<number>();
-    server_process: child_process.ChildProcess | undefined = undefined;
-    terminal: vscode.Terminal | undefined = undefined;
+async function start_server() {
+    // Get the command from the VSCode configuration.
+    const codechat_server_command = vscode.workspace
+        .getConfiguration("CodeChat.CodeChatServer")
+        .get("Command");
+    assert(typeof codechat_server_command === "string");
 
-    is_server_running() {
-        return this.server_process?.exitCode === null;
-    }
+    // Split it into a command and args.
+    let [command, ...args] = [...shlex.split(codechat_server_command), "start"];
+    let stdout = "";
+    let stderr = "";
 
-    async run_server() {
-        // If the server is already running, return.
-        if (this.is_server_running()) {
-            return;
-        }
+    return new Promise((resolve, reject) => {
+        assert(typeof command === "string");
+        const server_process = child_process.spawn(command, args);
+        server_process.on("error", (err: NodeJS.ErrnoException) => {
+            let msg =
+                err.code === "ENOENT"
+                    ? `Error - cannot find the file ${err.path}`
+                    : err;
+            reject(`While starting the CodeChat Server: ${msg}.`);
+        });
 
-        // This promise is resolved if the server reports readiness or exits; it is rejected if running the server produces an error or if the timeout occurs.
-        return new Promise((resolve, reject) => {
-            // **Step 1:** define the core code to run the server.
-            const _run_server = () => {
-                // Get the command from the VSCode configuration.
-                const codechat_server_command = vscode.workspace
-                    .getConfiguration("CodeChat.CodeChatServer")
-                    .get("Command");
-                assert(typeof codechat_server_command === "string");
-
-                // Split it into a command and args.
-                let [command, ...args] = shlex.split(codechat_server_command);
-
-                // Run it in a VSCode terminal.
-                assert(typeof command === "string");
-                this.writeEmitter.fire(
-                    `\x1B[1m> Executing the CodeChat Server: ${command} ${args.join(
-                        " "
-                    )} <\n\r\n\rPress any key to stop the server.\x1B[0m\n\r\n\r`
-                );
-                this.server_process = child_process.spawn(command, args);
-                // Reject the promise with a timeout if the server doesn't report success before then.
-                setTimeout(reject, 5000, "timeout");
-
-                // Handle events.
-                let post_str =
-                    "\n\r\n\rThis terminal will be reused by the CodeChat Server; to restart the server, re-run the CodeChat extension.\x1B[0m\n\r\n\r";
-                this.server_process.on("error", (err: NodeJS.ErrnoException) => {
-                    let msg =
-                        err.code === "ENOENT"
-                            ? `Error - cannot find the file ${err.path}`
-                            : err;
-                    this.writeEmitter.fire(
-                        `\n\r\n\r\x1B[1m> While running the CodeChat Server: ${msg} <${post_str}`
-                    );
-                    // Indicate the server didn't start.
-                    reject(err);
-                });
-
-                this.server_process.on("exit", (code, signal) => {
-                    let exit_str = code ? `code ${code}` : `signal ${signal}`;
-                    this.writeEmitter.fire(
-                        `\n\r\n\r\x1B[1m> CodeChat Server exited with ${exit_str}. <${post_str}`
-                    );
-                    this.server_process = undefined;
-                    // Indicate the server exiting; hopefully, this means another instance of the server is already running.
-                    resolve(["exit", code, signal]);
-                });
-
-                let found_ready = false;
-                const ready_regex = /\r?\nCODECHAT_READY\r?\n/;
-                assert(this.server_process.stdout !== null);
-                this.server_process.stdout.on("data", (chunk) => {
-                    // Scan stdout for the code indicating the server is up.
-                    const s = chunk.toString();
-                    this.writeEmitter.fire(s);
-                    if (!found_ready && ready_regex.test(s)) {
-                        found_ready = true;
-                        resolve("ready");
-                    }
-                });
-
-                assert(this.server_process.stderr !== null);
-                this.server_process.stderr.on("data", (chunk) =>
-                    this.writeEmitter.fire(chunk.toString())
-                );
-            };
-
-            // **Step 2:** Run the server (creating a terminal first if necessary).
-            if (this.terminal !== undefined) {
-                _run_server();
+        server_process.on("exit", (code, signal) => {
+            let exit_str = code ? `code ${code}` : `signal ${signal}`;
+            if (code === 0) {
+                resolve("");
             } else {
-                // If the terminal doesn't exist, create it. When the terminal is created, it will run the server from its startup code (the open callback).
-                const pty: vscode.Pseudoterminal = {
-                    onDidWrite: this.writeEmitter.event,
-                    onDidClose: this.closeEmitter.event,
-                    // Important: don't run the server until this event is called; otherwise, the terminal isn't ready and will ignore any text sent to it. See the ``open`` method of `Pseudoterminal <https://code.visualstudio.com/api/references/vscode-api#Pseudoterminal>`_.
-                    open: _run_server,
-                    close: () => {
-                        this.server_process?.kill();
-                        this.server_process = undefined;
-                        codechat_terminal = undefined;
-                    },
-                    handleInput: () => {
-                        if (this.is_server_running()) {
-                            // The server is running. Stop it.
-                            this.server_process!.kill();
-                            this.server_process = undefined;
-                        }
-                    },
-                };
-
-                this.terminal = vscode.window.createTerminal({
-                    name: "CodeChat Server",
-                    pty: pty,
-                });
+                reject(`${stdout}\n${stderr}\n\nCodeChat Server exited with ${exit_str}.\n`);
             }
         });
-    }
+
+        assert(server_process.stdout !== null);
+        server_process.stdout.on("data", (chunk) => {
+            stdout += chunk.toString();
+        });
+
+        assert(server_process.stderr !== null);
+        server_process.stderr.on("data", (chunk) => {
+            stderr += chunk.toString();
+        });
+    });
 }
