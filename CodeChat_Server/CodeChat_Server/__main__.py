@@ -29,6 +29,7 @@
 # Standard library
 # ----------------
 import asyncio
+from datetime import datetime, timedelta
 import os
 from pathlib import Path
 import sys
@@ -169,9 +170,10 @@ def start(coverage: bool = typer.Option(False, help="Run with code coverage enab
         text=True,
     )
     # Wait for the server to start.
+    print("Waiting for the server to start...", file=sys.stderr)
     out = ""
     line = ""
-    print("Waiting for the server to start...", file=sys.stderr)
+    start_time = datetime.utcnow()
     while "CODECHAT_READY\n" not in line:
         p.stderr.flush()
         line = p.stderr.readline()
@@ -183,8 +185,10 @@ def start(coverage: bool = typer.Option(False, help="Run with code coverage enab
             print(p.stderr.read())
             print("The server failed to start.", file=sys.stderr)
             return 1
+        if datetime.utcnow() - start_time > timedelta(seconds=5):
+            print("The server failed to start before the timeout expired.", file=sys.stderr)
+            return 1
         sleep(0.1)
-    print("done.", file=sys.stderr)
     return 0
 
 
