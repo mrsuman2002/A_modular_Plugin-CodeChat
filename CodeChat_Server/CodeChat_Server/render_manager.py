@@ -339,7 +339,7 @@ class RenderManager:
     async def _delete_client_later(self, id: int):
         await asyncio.sleep(1)
         if self.delete_client(id):
-            loggger.warning(f"Client {id} not responding -- deleted it.")
+            logger.warning(f"Client {id} not responding -- deleted it.")
 
     # Shut down the render manager, called from another thread.
     def threadsafe_shutdown(self):

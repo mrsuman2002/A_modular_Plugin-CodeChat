@@ -22,14 +22,17 @@ from thrift.transport.TTransport import TTransportException
 
 # Local imports
 # -------------
-from CodeChat_Server.gen_py.CodeChat_Services.ttypes import RenderClientReturn
+from CodeChat_Server.constants import HTTP_PORT
+from CodeChat_Server.gen_py.CodeChat_Services.ttypes import (
+    RenderClientReturn,
+    CodeChatClientLocation,
+)
 from CodeChat_Server.renderer import _render_CodeChat, _render_markdown, _render_ReST
 from CodeChat_Server.render_manager import (
     WEBSOCKET_PORT,
     GetResultType,
     GetResultReturn,
 )
-from CodeChat_Server.constants import HTTP_PORT
 from conftest import SUBPROCESS_SERVER_ARGS
 import websockets
 
@@ -73,9 +76,11 @@ def test_2(editor_plugin):
 
 # Test the plugin shutdown.
 def test_3(editor_plugin):
-    assert editor_plugin.shutdown_server() == ""
+    rcr = editor_plugin.get_client(CodeChatClientLocation.html)
+    assert rcr.error == ""
+    assert editor_plugin.stop_client(rcr.id) == ""
     # Wait for the server to finish shutting down.
-    sleep(1)
+    sleep(2)
     # Make sure the server no longer responds to pings to verify it shut down.
     with pytest.raises(TTransportException):
         editor_plugin.ping()
