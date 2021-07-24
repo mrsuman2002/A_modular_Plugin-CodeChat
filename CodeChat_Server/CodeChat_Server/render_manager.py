@@ -27,6 +27,7 @@
 # ---------------
 import asyncio
 from enum import Enum
+import logging
 import json
 from pathlib import Path
 import sys
@@ -54,6 +55,9 @@ from .renderer import render_file
 
 # RenderManager / render thread
 # ==============================
+logger = logging.getLogger(__name__)
+
+
 # .. _GetResultType Py:
 #
 # These must match the `constants in the client <GetResultType JS>`.
@@ -312,11 +316,8 @@ class RenderManager:
             ):
                 # Check that the queue is empty
                 if not q.empty():
-                    print(
-                        "CodeChat warning: client id {} shut down with pending commands.".format(
-                            id
-                        ),
-                        file=sys.stderr,
+                    logger.warning(
+                        f"CodeChat warning: client id {id} shut down with pending commands."
                     )
                 # Request a client deletion.
                 assert self.delete_client(id)
@@ -338,7 +339,7 @@ class RenderManager:
     async def _delete_client_later(self, id: int):
         await asyncio.sleep(1)
         if self.delete_client(id):
-            print(f"Client {id} not responding -- deleted it.", file=sys.stderr)
+            loggger.warning(f"Client {id} not responding -- deleted it.")
 
     # Shut down the render manager, called from another thread.
     def threadsafe_shutdown(self):
@@ -347,7 +348,7 @@ class RenderManager:
 
     # Shut down the render manager.
     async def shutdown(self):
-        print("Render manager shutting down...", file=sys.stderr)
+        logger.info("Render manager shutting down...")
         self._is_shutdown = True
         # Stop each client. This will tell the web client to shut down and also delete the render client.
         for id in self._client_state_dict.keys():
@@ -368,7 +369,7 @@ class RenderManager:
             asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 
         asyncio.run(self._run(*args), debug=debug)
-        print("Render manager is shut down.", file=sys.stderr)
+        logger.info("Render manager is shut down.")
 
     # Run the rendering thread with the given number of workers.
     async def _run(self, num_workers: int = 1) -> None:
@@ -386,6 +387,8 @@ class RenderManager:
             self.websocket_handler, LOCALHOST, WEBSOCKET_PORT
         )
         # _`CODECHAT_READY`: let the user know that the server is now ready -- this is the last piece of it to start.
+        #
+        # NOTE: The ``CodeChat_Server start`` CLI command reads this line, then quits. This means (on Windows at least) that all future ``print`` statements will block, preventing the server from shutting down. Outputing info to the logger avoid this problem. Therefore, **do not include print statements after this point in the code**.
         print("The CodeChat Server is ready.\nCODECHAT_READY", file=sys.stderr)
         render_manager_ready_event.set()
         # Flush this since extension and test code waits for it before connecting to the server/running the rest of a test.
@@ -399,7 +402,7 @@ class RenderManager:
             id = await self._job_q.get()
             # Check for shutdown.
             if id is None:
-                print(f"Render worker {worker_index} is shut down.", file=sys.stderr)
+                logger.info(f"Render worker {worker_index} is shut down.")
                 break
             cs = self._client_state_dict[id]
             assert cs._in_job_q

@@ -332,7 +332,7 @@ def run_servers() -> int:
             shutdown_event.clear()
             break
 
-    print("Shutting down...")
+    logger.info("Shutting down...")
     # This will prevent future editor or web requests from being serviced.
     handler.render_manager.threadsafe_shutdown()
     # When this is done, the Flask server and editor plugin sever can be shut down, since they're idle. Since they're daemons, they'll be shut down by exiting main.
