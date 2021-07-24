@@ -159,7 +159,9 @@ def start(coverage: bool = typer.Option(False, help="Run with code coverage enab
         print("No running CodeChat Server instances found.", file=sys.stderr)
 
     # The server isn't up or has crashed. Stop any existing instances in case it crashed.
-    stop()
+    ret = stop()
+    if ret:
+        return ret
 
     # Start the server, now that any hung instances are terminated.
     cov_args = ["-m", "coverage", "run"] if coverage else []
@@ -261,8 +263,9 @@ def serve():
 def build(path_to_build: List[Path]):
     "Build the specified CodeChat project(s)."
 
-    # TODO: stdout from here makes getting put HTML from a render hard.
-    start()
+    ret = start()
+    if ret:
+        return ret
     from .renderer import render_file
 
     async def aprint(_str):
@@ -292,6 +295,7 @@ def build(path_to_build: List[Path]):
                     f"Error: file {ptb} not found, and no containing project to render was found.",
                     file=sys.stderr,
                 )
+    return 0
 
 
 @app.command()
@@ -299,7 +303,9 @@ def render(path_to_build: Path, id: int):
     "Render the specified CodeChat project in a web browser."
 
     print(f"Rendering {path_to_build} using ID {id}.", file=sys.stderr)
-    start()
+    ret = start()
+    if ret:
+        return ret
 
     # Ensure the ID is negative.
     id = -abs(id) - 1
@@ -308,6 +314,7 @@ def render(path_to_build: Path, id: int):
     path_to_build = path_to_build.resolve()
     thrift_client = get_client()
     thrift_client.start_render(file_text(path_to_build), str(path_to_build), id, False)
+    return 0
 
 
 @app.command()
@@ -324,7 +331,10 @@ def watch(
 ):
     "Watch the specified directories; perform a render when a matching file is changed."
 
-    start()
+    ret = start()
+    if ret:
+        return ret
+
     wc = WatcherClient(paths, patterns, ignore_patterns)
     wc.run()
     return 0
