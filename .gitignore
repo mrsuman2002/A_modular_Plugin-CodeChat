@@ -43,3 +43,4 @@ thrift*.exe
 node_modules/
 CodeChat_Server/.coverage
 CodeChat_Server/htmlcov/
+CodeChat_Server/templates/mkdocs/site
