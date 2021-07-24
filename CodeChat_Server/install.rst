@@ -94,12 +94,11 @@ Optionally, install additional external renderers such as:
 -   `Pandoc <https://pandoc.org/>`_
 -   `Runestone Components <https://runestone.academy/>`_
 -   `Skydocs <https://skydocs.skyost.eu/en/>`_
--   `Sphinx <https://www.sphinx-doc.org/en/master/>`_ (CodeChat `template <../_static/sphinx/_build/index.html>`_)
+-   `Sphinx <https://www.sphinx-doc.org/en/master/>`_
 
 CodeChat Server configuration file
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The linked templates above include the correct CodeChat Server configuration file along with the files needed by that external renderer to create a basic project. The `configuration file for this project <../codechat_config.yaml>` documents the format of this file and provides a working example.
+The `templates page <templates>` includes the correct CodeChat Server configuration file along with the files needed by that external renderer to create a basic project. The `configuration file for this project <../codechat_config.yaml>` documents the format of CodeChat Server configuration file and provides a working example.
 
 
 Use
