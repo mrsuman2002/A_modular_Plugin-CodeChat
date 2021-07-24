@@ -11,7 +11,7 @@ Contents:
    :maxdepth: 2
 
    conf.py
-   codechat_config.json
+   codechat_config.yaml
 
 
 Indices and tables

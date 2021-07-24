@@ -14,13 +14,15 @@ Change Log
 -   `Github master <https://github.com/bjones1/CodeChat_system.git>`_:
 
     -   Upgraded to Thrift v. 14.2.
-    -   Added the universal client.
+    -   Added the file change watcher client.
+    -   Added the CLI render client.
     -   Added a Sphinx template.
     -   Add code coverage support.
     -   Changed Markdown support to a more standard subset.
     -   Corrected command-line parsing in CodeChat project files.
     -   Added a number of CLI subcommands.
     -   Added the ping service.
+    -   Replaced the shutdown service with auto-shutdown.
 
 -   0.0.22, 16-Jun-2021:
 

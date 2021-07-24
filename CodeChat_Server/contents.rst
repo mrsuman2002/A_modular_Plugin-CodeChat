@@ -13,18 +13,23 @@ The CodeChat Server
 *******************
 The CodeChat Server receives requests from CodeChat plugins/extensions running in text editors/IDEs to render a file, performs the render, then displays it in the CodeChat Client. It also responds to user input from the CodeChat Client by processing this request then sending the results back to the plugin/extension.
 
-Server architecture
-===================
-TODO.
 
-
-Contents
-========
+User documentation
+==================
 .. toctree::
     :maxdepth: 2
 
     README
     install
+    templates
+    cli
+
+
+Developer documentation
+=======================
+.. toctree::
+    :maxdepth: 2
+
     CodeChat_Server/__init__.py
     setup.py
     tests/contents

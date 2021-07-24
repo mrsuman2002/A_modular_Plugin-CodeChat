@@ -8,7 +8,7 @@ To get started, follow the `CodeChat_Server/install` instructions.
 
 Help
 ====
-First read the `docs/common_problems` page then `open an issue <https://github.com/bjones1/CodeChat_system/issues/new>`_.
+First read the `docs/common_problems` page then `open an issue <https://github.com/bjones1/CodeChat_system/issues/new>`_. See also the `docs/CHANGELOG`.
 
 
 Development and Contributors

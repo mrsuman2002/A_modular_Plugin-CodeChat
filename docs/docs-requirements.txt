@@ -1,6 +1,7 @@
 # *******************************************************************
 # |docname| - Python requirements file for building the documentation
 # *******************************************************************
+# This is used by `../readthedocs.yml` for that build process.
 CodeChat
 sphinx >= 3
 myst-parser
