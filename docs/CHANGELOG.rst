@@ -23,6 +23,8 @@ Change Log
     -   Added a number of CLI subcommands.
     -   Added the ping service.
     -   Replaced the shutdown service with auto-shutdown.
+    -   Added more templates.
+    -   Docs improvements.
 
 -   0.0.22, 16-Jun-2021:
 
