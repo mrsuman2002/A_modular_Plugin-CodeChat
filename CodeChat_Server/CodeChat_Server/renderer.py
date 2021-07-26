@@ -216,7 +216,9 @@ async def _render_external_file(
 
         # Gather the output from the file if necessary.
         if output_file:
-            with open(output_file.name, "r", encoding="utf-8") as f:
+            with open(
+                output_file.name, "r", encoding="utf-8", errors="backslashreplace"
+            ) as f:
                 stdout = f.read()
 
     return stdout, stderr
@@ -317,14 +319,16 @@ async def _render_external_project(
     file_path = Path(file_path_)
 
     # Determine first guess at the location of the rendered HTML.
+    error_arr = []
     try:
         base_html_file = output_path / file_path.relative_to(source_path)
-    except Exception as e:
-        return (
-            "",
+    except ValueError as e:
+        # Give some arbitrary value to the output path, since it can't be determined.
+        base_html_file = output_path
+        error_arr.append(
             "{}:: ERROR: unable to compute path relative to {}. {}".format(
                 file_path, source_path, e
-            ),
+            )
         )
 
     # Compare dates to see if the rendered file is current
@@ -332,6 +336,8 @@ async def _render_external_project(
 
     # If not, render and try again.
     if error:
+        error_arr.append(error)
+
         # Perform replacement on the args.
         def args_format(arg):
             return arg.format(
@@ -352,8 +358,8 @@ async def _render_external_project(
         stderr = ""
 
     # Display an error in the main window if one exists.
-    if error:
-        stderr += error
+    if error_arr:
+        stderr += "\n".join(error_arr)
     return html_file, stderr
 
 
@@ -385,11 +391,17 @@ def _checkModificationTime(
 
     # Look for the resulting HTML.
     possible_html_file = base_html_file.with_suffix(html_ext)
-    html_file = (
-        possible_html_file
-        if possible_html_file.exists()
-        else Path(str(base_html_file) + html_ext)
-    )
+    if possible_html_file.exists():
+        html_file = possible_html_file
+    else:
+        possible_html_file = Path(str(base_html_file) + html_ext)
+        if possible_html_file.exists():
+            html_file = possible_html_file
+        else:
+            return (
+                str(base_html_file),
+                f"{source_file}:: ERROR: CodeChat renderer - unable to find the HTML output file {base_html_file}.",
+            )
 
     # Recall that time is measured in seconds since the epoch,
     # so that larger = newer.
@@ -399,7 +411,7 @@ def _checkModificationTime(
         else:
             return (
                 str(html_file),
-                "{}:: ERROR: CodeChat renderer - source file older than the html file {}.".format(
+                "{}:: ERROR: CodeChat renderer - source file older than the HTML file {}.".format(
                     source_file, html_file
                 ),
             )
@@ -561,8 +573,13 @@ def _select_renderer(
     # is_project: True if this is a project; False if not.
     bool,
 ]:
-    # Search for an external builder configuration file.
-    for project_path in Path(file_path).parents:
+    # If this is a directory, start searching there. Otherwise, assume it's a file and remove the file name to produce a directory.
+    file_path = Path(file_path)
+    if not file_path.is_dir():
+        file_path = file_path.parent
+
+    # Search for an external builder configuration file. I can't find an equivalent of `parents <https://docs.python.org/3/library/pathlib.html#pathlib.PurePath.parents>`_ that includes the full path, so the list below constructs it.
+    for project_path in [file_path, *file_path.parents]:
         project_file = project_path / "codechat_config.json"
         if project_file.exists():
             return _render_external_project, str(project_file), True
