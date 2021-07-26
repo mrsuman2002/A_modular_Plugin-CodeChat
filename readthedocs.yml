@@ -34,3 +34,7 @@ python:
   install:
     # To build this documentation, install the required packages. See `requirements <https://docs.readthedocs.io/en/stable/config-file/v2.html#requirements-file>`_.
     - requirements: docs/docs-requirements.txt
+
+# For some reason, the Read The Docs engine can't find `conf.py`. `Specify it explicitly <https://docs.readthedocs.io/en/stable/config-file/v2.html#sphinx-configuration>`_.
+sphinx:
+  configuration: conf.py
