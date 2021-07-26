@@ -30,7 +30,6 @@
 # =======
 # Library imports
 # ---------------
-import ast
 import asyncio
 import codecs
 from contextlib import contextmanager
@@ -244,68 +243,18 @@ async def _render_external_project(
     except Exception as e:
         return "", "{}:: ERROR: Unable to open. {}".format(tool_or_project_path, e)
 
-    if tool_or_project_path.suffix == ".yaml":
-        schema = strictyaml.Map(
-            {
-                strictyaml.Optional("source_path", default="."): strictyaml.Str(),
-                "output_path": strictyaml.Str(),
-                "args": strictyaml.Str() | strictyaml.Seq(strictyaml.Str()),
-                strictyaml.Optional("html_ext", default=".html"): strictyaml.Str(),
-            }
-        )
-        try:
-            data_dict = strictyaml.load(data, schema).data
-        except strictyaml.YAMLError as e:
-            return "", "{}:: ERROR: Unable to parse. {}".format(tool_or_project_path, e)
-    else:
-        # Parse it and check the format.
-        assert tool_or_project_path.suffix == ".json"
-        try:
-            data_dict = ast.literal_eval(data)
-        except Exception as e:
-            return "", "{}:: ERROR: Unable to parse. {}".format(tool_or_project_path, e)
-        if not isinstance(data_dict, dict):
-            return (
-                "",
-                "{}:: ERROR: Unexpected type; file should contain a dict, but saw a {}".format(
-                    tool_or_project_path, type(data_dict)
-                ),
-            )
-
-    # If we can drop the ``.json`` format, then we can remove the following validation as well; the YAML data is validated by the schema.
-    args = data_dict.get("args")
-    # Note that we don't check the type of each element of the list (which should be a str).
-    if not (isinstance(args, list) or isinstance(args, str)):
-        return (
-            "",
-            "{}:: ERROR: missing args or wrong type; saw {} (type was {}).".format(
-                tool_or_project_path, args, type(args)
-            ),
-        )
-    source_path = data_dict.get("source_path", ".")
-    if not isinstance(source_path, str):
-        return (
-            "",
-            "{}:: ERROR: missing source_path or wrong type; saw {} (type was {}).".format(
-                tool_or_project_path, source_path, type(source_path)
-            ),
-        )
-    output_path = data_dict.get("output_path")
-    if not isinstance(output_path, str):
-        return (
-            "",
-            "{}:: ERROR: missing output_path or wrong type; saw {} (type was {}).".format(
-                tool_or_project_path, output_path, type(output_path)
-            ),
-        )
-    html_ext = data_dict.get("html_ext", ".html")
-    if not isinstance(html_ext, str):
-        return (
-            "",
-            "{}:: ERROR: wrong type for html_ext; saw {} (type was {}).".format(
-                file_path_, html_ext, type(html_ext)
-            ),
-        )
+    schema = strictyaml.Map(
+        {
+            strictyaml.Optional("source_path", default="."): strictyaml.Str(),
+            "output_path": strictyaml.Str(),
+            "args": strictyaml.Str() | strictyaml.Seq(strictyaml.Str()),
+            strictyaml.Optional("html_ext", default=".html"): strictyaml.Str(),
+        }
+    )
+    try:
+        data_dict = strictyaml.load(data, schema).data
+    except strictyaml.YAMLError as e:
+        return "", "{}:: ERROR: Unable to parse. {}".format(tool_or_project_path, e)
 
     # Make paths absolute.
     def abs_path(path: Union[str, Path]) -> Path:
@@ -314,8 +263,8 @@ async def _render_external_project(
             path_ = project_path / path_
         return path_
 
-    source_path = abs_path(source_path)
-    output_path = abs_path(output_path)
+    source_path = abs_path(data_dict["source_path"])
+    output_path = abs_path(data_dict["output_path"])
     file_path = Path(file_path_)
 
     # Determine first guess at the location of the rendered HTML.
@@ -332,12 +281,11 @@ async def _render_external_project(
         )
 
     # Compare dates to see if the rendered file is current
+    html_ext = data_dict["html_ext"]
     html_file, error = _checkModificationTime(file_path, base_html_file, html_ext)
 
     # If not, render and try again.
     if error:
-        error_arr.append(error)
-
         # Perform replacement on the args.
         def args_format(arg):
             return arg.format(
@@ -346,6 +294,7 @@ async def _render_external_project(
                 output_path=output_path,
             )
 
+        args = data_dict["args"]
         args = (
             args_format(args)
             if isinstance(args, str)
@@ -354,6 +303,8 @@ async def _render_external_project(
         # Render.
         stdout, stderr = await _run_subprocess(args, project_path, None, True, co_build)
         html_file, error = _checkModificationTime(file_path, base_html_file, html_ext)
+        if error:
+            error_arr.append(error)
     else:
         stderr = ""
 
@@ -579,9 +530,6 @@ def _select_renderer(
 
     # Search for an external builder configuration file. I can't find an equivalent of `parents <https://docs.python.org/3/library/pathlib.html#pathlib.PurePath.parents>`_ that includes the full path, so the list below constructs it.
     for project_path in [file_path, *file_path.parents]:
-        project_file = project_path / "codechat_config.json"
-        if project_file.exists():
-            return _render_external_project, str(project_file), True
         project_file = project_path / "codechat_config.yaml"
         if project_file.exists():
             return _render_external_project, str(project_file), True
