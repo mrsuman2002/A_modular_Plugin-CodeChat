@@ -214,6 +214,11 @@ def start(coverage: bool = typer.Option(False, help="Run with code coverage enab
     return 0
 
 
+# Typer's default arguments don't work when called directly from Python.
+def _start(coverage=False):
+    start(coverage)
+
+
 @app.command()
 def stop():
     "Stop the server."
@@ -265,9 +270,6 @@ def serve():
 def build(path_to_build: List[Path]):
     "Build the specified CodeChat project(s)."
 
-    ret = start()
-    if ret:
-        return ret
     from .renderer import render_file
 
     async def aprint(_str):
@@ -305,7 +307,7 @@ def render(path_to_build: Path, id: int):
     "Render the specified CodeChat project in a web browser."
 
     print(f"Rendering {path_to_build} using ID {id}.", file=sys.stderr)
-    ret = start()
+    ret = _start()
     if ret:
         return ret
 
@@ -333,7 +335,7 @@ def watch(
 ):
     "Watch the specified directories; perform a render when a matching file is changed."
 
-    ret = start()
+    ret = _start()
     if ret:
         return ret
 
