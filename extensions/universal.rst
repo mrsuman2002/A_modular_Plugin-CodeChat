@@ -9,4 +9,8 @@ The CodeChat Server offers two modes that will work with almost any text editor 
 
 VIM
 ===
-In VIM, use ``:nmap <C-X> :w<cr>:!CodeChat_Server render % 1<CR>`` to define the Ctrl-X command which saves the current file and renders it. If you'd like to render files in a separate window, replace the ``1`` with any other number of your choice.
+In VIM, enter ``:nmap <C-X> :w<cr>:!CodeChat_Server render % 1<cr>`` to define the Ctrl-X command in normal mode which saves the current file and renders it. Additional notes:
+
+-   If you'd like to render files in a separate window, replace the ``1`` with any other number of your choice.
+-   If the ``CodeChat_Server`` is not in your path, simply prepend the path: for example, ``:nmap <C-X> :w<cr>:!/path/to/CodeChat_Server render % 1<cr>``.
+-   To make this mapping permanent, add it to your ``.vimrc`` file.
