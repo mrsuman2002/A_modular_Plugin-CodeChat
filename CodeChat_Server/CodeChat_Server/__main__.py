@@ -90,8 +90,17 @@ class WatcherClient:
         self.thrift_client = get_client()
 
         # Request a client ID.
-        ret = self.thrift_client.get_client(CodeChatClientLocation.browser)
-        assert ret.error == ""
+        try:
+            ret = self.thrift_client.get_client(CodeChatClientLocation.browser)
+        except ConnectionResetError as e:
+            print(f"Unable to connect to the CodeChat Server: {e}.", file=sys.stderr)
+            sys.exit(1)
+        if ret.error:
+            print(
+                f"Error connecting to the CodeChat Server: {ret.error}.",
+                file=sys.stderr,
+            )
+            sys.exit(1)
         assert ret.html == ""
         self.client_id = ret.id
 
@@ -111,17 +120,31 @@ class WatcherClient:
     # See the `docs <https://watchdog.readthedocs.io/en/latest/api.html#watchdog.events.FileSystemEventHandler.on_any_event>`__.
     def on_any_event(self, event: FileSystemEvent):
         if not event.is_directory:
-            print(event, event.src_path)
+            print(event, event.src_path, file=sys.stderr)
             src_path = Path(event.src_path).absolute()
             with open(src_path, encoding="utf-8", errors="backslashreplace") as f:
-                # TODO: check the return value, then do what on failure?
-                self.thrift_client.start_render(
-                    f.read(), str(src_path), self.client_id, False
-                )
+                try:
+                    ret = self.thrift_client.start_render(
+                        f.read(), str(src_path), self.client_id, False
+                    )
+                except TTransport.TTransportException as e:
+                    print(
+                        f"Unable to communicate with the CodeChat Server when requesting a render: {e}.",
+                        file=sys.stderr,
+                    )
+                    self.running = False
+                else:
+                    if ret:
+                        print(
+                            f"Error requesting a render from the CodeChat Server: {ret}.",
+                            file=sys.stderr,
+                        )
+                        self.running = False
 
     def run(self):
+        self.running = True
         try:
-            while True:
+            while self.running:
                 sleep(1)
         except KeyboardInterrupt:
             pass
@@ -129,7 +152,15 @@ class WatcherClient:
 
     def shutdown(self):
         print("Watcher shutting down...", file=sys.stderr)
-        self.thrift_client.stop_client(self.client_id)
+        try:
+            ret = self.thrift_client.stop_client(self.client_id)
+        except TTransport.TTransportException as e:
+            print(
+                f"Unable to communicate when the CodeChat Server when shutting down the CodeChat Client: {e}."
+            )
+        else:
+            if ret:
+                print(f"Error shutting down the CodeChat Client: {ret}.")
         self.observer.stop()
         self.observer.join()
         print("Watcher shut down.", file=sys.stderr)
@@ -141,7 +172,9 @@ app = typer.Typer()
 
 
 @app.command()
-def start(coverage: bool = typer.Option(False, help="Run with code coverage enabled.")):
+def start(
+    coverage: bool = typer.Option(False, help="Run with code coverage enabled.")
+) -> int:
     "Start the server."
 
     print(
@@ -215,12 +248,12 @@ def start(coverage: bool = typer.Option(False, help="Run with code coverage enab
 
 
 # Typer's default arguments don't work when called directly from Python.
-def _start(coverage=False):
-    start(coverage)
+def _start(coverage=False) -> int:
+    return start(coverage)
 
 
 @app.command()
-def stop():
+def stop() -> int:
     "Stop the server."
 
     print("Stopping all CodeChat Server instances...", file=sys.stderr)
@@ -256,7 +289,7 @@ def stop():
 
 
 @app.command()
-def serve():
+def serve() -> int:
     "Run the server in the current terminal/console."
 
     # This file takes a long time to load and run. Print a status message as it starts.
@@ -267,7 +300,7 @@ def serve():
 
 
 @app.command()
-def build(path_to_build: List[Path]):
+def build(path_to_build: List[Path]) -> int:
     "Build the specified CodeChat project(s)."
 
     from .renderer import render_file
@@ -303,7 +336,7 @@ def build(path_to_build: List[Path]):
 
 
 @app.command()
-def render(path_to_build: Path, id: int):
+def render(path_to_build: Path, id: int) -> int:
     "Render the specified CodeChat project in a web browser."
 
     print(f"Rendering {path_to_build} using ID {id}.", file=sys.stderr)
@@ -332,7 +365,7 @@ def watch(
     ignore_patterns: List[str] = typer.Option(
         [], help="Patterns of files to ignore in the provided directory(s)."
     ),
-):
+) -> int:
     "Watch the specified directories; perform a render when a matching file is changed."
 
     ret = _start()
