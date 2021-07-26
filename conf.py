@@ -378,19 +378,27 @@ def build_template(template_name):
     else:
         print(cp.stdout)
 
-def build_template_projects():
-    # Include a specific file to build, so the CodeChat Server can build only if there are out of date.
+
+def build_template_projects(app):
+    # Determine if we're running an `RTD build <https://docs.readthedocs.io/en/latest/faq.html#how-do-i-change-behavior-when-building-with-read-the-docs>`_.
+    read_the_docs_build = os.environ.get("READTHEDOCS", None) == "True"
+
+    # In the following calls, include a specific file to build, so the CodeChat Server can build only if there are out of date.
     build_template("doxygen/main.c")
-    build_template("javadoc/Simple.java")
+    # ReadTheDocs doesn't have javadoc installed.
+    if not read_the_docs_build:
+        build_template("javadoc/Simple.java")
     build_template("mkdocs/docs/index.md")
     build_template("runestone/_sources/index.rst")
-    # This builder isn't pip-installable.
-    ##build_template("pretext/minimal.xml")
+    # This builder isn't pip-installable. TODO: if/when that's available, update this so it will build on RTD.
+    if not read_the_docs_build:
+        build_template("pretext/minimal.xml")
     build_template("sphinx/index.rst")
 
 
 def setup(app):
-    build_template_projects()
+    # A good idea from `Breathe <https://breathe.readthedocs.io/en/latest/readthedocs.html#a-more-involved-setup>`_.
+    app.connect("builder-inited", build_template_projects)
 
     # return the usual `extension metadata <https://www.sphinx-doc.org/en/master/extdev/index.html#extension-metadata>`_.
     return dict(parallel_read_safe=True)
