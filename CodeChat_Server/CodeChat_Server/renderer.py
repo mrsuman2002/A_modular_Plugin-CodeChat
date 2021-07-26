@@ -560,7 +560,7 @@ GLOB_TO_RENDERER.update(
 
 # Return the converter for the provided file.
 def _select_renderer(
-    file_path: str,
+    file_path: Path,
 ) -> Tuple[
     # _`renderer`: a function or coroutine which will perform the render.
     Callable,
@@ -574,7 +574,6 @@ def _select_renderer(
     bool,
 ]:
     # If this is a directory, start searching there. Otherwise, assume it's a file and remove the file name to produce a directory.
-    file_path = Path(file_path)
     if not file_path.is_dir():
         file_path = file_path.parent
 
@@ -588,8 +587,9 @@ def _select_renderer(
             return _render_external_project, str(project_file), True
 
     # Otherwise, look for a single-file converter.
+    str_file_path = str(file_path)
     for glob, (converter, tool_or_project_path) in GLOB_TO_RENDERER.items():
-        if fnmatch.fnmatch(file_path, glob):
+        if fnmatch.fnmatch(str_file_path, glob):
             return converter, tool_or_project_path, False
     return _error_renderer, None, False
 
@@ -618,7 +618,7 @@ async def render_file(
     str,
 ]:
     # Determine the renderer for this file/project.
-    renderer, tool_or_project_path, is_project = _select_renderer(file_path)
+    renderer, tool_or_project_path, is_project = _select_renderer(Path(file_path))
 
     # Projects require a clean file in order to render.
     if is_project and is_dirty:
