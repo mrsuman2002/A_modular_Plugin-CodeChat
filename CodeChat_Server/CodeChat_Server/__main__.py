@@ -234,6 +234,8 @@ def stop():
             # Don't kill the current process (its parent is often a Python launcher).
             p.pid != os.getpid()
             and p.pid != os.getppid()
+            # If we have the command line, then "serve" must be in it.
+            and (not p.info["cmdline"] or "serve" in p.info["cmdline"])
         ):
             print(
                 f"Killing server process {p.pid} named {p.info['name']} with command line {p.info['cmdline']}.",
@@ -269,7 +271,7 @@ def build(path_to_build: List[Path]):
     from .renderer import render_file
 
     async def aprint(_str):
-        print(_str)
+        print(_str, end="")
 
     # Build each path provided.
     for ptb in path_to_build:
