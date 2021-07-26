@@ -378,13 +378,19 @@ def build_template(template_name):
     else:
         print(cp.stdout)
 
+def build_template_projects():
+    # Include a specific file to build, so the CodeChat Server can build only if there are out of date.
+    build_template("doxygen/main.c")
+    build_template("javadoc/Simple.java")
+    build_template("mkdocs/docs/index.md")
+    build_template("runestone/_sources/index.rst")
+    # This builder isn't pip-installable.
+    ##build_template("pretext/minimal.xml")
+    build_template("sphinx/index.rst")
+
 
 def setup(app):
-    # Build all the template projects.
-    do_build = False
-    if do_build:
-        build_template("doxygen")
-        build_template("javadoc")
-        build_template("mkdocs")
-        build_template("runestone")
-        build_template("sphinx")
+    build_template_projects()
+
+    # return the usual `extension metadata <https://www.sphinx-doc.org/en/master/extdev/index.html#extension-metadata>`_.
+    return dict(parallel_read_safe=True)
