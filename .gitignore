@@ -44,3 +44,4 @@ node_modules/
 CodeChat_Server/.coverage
 CodeChat_Server/htmlcov/
 CodeChat_Server/templates/mkdocs/site
+CodeChat_Server/templates/runestone/build_info
