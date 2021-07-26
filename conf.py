@@ -48,11 +48,16 @@
 # =======
 import sys
 import os
+import subprocess
+
+from sphinx.util import logging
 import CodeChat.CodeToRest
 
 # Ensure the path to these docs available in order to import the version number.
 sys.path.insert(0, os.path.abspath('CodeChat_Server'))
 from CodeChat_Server import __version__
+
+logger = logging.getLogger(__name__)
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -357,3 +362,29 @@ intersphinx_mapping = {
 # ===========================================================================================================
 # The output format for Graphviz when building HTML files.
 graphviz_output_format = "svg"
+
+
+# Given the name of a template to build, do so.
+def build_template(template_name):
+    cmd = ["CodeChat_Server", "build", f"CodeChat_Server/templates/{template_name}"]
+    cmd_str = ' '.join(cmd)
+    logger.info(f"Running {cmd_str}...")
+    try:
+        cp = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Build of {template_name} template failed:\n{e.output}")
+    except FileNotFoundError as e:
+        logger.error(f"{e} when executing {cmd_str}.")
+    else:
+        print(cp.stdout)
+
+
+def setup(app):
+    # Build all the template projects.
+    do_build = False
+    if do_build:
+        build_template("doxygen")
+        build_template("javadoc")
+        build_template("mkdocs")
+        build_template("runestone")
+        build_template("sphinx")
