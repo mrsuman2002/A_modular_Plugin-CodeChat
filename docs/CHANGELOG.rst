@@ -13,6 +13,10 @@ Change Log
 **********
 -   `Github master <https://github.com/bjones1/CodeChat_system.git>`_:
 
+    -   No changes yet.
+
+-   0.1.0, 27-Jul-2021:
+
     -   Upgraded to Thrift v. 14.2.
     -   Added the file change watcher client.
     -   Added the CLI render client.
@@ -25,6 +29,7 @@ Change Log
     -   Replaced the shutdown service with auto-shutdown.
     -   Added more templates.
     -   Docs improvements.
+    -   Removed support for ``codechat_config.json`` files.
 
 -   0.0.22, 16-Jun-2021:
 
