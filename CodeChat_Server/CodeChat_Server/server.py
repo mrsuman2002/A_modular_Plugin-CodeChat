@@ -134,6 +134,9 @@ class CodeChatHandler:
     # Indicate the server is alive.
     def ping(self) -> str:
         logger.info("ping()\n")
+        if shutdown_event.is_set():
+            # Indicate an error by returning a non-emptry string.
+            return "Shutting down."
         return ""
 
     # Render the provided text to HTML, then enqueue it for the web view.
