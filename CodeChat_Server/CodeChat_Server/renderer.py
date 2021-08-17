@@ -525,11 +525,10 @@ def _select_renderer(
     bool,
 ]:
     # If this is a directory, start searching there. Otherwise, assume it's a file and remove the file name to produce a directory.
-    if not file_path.is_dir():
-        file_path = file_path.parent
+    project_path_search = file_path if file_path.is_dir() else file_path.parent
 
     # Search for an external builder configuration file. I can't find an equivalent of `parents <https://docs.python.org/3/library/pathlib.html#pathlib.PurePath.parents>`_ that includes the full path, so the list below constructs it.
-    for project_path in [file_path, *file_path.parents]:
+    for project_path in [project_path_search, *project_path_search.parents]:
         project_file = project_path / "codechat_config.yaml"
         if project_file.exists():
             return _render_external_project, str(project_file), True
