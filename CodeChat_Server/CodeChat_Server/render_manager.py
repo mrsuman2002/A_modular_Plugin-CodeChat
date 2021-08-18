@@ -113,7 +113,7 @@ class ClientState:
         # The HTML converted to text.
         self._html_as_text = None
 
-        # Shutdown is tricky; see `this discussion <shut down an editor client>`_.
+        # Shutdown is tricky; see `this discussion <shut down an editor client>`.
         #
         # A flag to request the worker to delete this client.
         self._is_deleting = False
@@ -446,7 +446,7 @@ class RenderManager:
                 # Render next.
                 await render_client_state(cs)
 
-                # If this client received more work to do while working on the current job, add it back to the queue -- it can't safely be added to the queue while in the job is in process. Otherwise, we would potentially allow two workers to render the same job in parallel, which would confuse the renderer.
+                # If this client received more work to do while working on the current job, add it back to the queue -- it can't safely be added to the queue while the job is in process. Otherwise, we would potentially allow two workers to render the same job in parallel, which would confuse the renderer.
                 if cs._needs_processing:
                     self._job_q.put_nowait(id)
                 else:

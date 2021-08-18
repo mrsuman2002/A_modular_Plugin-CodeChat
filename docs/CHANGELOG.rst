@@ -13,7 +13,11 @@ Change Log
 **********
 -   `Github master <https://github.com/bjones1/CodeChat_system.git>`_:
 
-    -   No changes yet.
+    -   Fix broken single-file rendering.
+    -   Fix hang on server exit.
+    -   Enable server to shut down if any threads report an exception.
+    -   Return an error ping if the server is shutting down.
+    -   Improve splitter usability.
 
 -   0.1.0, 27-Jul-2021:
 
