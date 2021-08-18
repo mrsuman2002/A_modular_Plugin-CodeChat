@@ -218,7 +218,12 @@ def editor_plugin_server() -> None:
     # A simpler server:
     ## server = TServer.TSimpleServer(processor, transport, tfactory, pfactory)  # noqa: E266
 
-    server.serve()
+    try:
+        server.serve()
+    except Exception:
+        # Shut down the server instead of allowing it to keep running in a broken state.
+        shutdown_event.set()
+        raise
 
 
 # Server for the CodeChat Client
@@ -307,9 +312,17 @@ def run_servers() -> int:
     )
     editor_plugin_thread.start()
 
+    def flask_launcher(*args, **kwargs):
+        try:
+            client_app.run(*args, **kwargs)
+        except Exception:
+            # Shut down the server instead of allowing it to keep running in a broken state.
+            shutdown_event.set()
+            raise
+
     # Taken from https://stackoverflow.com/a/45017691.
     flask_server_thread = threading.Thread(
-        target=client_app.run, kwargs=dict(port=HTTP_PORT), name="Flask", daemon=True
+        target=flask_launcher, kwargs=dict(port=HTTP_PORT), name="Flask", daemon=True
     )
     flask_server_thread.start()
 

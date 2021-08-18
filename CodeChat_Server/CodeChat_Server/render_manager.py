@@ -31,7 +31,6 @@ import logging
 import json
 from pathlib import Path
 import sys
-import threading
 from typing import (
     Any,
     cast,
@@ -118,10 +117,6 @@ class ClientState:
         #
         # A flag to request the worker to delete this client.
         self._is_deleting = False
-
-
-# The render manager sets this event when it is ready.
-render_manager_ready_event = threading.Event()
 
 
 # Use the contents of the provided ClientState to perform a render.
@@ -344,16 +339,20 @@ class RenderManager:
     async def _delete_client_later(self, id: int):
         await asyncio.sleep(1)
         if self.delete_client(id):
-            logger.warning(f"CodeCHat Client {id} not responding -- deleted it.")
+            logger.warning(f"CodeChat Client {id} not responding -- deleted it.")
 
     # Shut down the render manager, called from another thread.
     def threadsafe_shutdown(self):
+        # If the shutdown is in progress, don't do it again.
+        if self._is_shutdown:
+            return
         # We can't wait for a result, since this causes the asyncio event loop to exit, but the result must be retrieved from a Future running within the event loop. Therefore, call without waiting.
         self._loop.call_soon_threadsafe(asyncio.create_task, self.shutdown())
 
     # Shut down the render manager.
     async def shutdown(self):
         logger.info("Render manager shutting down...")
+        assert not self._is_shutdown
         self._is_shutdown = True
 
         # Request a shutdown for each MultiClient.
@@ -380,7 +379,14 @@ class RenderManager:
         if is_win:
             asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 
-        asyncio.run(self._run(*args), debug=debug)
+        try:
+            asyncio.run(self._run(*args), debug=debug)
+        except Exception:
+            # If something goes wrong, don't try a clean shutdown of this thread, since the event loop already died. This must precede the event below, so that when the main thread tries calling ``threadsafe_shutdown``, this flag is already set.
+            self._is_shutdown = True
+            # Shut the server down instead of hanging.
+            self.shutdown_event.set()
+            raise
         logger.info("Render manager is shut down.")
 
     # Run the rendering thread with the given number of workers.
@@ -401,9 +407,8 @@ class RenderManager:
         )
         # _`CODECHAT_READY`: let the user know that the server is now ready -- this is the last piece of it to start.
         #
-        # NOTE: The ``CodeChat_Server start`` CLI command reads this line, then quits. This means (on Windows at least) that all future ``print`` statements will block, preventing the server from shutting down. Outputing info to the logger avoid this problem. Therefore, **do not include print statements after this point in the code**.
+        # NOTE: The ``CodeChat_Server start`` CLI command reads this line, then quits. This means (on Windows at least) that all future ``print`` statements will block, preventing the server from shutting down. Outputing info to the logger avoids this problem. Therefore, **do not include print statements after this point in the code**.
         print("The CodeChat Server is ready.\nCODECHAT_READY", file=sys.stderr)
-        render_manager_ready_event.set()
         # Flush this since extension and test code waits for it before connecting to the server/running the rest of a test.
         sys.stdout.flush()
         await asyncio.gather(*[self._worker(i) for i in range(num_workers)])
