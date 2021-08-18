@@ -7,11 +7,11 @@
   background: #f00;
 }
 .divider_vertical {
-  width: 2px;
+  width: 0.25rem;
   cursor: ew-resize;
 }
 .divider_horizontal {
-  height: 2px;
+  height: 0.25rem;
   cursor: ns-resize;
 }
 .divider_vertical:after,

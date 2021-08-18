@@ -147,6 +147,8 @@ var splitMe = {
 
         addEvent(document,'mousemove',splitMe.move);
         addEvent(document,'mouseup',splitMe.up);
+        // BAJ change: add this event.
+        addEvent(document,'mouseleave',splitMe.up);
 
         addEvent(window,'resize',function(){
             setTimeout(function(){
