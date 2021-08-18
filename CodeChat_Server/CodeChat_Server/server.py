@@ -177,12 +177,9 @@ class CodeChatHandler:
             logger.info(" => {}".format(ret))
             return ret
 
-    # _`Shut down an editor client`. The sequence is:
+    # _`Shut down an editor client`. The sequence is complex. Here's a web of links which step throughs the process.
     #
-    # #.    _`Client stop`: send a message to the web client, informing it of the shutdown. While the editor shouldn't make any more ``start_render`` or ``stop_client`` calls, doing so won't cause the server to misbehave.
-    # #.    _`Client deletion`: when the web client receives the shutdown message, tell the renderer to delete its ClientState. Since the ClientState contains the queue with the shutdown message, it shouldn't be deleted until the message is sent.
-    #
-    # This method performs the first step; ``get_result`` performs the second.
+    # _`Delete step 1.` `--> <Delete step 2.>` The editor/IDE invokes stop_client, which delegates to the render manager thread.
     def stop_client(self, id: int) -> str:
         logger.info("stop_client(id={})".format(id))
         ok = self.render_manager.threadsafe_shutdown_client(id)

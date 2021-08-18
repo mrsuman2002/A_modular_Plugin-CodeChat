@@ -83,13 +83,13 @@ def path_to_uri(file_path: str):
     return Path(file_path).resolve().as_posix() if file_path else file_path
 
 
-# Store data for about each client.
+# Store data for about each client. This is a combination of data about the editor/IDE client and the associated CodeChat Client.
 class ClientState:
     def __init__(self):
-        # A queue of messages for the client.
+        # A queue of messages for the CodeChat Client.
         self.q = asyncio.Queue()
 
-        # The remaining data in this class should only be accessed by rendering thread.
+        # The remaining data in this class should only be accessed by the rendering thread.
         #
         # The most recent HTML and editor text after rendering the specified file_path.
         self._html = None
@@ -221,16 +221,17 @@ class RenderManager:
         self._client_state_dict[id] = ClientState()
         return id
 
+    # `<-- <Delete step 3.>` _`Delete step 4.` `--> <Delete step 5.>` _`delete_client`: Request a worker to delete this MultiClient.
     def delete_client(self, id: int) -> bool:
         cs = self.get_client_state(id)
-        if cs:
-            cs = cast(ClientState, cs)
-            # Tell the worker to delete this.
-            self._enqueue(id)
-            cs._is_deleting = True
-            return True
-        else:
+        if not cs:
             return False
+        assert isinstance(cs, ClientState)
+        # Tell the worker to delete this. We can't simply delete it now, since it may be in the middle of a render. Allowing the worker to delete it ensures it's in a safe (unused) state for deletion.
+        self._enqueue(id)
+        # Prevent any new entries in the queue by setting this flag; see ``get_client_state``.
+        cs._is_deleting = True
+        return True
 
     # Place the item in the render queue; must be called from another (non-render) thread. Returns True on success, or False if the provided id doesn't exist.
     def start_render(
@@ -253,7 +254,7 @@ class RenderManager:
         # Indicate success
         return True
 
-    # Get a client's queue.
+    # Get a CodeChat Client's queue.
     def get_queue(self, id: int) -> Optional[asyncio.Queue]:
         cs = self.get_client_state(id)
         return cast(ClientState, cs).q if cs else None
@@ -281,7 +282,7 @@ class RenderManager:
             # Give up if there's a websocket error.
             return
 
-        # Find the queue for this client.
+        # Find the queue for this CodeChat Client.
         try:
             id = json.loads(data)
         except json.decoder.JSONDecodeError:
@@ -314,23 +315,27 @@ class RenderManager:
             if (ret["get_result_type"] == GetResultType.command.value) and (
                 ret["text"] == "shutdown"
             ):
+                # `<-- <Delete step 2.>` _`Delete step 3.` `--> <Delete step 4.>` The MultiClient must be kept working until it sends the CodeChat Client a shutdown message. The message is sent, so we can now delete the MultiClient.
+                logger.info(f"Sent shutdown command to CodeChat Client id {id}.")
                 # Check that the queue is empty
                 if not q.empty():
                     logger.warning(
-                        f"CodeChat warning: client id {id} shut down with pending commands."
+                        f"CodeChat warning: CodeChat Client id {id} shut down with pending commands."
                     )
-                # Request a client deletion.
+                # Request MultiClient deletion.
                 assert self.delete_client(id)
 
-    # Shut down a CodeChat Client.
+        logger.info(f"Websocket for CodeChat Client id {id} exiting.")
+
+    # `<-- <Delete step 1.>` _`Delete step 2.` `--> <Delete step 3.>` Begin the MultiClient shutdown process by sending a shutdown message to the CodeChat Client.
     async def shutdown_client(self, id: int) -> bool:
         q = self.get_queue(id)
         # Fail if the ID is unknown.
         if not q:
             return False
-        # Send the shutdown command to the client.
+        # Send the shutdown command to the CodeChat Client.
         await q.put(GetResultReturn(GetResultType.command, "shutdown"))
-        # In case the client is dead, shut down after a delay.
+        # In case the CodeChat Client is dead, shut down after a delay.
         asyncio.create_task(self._delete_client_later(id))
         # Indicate success.
         return True
@@ -339,7 +344,7 @@ class RenderManager:
     async def _delete_client_later(self, id: int):
         await asyncio.sleep(1)
         if self.delete_client(id):
-            logger.warning(f"Client {id} not responding -- deleted it.")
+            logger.warning(f"CodeCHat Client {id} not responding -- deleted it.")
 
     # Shut down the render manager, called from another thread.
     def threadsafe_shutdown(self):
@@ -350,18 +355,25 @@ class RenderManager:
     async def shutdown(self):
         logger.info("Render manager shutting down...")
         self._is_shutdown = True
-        # Stop each client. This will tell the web client to shut down and also delete the render client.
+
+        # Request a shutdown for each MultiClient.
         for id in self._client_state_dict.keys():
+            # The await doesn't mean the shut down is complete, but only that the request was made.
             await self.shutdown_client(id)
-        # A special case: there are no clients currently. Then, the code above did nothing, so shut the workers down now.
-        if len(self._client_state_dict) == 0:
-            for i in range(self._num_workers):
-                await self._job_q.put(None)
-        # Shut down the websocket.
+
+        # Wait for all MultiClients to shut down. Special case: if the server never created a MultiClient, then skip this.
+        if len(self._client_state_dict):
+            await self._MultiClients_deleted.wait()
+
+        # Shut down the websocket, since only the MultiClient can use it.
         self.websocket_server.close()
         await self.websocket_server.wait_closed()
 
-    # Start the render manager. This typically never returns.
+        # Shut the workers down now that the MultiClients have shut down.
+        for i in range(self._num_workers):
+            await self._job_q.put(None)
+
+    # Start the render manager.
     def run(self, *args, debug: bool = True) -> None:
         # The default Windows event loop doesn't support asyncio subprocesses.
         is_win = sys.platform.startswith("win")
@@ -378,10 +390,11 @@ class RenderManager:
         self._job_q: asyncio.Queue = asyncio.Queue()
         # Keep a dict of id: ClientState for each client.
         self._client_state_dict: Dict[int, ClientState] = {}
-        # The next ID will be 0. Use the lock below to establish ownership before writing this.
+        # The next ID will be 0.
         self._last_id = -1
         self._loop = asyncio.get_running_loop()
         self._is_shutdown = False
+        self._MultiClients_deleted = asyncio.Event()
 
         self.websocket_server = await websockets.serve(
             self.websocket_handler, LOCALHOST, WEBSOCKET_PORT
@@ -413,10 +426,14 @@ class RenderManager:
 
             # If the client should be deleted, ignore all other requests.
             if cs._is_deleting:
+                # `<-- <Delete step 4.>` _`Delete step 5.` Now, the deletion can safely proceed. Done.
                 del self._client_state_dict[id]
-                # If there are no more clients, shut down.
+                # If there are no more MultiClients, shut down and signal that shutdown can proceed.
                 if len(self._client_state_dict) == 0:
                     self.shutdown_event.set()
+                    # Indicate that all MultiClients have been deleted; shutdown can now proceed.
+                    assert not self._MultiClients_deleted.is_set()
+                    self._MultiClients_deleted.set()
             else:
                 # Sync first.
                 # TODO: sync.
