@@ -139,14 +139,19 @@ def _render_ReST(
 def _render_CodeChat(text: str, filePath: str) -> Tuple[str, str]:
     try:
         rest_string = code_to_rest_string(text, filename=filePath)
-    except (KeyError, ValueError, pygments.util.ClassNotFound):
+    except KeyError as e:
+        return (
+            "",
+            f"{filePath}:: ERROR: this file, recognized as {e.args[0]}, is not supported by CodeChat.",
+        )
+    except (ValueError, pygments.util.ClassNotFound):
         # Although the file extension may be in the list of supported
         # extensions, CodeChat may not support the lexer chosen by Pygments.
         # For example, a ``.v`` file may be Verilog (supported by CodeChat)
         # or Coq (not supported). In this case, provide an error message.
         return (
             "",
-            "{}:: ERROR: this file is not supported by CodeChat.".format(filePath),
+            f"{filePath}:: ERROR: this file is not supported by CodeChat.",
         )
     return _render_ReST(rest_string, filePath, True)
 
