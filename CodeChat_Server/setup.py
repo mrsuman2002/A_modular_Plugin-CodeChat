@@ -33,11 +33,22 @@
 # To package
 # ==========
 # Create a source distribution, a built distribution, then upload both to
-# `CodeChat_Server at PyPI <https://pypi.python.org/pypi/CodeChat_Server>`_::
+# `CodeChat_Server at PyPI <https://pypi.python.org/pypi/CodeChat_Server>`_:
 #
-#   python -m pip install -U pip setuptools wheel twine
-#   python setup.py sdist bdist_wheel
-#   python -m twine upload dist/*
+#   .. code-block:: console
+#       :linenos:
+#
+#       python -m pip install -U pip setuptools wheel twine
+#       python setup.py sdist bdist_wheel
+#       python -m twine upload dist/*
+#
+# To create an RPM, use (on a RPM-based Linux distribution):
+#
+#   .. code-block:: console
+#       :linenos:
+#
+#       python -m pip install -U pip setuptools wheel twine
+#       python setup.py bdist_rpm
 #
 # For `development
 # <https://pythonhosted.org/setuptools/setuptools.html#development-mode>`_::
