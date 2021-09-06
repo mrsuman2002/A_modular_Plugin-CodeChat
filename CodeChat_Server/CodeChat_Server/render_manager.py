@@ -297,7 +297,7 @@ class RenderManager:
                 pass
             return
 
-        # Send messages until shutdown.
+        # Send messages until shutdown. However, this function should typically never exit using this conditional; instead, the shutdown code below should break out of the loop.
         while not self._is_shutdown:
             ret = await q.get()
             try:
@@ -319,6 +319,8 @@ class RenderManager:
                     )
                 # Request MultiClient deletion.
                 assert self.delete_client(id)
+                # Shut down this websocket.
+                break
 
         logger.info(f"Websocket for CodeChat Client id {id} exiting.")
 
@@ -361,14 +363,17 @@ class RenderManager:
             await self.shutdown_client(id)
 
         # Wait for all MultiClients to shut down. Special case: if the server never created a MultiClient, then skip this.
+        logger.info("Waiting for client shutdown...")
         if len(self._client_state_dict):
             await self._MultiClients_deleted.wait()
 
         # Shut down the websocket, since only the MultiClient can use it.
+        logger.info("Waiting for websocket server to close...")
         self.websocket_server.close()
         await self.websocket_server.wait_closed()
 
         # Shut the workers down now that the MultiClients have shut down.
+        logger.info("Shutting down workers...")
         for i in range(self._num_workers):
             await self._job_q.put(None)
 
