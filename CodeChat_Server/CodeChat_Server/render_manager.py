@@ -49,7 +49,7 @@ import websockets
 # Local imports
 # -------------
 from .constants import LOCALHOST, WEBSOCKET_PORT
-from .renderer import render_file
+from .renderer import render_file, is_win
 
 
 # RenderManager / render thread
@@ -375,7 +375,6 @@ class RenderManager:
     # Start the render manager.
     def run(self, *args, debug: bool = True) -> None:
         # The default Windows event loop doesn't support asyncio subprocesses.
-        is_win = sys.platform.startswith("win")
         if is_win:
             asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 
