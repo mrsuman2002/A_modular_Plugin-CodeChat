@@ -13,6 +13,12 @@ Change Log
 **********
 -   `Github master <https://github.com/bjones1/CodeChat_system.git>`_:
 
+    -   No changes yet.
+
+-   0.1.1, 6-Aug-2021:
+
+    -   Fix 404 error on non-Windows URLs.
+    -   Wait longer for the server to start (for slow systems).
     -   Packaging to RPM added.
     -   Fix broken single-file rendering; provide better error messages.
     -   Fix hang on server exit.
