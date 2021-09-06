@@ -13,7 +13,8 @@ Change Log
 **********
 -   `Github master <https://github.com/bjones1/CodeChat_system.git>`_:
 
-    -   Fix broken single-file rendering.
+    -   Packaging to RPM added.
+    -   Fix broken single-file rendering; provide better error messages.
     -   Fix hang on server exit.
     -   Enable server to shut down if any threads report an exception.
     -   Return an error ping if the server is shutting down.
