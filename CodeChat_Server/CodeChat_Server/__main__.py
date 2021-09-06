@@ -209,7 +209,7 @@ def start(
     server_starting = True
 
     def timeout():
-        sleep(5)
+        sleep(10)
         if server_starting:
             p.terminate()
             print(
