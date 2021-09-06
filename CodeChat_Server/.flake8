@@ -11,3 +11,4 @@ exclude =
     gen_py
     .tox
     templates
+    venv_fedora

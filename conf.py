@@ -172,13 +172,12 @@ CodeChat_lexer_for_glob = {
     ".gitignore": "Perl",
     "MANIFEST.in": "Perl",
     "docs-requirements.txt": "Perl",
-    ".flake8": "Perl",
     # Treat JavaScript as plain JavaScript; the auto-detect code finds something else.
     "*.js": "JavaScript",
-    # The ``codechat_config.json`` file is actually Python.
-    "codechat_config.json": "Python",
     # The coverage config files is INI.
     ".coveragerc": "INI",
+    # Misc.
+    ".flake8": "INI",
 }
 
 # `source_encoding <http://sphinx-doc.org/config.html#confval-source_encoding>`_:
@@ -224,6 +223,9 @@ exclude_patterns = [
 
     # Libraries
     "CodeChat_Server/CodeChat_Server/CodeChat_Client/static/splitter.*",
+
+    # Misc
+    "CodeChat_Server/venv_fedora",
 ]
 
 
