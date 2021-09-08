@@ -42,7 +42,7 @@
 #   python setup.py sdist bdist_wheel
 #   python -m twine upload dist/*
 #
-# To create an RPM, first manually edit the ``name=`` setting to add a ``python3-`` prefix and lowercase the name (e.g. ``name=python3-codechat``, not ``name=python3-CodeChat``). Then, use (on an RPM-based Linux distribution):
+# To create an RPM, first manually edit the ``name=`` setting to add a ``python3-`` prefix and lowercase the name (e.g. ``name=python3-codechat``, not ``name=python3-CodeChat``). Perform ``sudo dnf install python3-devel rpm-build``. Then, use (on an RPM-based Linux distribution):
 #
 # .. code-block:: console
 #   :linenos:
