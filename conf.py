@@ -392,7 +392,7 @@ def build_template_projects(app):
         build_template("javadoc/Simple.java")
     build_template("mkdocs/docs/index.md")
     build_template("runestone/_sources/index.rst")
-    build_template("pretext/minimal.xml")
+    build_template("pretext/source/minimal.xml")
     build_template("sphinx/index.rst")
 
 
