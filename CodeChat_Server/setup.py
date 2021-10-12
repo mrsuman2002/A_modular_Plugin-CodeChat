@@ -139,7 +139,7 @@ setup(
             "psutil",
             "Sphinx",
             "strictyaml",
-            "thrift-unofficial",
+            "thrift",
             "typer",
             "watchdog",
             "websockets",
