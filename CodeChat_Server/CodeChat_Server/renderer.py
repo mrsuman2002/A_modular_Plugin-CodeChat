@@ -230,23 +230,14 @@ async def _render_external_file(
 
 # Project
 # -------
-# Convert an project using an external renderer.
-async def _render_external_project(
-    text: str, file_path_: str, _tool_or_project_path: str, co_build: Co_Build
-) -> Tuple[str, str]:
-    # Run from the directory containing the project file.
-    tool_or_project_path = Path(_tool_or_project_path)
-    project_path = tool_or_project_path.parent
-    await co_build(
-        "Loading project file {}.\n".format(tool_or_project_path),
-    )
-
+# Read a CodeChat project configuration file.
+def _read_project_conf_file(tool_or_project_path):
     # Read the project configuration.
     try:
         with open(tool_or_project_path, encoding="utf-8") as f:
             data = f.read()
     except Exception as e:
-        return "", "{}:: ERROR: Unable to open. {}".format(tool_or_project_path, e)
+        raise RuntimeError(f"{tool_or_project_path}:: ERROR: Unable to open. {e}")
 
     schema = strictyaml.Map(
         {
@@ -259,9 +250,10 @@ async def _render_external_project(
     try:
         data_dict = strictyaml.load(data, schema).data
     except strictyaml.YAMLError as e:
-        return "", "{}:: ERROR: Unable to parse. {}".format(tool_or_project_path, e)
+        raise RuntimeError(f"{tool_or_project_path}:: ERROR: Unable to parse. {e}")
 
     # Make paths absolute.
+    project_path = tool_or_project_path.parent
     def abs_path(path: Union[str, Path]) -> Path:
         path_ = Path(path)
         if not path_.is_absolute():
@@ -270,9 +262,46 @@ async def _render_external_project(
 
     source_path = abs_path(data_dict["source_path"])
     output_path = abs_path(data_dict["output_path"])
-    file_path = Path(file_path_)
+
+    # Perform replacement on the args.
+    def args_format(arg):
+        return arg.format(
+            project_path=project_path,
+            source_path=source_path,
+            output_path=output_path,
+        )
+
+    args = data_dict["args"]
+    args = (
+        args_format(args)
+        if isinstance(args, str)
+        else [args_format(arg) for arg in args]
+    )
+
+    return source_path, output_path, args, data_dict["html_ext"]
+
+
+
+# Convert an project using an external renderer.
+async def _render_external_project(
+    text: str, file_path_: str, _tool_or_project_path: str, co_build: Co_Build
+) -> Tuple[str, str]:
+    # Run from the directory containing the project file.
+    tool_or_project_path = Path(_tool_or_project_path)
+    project_path = tool_or_project_path.parent
+    await co_build(
+        f"Loading project file {tool_or_project_path}.\n",
+    )
+
+    # Read the project configuration.
+    try:
+        source_path, output_path, args, html_ext = _read_project_conf_file(tool_or_project_path)
+    except RuntimeError as e:
+        return "", str(e)
+
 
     # Determine first guess at the location of the rendered HTML.
+    file_path = Path(file_path_)
     error_arr = []
     try:
         base_html_file = output_path / file_path.relative_to(source_path)
@@ -286,25 +315,10 @@ async def _render_external_project(
         )
 
     # Compare dates to see if the rendered file is current
-    html_ext = data_dict["html_ext"]
     html_file, error = _checkModificationTime(file_path, base_html_file, html_ext)
 
     # If not, render and try again.
     if error:
-        # Perform replacement on the args.
-        def args_format(arg):
-            return arg.format(
-                project_path=project_path,
-                source_path=source_path,
-                output_path=output_path,
-            )
-
-        args = data_dict["args"]
-        args = (
-            args_format(args)
-            if isinstance(args, str)
-            else [args_format(arg) for arg in args]
-        )
         # Render.
         stdout, stderr = await _run_subprocess(args, project_path, None, True, co_build)
         html_file, error = _checkModificationTime(file_path, base_html_file, html_ext)
@@ -559,6 +573,8 @@ async def render_file(
 ) -> Tuple[
     # was_performed: True if the render was performed. False if this is a project and the source file is dirty; in this case, the render is skipped.
     bool,
+    # project_path: If this is a project, then ``project_path``` contains a path to the CodeChat project configuration file; otherwise, ``project_path`` is ``None``.
+    Optional[Path],
     # rendered_file_path: A path to the rendered file.
     #
     # - If this is a project, the rendered file is different from ``file_path``, since it points to the location on disk where the external renderer wrote the HTML. In this case, the ``html`` return value is ``None``, since the HTMl should be read from the disk instead.
@@ -574,7 +590,7 @@ async def render_file(
 
     # Projects require a clean file in order to render.
     if is_project and is_dirty:
-        return False, "", None, ""
+        return False, None, "", None, ""
 
     if asyncio.iscoroutinefunction(renderer):
         # Coroutines get the queue, so they can report progress during the build.
@@ -588,7 +604,7 @@ async def render_file(
     # Update the client's state, now that the rendering is complete.
     if is_project:
         # For projects, the rendered HTML is already on disk; a path to this rendered file is returned.
-        return True, html_string_or_file_path, None, err_string
+        return True, tool_or_project_path, html_string_or_file_path, None, err_string
     else:
         # Otherwise, the rendered HTML is returned as a string and can be directly used. Provide a path to the source file which was just rendered.
-        return True, file_path, html_string_or_file_path, err_string
+        return True, None, file_path, html_string_or_file_path, err_string

@@ -50,6 +50,8 @@ let percent_regex = new RegExp(
 // Given an ID to use, run the CodeChat Client.
 function run_client(id, ws_address)
 {
+// Set up variables used by the functions below
+// --------------------------------------------
     // Get commonly-used nodes in the DOM.
     let status_message = document.getElementById("status_message");
     let build_progress = document.getElementById("build_progress");
@@ -59,8 +61,6 @@ function run_client(id, ws_address)
     let build_contents = document.getElementById("build_contents");
     let errors_div = document.getElementById("errors");
 
-    // Set up "globals" for the function below.
-    //
     // True if the output/errors should be cleared on the next result.
     let clear_output = true;
     // True if the most recent reload was caused by the user; false if this was a programmatic reload.
@@ -72,6 +72,9 @@ function run_client(id, ws_address)
         true: 85,
         false: 100,
     }
+
+// Core code
+// ---------
     splitMe.init();
     set_splitter_percent(splitter_size[errors_or_warnings]);
 
@@ -217,6 +220,9 @@ function run_client(id, ws_address)
         }
     };
 
+// Provide utility functions for use by the core functions above
+// -------------------------------------------------------------
+
     // Return the X and Y coordinates of the scrollbar of the output iframe if possible.
     function getScroll() {
         try {
@@ -227,14 +233,33 @@ function run_client(id, ws_address)
         }
     }
 
-    // The let statement below makes this accessible globally.
-    navigate_to_error = function(file_path, line) {
-        // TODO.
-        console.log("CodeChat Client: TODO", file_path, line);
+    // Send a message to the CodeChat server.
+    function send_to_codechat_server(
+        // A string, indentifying the type of message.
+        msg,
+        // Message-specific data to send. Must be JSON-encodable.
+        data
+    ) {
+        ws.send(JSON.stringify([msg, data]));
     };
+
+    // These functions define _`messages sent by the CodeChat Client`, which are handled by `read_websocket_handler <read_websocket_handler>`. Defining them this way makes them accessible to the iframe and globally (to functions called outside this function). See below.
+    //
+    // Save data to the filesystem. Right now, only used for pretext editing.
+    save_file = function(xml_node, file_contents) {
+        send_to_codechat_server("save_file", {xml_node: xml_node, file_contents: file_contents});
+    };
+
+    // The let statements below makes these accessible globally.
+    navigate_to_error = function(file_path, line) {
+        send_to_codechat_server("navigate_to_error", {file_path: file_path, line: line});
+    };
+
 }
 
-let navigate_to_error;
+// Globally-accessible functions (see above). These must be declared as ``var`` (not ``let``) due to (I assume) scoping rules I don't understand.
+var navigate_to_error, save_file;
+
 
 // Utilities
 // =========

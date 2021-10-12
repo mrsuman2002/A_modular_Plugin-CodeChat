@@ -94,6 +94,8 @@ class ClientState:
         self._html = None
         self._editor_text = None
         self._file_path = None
+        # The path to the CodeChat project configuration file if this is a project; None otherwise.
+        self._project_path = None
 
         # A flag to indicate if this has been placed in the renderer's job queue.
         self._in_job_q = False
@@ -130,7 +132,7 @@ async def render_client_state(cs: ClientState) -> None:
             )
         )
 
-    is_converted, rendered_file_path, html, err_string = await render_file(
+    is_converted, project_path, rendered_file_path, html, err_string = await render_file(
         cs._to_render_editor_text,
         cs._to_render_file_path,
         co_build,
@@ -140,6 +142,7 @@ async def render_client_state(cs: ClientState) -> None:
     if not is_converted:
         return
 
+    cs._project_path = project_path
     cs._file_path = rendered_file_path
     cs._html = html
     cs._editor_text = cs._to_render_editor_text
@@ -279,16 +282,16 @@ class RenderManager:
 
         # Find the queue for this CodeChat Client.
         try:
-            id = json.loads(data)
+            id_ = json.loads(data)
         except json.decoder.JSONDecodeError:
-            id = f"<invalid id {repr(data)}>"
-        q = self.get_queue(id)
+            id_ = f"<invalid id {repr(data)}>"
+        q = self.get_queue(id_)
         if not q:
             try:
                 await websocket.send(
                     json.dumps(
                         GetResultReturn(
-                            GetResultType.command, f"error: unknown client {id}."
+                            GetResultType.command, f"error: unknown client {id_}."
                         )
                     )
                 )
@@ -297,32 +300,78 @@ class RenderManager:
                 pass
             return
 
+        # Start one task to get read results from the websocket.
+        read_websocket_handler = asyncio.create_task(self.read_websocket_handler(websocket, id_))
+
         # Send messages until shutdown. However, this function should typically never exit using this conditional; instead, the shutdown code below should break out of the loop.
+        q_task = asyncio.create_task(q.get())
+        socket_closed_task = asyncio.create_task(websocket.wait_closed())
         while not self._is_shutdown:
-            ret = await q.get()
+            done, pending = await asyncio.wait([q_task, socket_closed_task], return_when=asyncio.FIRST_COMPLETED)
+            # If the socket was closed, wrap up.
+            if socket_closed_task in done:
+                # Stop waiting on the queue.
+                q_task.cancel()
+                break
+            # The usual case: we have data to send over the websocket.
+            if q_task in done:
+                ret = q_task.result()
+                # Prepare for the next run.
+                q_task = asyncio.create_task(q.get())
+                try:
+                    await websocket.send(json.dumps(ret))
+                except websockets.exceptions.WebSocketException:
+                    # An error occurred -- close the websocket. The client will open another, so we can try again.
+                    return
+
+                # Delete the client if this was a shutdown command.
+                if (ret["get_result_type"] == GetResultType.command.value) and (
+                    ret["text"] == "shutdown"
+                ):
+                    # `<-- <Delete step 2.>` _`Delete step 3.` `--> <Delete step 4.>` The MultiClient must be kept working until it sends the CodeChat Client a shutdown message. The message is sent, so we can now delete the MultiClient.
+                    logger.info(f"Sent shutdown command to CodeChat Client id {id_}.")
+                    # Check that the queue is empty
+                    if not q.empty():
+                        logger.warning(
+                            f"CodeChat warning: CodeChat Client id {id_} shut down with pending commands."
+                        )
+                    # Request MultiClient deletion.
+                    assert self.delete_client(id_)
+                    # Shut down this websocket.
+                    break
+
+        # Wait for the read to shut down.
+        if not read_websocket_handler.done():
+            await read_websocket_handler.result()
+        logger.info(f"Websocket for CodeChat Client id {id_} exiting.")
+
+    # _`read_websocket_handler`: this responds to `messages sent by the CodeChat Client <messages sent by the CodeChat Client>`.
+    async def read_websocket_handler(
+        self, websocket: websockets.WebSocketServerProtocol, id_: str
+    ):
+        while not self._is_shutdown:
             try:
-                await websocket.send(json.dumps(ret))
+                ret = await websocket.recv()
             except websockets.exceptions.WebSocketException:
-                # An error occurred -- close the websocket. The client will open another, so we can try again.
+                # If anything breaks, exit.
                 return
 
-            # Delete the client if this was a shutdown command.
-            if (ret["get_result_type"] == GetResultType.command.value) and (
-                ret["text"] == "shutdown"
-            ):
-                # `<-- <Delete step 2.>` _`Delete step 3.` `--> <Delete step 4.>` The MultiClient must be kept working until it sends the CodeChat Client a shutdown message. The message is sent, so we can now delete the MultiClient.
-                logger.info(f"Sent shutdown command to CodeChat Client id {id}.")
-                # Check that the queue is empty
-                if not q.empty():
-                    logger.warning(
-                        f"CodeChat warning: CodeChat Client id {id} shut down with pending commands."
-                    )
-                # Request MultiClient deletion.
-                assert self.delete_client(id)
-                # Shut down this websocket.
-                break
+            msg, data = json.loads(ret)
+            if msg == "save_file":
+                print(f"Save to {data['xml_node']} values '{data['file_contents']}'.")
+                # Get the location of the project file.
+                pp = self._client_state_dict[id_]._project_path
+                if not pp:
+                    print("Unable to save: no project file available.")
+                    continue
 
-        logger.info(f"Websocket for CodeChat Client id {id} exiting.")
+                # The pretext build must provide the root document and a map of {source file path: [rendered file paths]} for all files in a build. Invert this to compute the source file path given a rendered file path.
+            elif msg == "navigate_to_error":
+                # TODO
+                print(f"TODO: navigate to error on line {data['line']} of file {data['file_path']}.")
+            else:
+                print(f"Error: unknown message {msg} with data '{data}'.")
+
 
     # `<-- <Delete step 1.>` _`Delete step 2.` `--> <Delete step 3.>` Begin the MultiClient shutdown process by sending a shutdown message to the CodeChat Client.
     async def shutdown_client(self, id: int) -> bool:
