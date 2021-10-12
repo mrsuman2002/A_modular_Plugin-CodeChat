@@ -352,7 +352,7 @@ class RenderManager:
 
         # Wait for the read to shut down.
         if not read_websocket_handler.done():
-            await read_websocket_handler.result()
+            await read_websocket_handler
         logger.info(f"Websocket for CodeChat Client id {id_} exiting.")
 
     # _`read_websocket_handler`: this responds to `messages sent by the CodeChat Client <messages sent by the CodeChat Client>`.
