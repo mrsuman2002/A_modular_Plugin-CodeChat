@@ -312,9 +312,13 @@ def build(path_to_build: List[Path]) -> int:
     for ptb in path_to_build:
         ptb = ptb.resolve()
         print(f"Building {ptb}...", file=sys.stderr)
-        was_performed, rendered_file_path, html, err_string = asyncio.run(
-            render_file(file_text(ptb), str(ptb), aprint, False)
-        )
+        (
+            was_performed,
+            rendered_project_path,
+            rendered_file_path,
+            html,
+            err_string,
+        ) = asyncio.run(render_file(file_text(ptb), str(ptb), aprint, False))
         assert was_performed
         # Print all errors produced by the render.
         print(err_string, file=sys.stderr)

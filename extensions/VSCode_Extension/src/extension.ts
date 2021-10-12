@@ -91,7 +91,9 @@ export function activate(context: vscode.ExtensionContext) {
             }
 
             // Create or reveal the webview panel; if this is an external browser, we'll open it after the client is created.
-            if (codechat_client_location === ttypes.CodeChatClientLocation.html) {
+            if (
+                codechat_client_location === ttypes.CodeChatClientLocation.html
+            ) {
                 if (webview_panel !== undefined) {
                     // As below, don't take the focus when revealing.
                     webview_panel.reveal(undefined, true);
@@ -129,7 +131,8 @@ export function activate(context: vscode.ExtensionContext) {
             if (webview_panel !== undefined) {
                 // If we have an ID, then the GUI is already running; don't replace it.
                 if (codechat_client_id === undefined) {
-                    webview_panel.webview.html = "<h1>CodeChat</h1><p>Loading...</p>";
+                    webview_panel.webview.html =
+                        "<h1>CodeChat</h1><p>Loading...</p>";
                 }
             } else {
                 vscode.window.showInformationMessage(
@@ -170,7 +173,9 @@ export function activate(context: vscode.ExtensionContext) {
                 });
 
                 thrift_connection.on("close", (hadError) => {
-                    console.log("CodeChat extension: closing Thrift connection.");
+                    console.log(
+                        "CodeChat extension: closing Thrift connection."
+                    );
                     // BUG: on deactivation, VS Code closes this socket before calling the ``deactivate()`` method. This prevents us from shutting down the client. I'm not sure what event handler would allow me to perform cleanup before the socket is closed.
 
                     // If there was an error, the event handler above already provided the message. Note: the `parameter hadError <https://nodejs.org/api/net.html#net_event_close_1>`_ only applies to transmission errors, not to any other errors which trigger the error callback. Therefore, I'm using the ``was_error`` flag instead to catch non-transmission errors.
@@ -201,7 +206,9 @@ export function activate(context: vscode.ExtensionContext) {
                 if (!thrift_connection.connection.connecting) {
                     get_render_client(thrift_connection);
                 } else {
-                    console.log("CodeChat extension: connection already pending, so a new client wasn't created.");
+                    console.log(
+                        "CodeChat extension: connection already pending, so a new client wasn't created."
+                    );
                 }
             }
         })
@@ -237,9 +244,7 @@ export async function deactivate() {
 // CodeChat services
 // =================
 // Get the render client from the CodeChat Server and place it in the web view. Then, start a render.
-function get_render_client(
-    connection: thrift.Connection
-) {
+function get_render_client(connection: thrift.Connection) {
     // Get a client if needed.
     if (thrift_client === undefined) {
         thrift_client = thrift.createClient(EditorPlugin, connection);
@@ -325,17 +330,20 @@ function start_render() {
 function stop_client() {
     console.log("CodeChat extension: stopping client.");
     if (thrift_client !== undefined && codechat_client_id !== undefined) {
-        thrift_client.stop_client(codechat_client_id, function (err, stop_client_return) {
-            if (err !== null) {
-                show_error(
-                    `Communication error when stopping the client: ${err}`
-                );
-            } else if (stop_client_return !== "") {
-                show_error(
-                    `Error when stopping the client: ${stop_client_return}`
-                );
+        thrift_client.stop_client(
+            codechat_client_id,
+            function (err, stop_client_return) {
+                if (err !== null) {
+                    show_error(
+                        `Communication error when stopping the client: ${err}`
+                    );
+                } else if (stop_client_return !== "") {
+                    show_error(
+                        `Error when stopping the client: ${stop_client_return}`
+                    );
+                }
             }
-        });
+        );
     }
 
     // Even though the callbacks to ``stop_client`` haven't completed yet, set this now to prevent further use of the client, which is stopping.
@@ -358,9 +366,14 @@ function show_error(message: string) {
         if (!webview_panel.webview.html.startsWith("<h1>CodeChat</h1>")) {
             webview_panel.webview.html = "<h1>CodeChat</h1>";
         }
-        webview_panel.webview.html += `<p>${escape(message)}</p><p>See the <a href="https://codechat-system.readthedocs.io/en/latest/docs/common_problems.html" target="_blank" rel="noreferrer noopener">docs</a>.</p>`;
+        webview_panel.webview.html += `<p>${escape(
+            message
+        )}</p><p>See the <a href="https://codechat-system.readthedocs.io/en/latest/docs/common_problems.html" target="_blank" rel="noreferrer noopener">docs</a>.</p>`;
     } else {
-        vscode.window.showErrorMessage(message + "\nSee https://codechat-system.readthedocs.io/en/latest/docs/common_problems.html.");
+        vscode.window.showErrorMessage(
+            message +
+                "\nSee https://codechat-system.readthedocs.io/en/latest/docs/common_problems.html."
+        );
     }
 }
 
@@ -404,7 +417,11 @@ async function start_server() {
             if (code === 0) {
                 resolve("");
             } else {
-                reject(new Error(`${stdout}\n${stderr}\n\nCodeChat Server exited with ${exit_str}.\n`));
+                reject(
+                    new Error(
+                        `${stdout}\n${stderr}\n\nCodeChat Server exited with ${exit_str}.\n`
+                    )
+                );
             }
         });
 

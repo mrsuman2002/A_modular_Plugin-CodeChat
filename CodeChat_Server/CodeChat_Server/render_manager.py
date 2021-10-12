@@ -132,7 +132,13 @@ async def render_client_state(cs: ClientState) -> None:
             )
         )
 
-    is_converted, project_path, rendered_file_path, html, err_string = await render_file(
+    (
+        is_converted,
+        project_path,
+        rendered_file_path,
+        html,
+        err_string,
+    ) = await render_file(
         cs._to_render_editor_text,
         cs._to_render_file_path,
         co_build,
@@ -301,13 +307,17 @@ class RenderManager:
             return
 
         # Start one task to get read results from the websocket.
-        read_websocket_handler = asyncio.create_task(self.read_websocket_handler(websocket, id_))
+        read_websocket_handler = asyncio.create_task(
+            self.read_websocket_handler(websocket, id_)
+        )
 
         # Send messages until shutdown. However, this function should typically never exit using this conditional; instead, the shutdown code below should break out of the loop.
         q_task = asyncio.create_task(q.get())
         socket_closed_task = asyncio.create_task(websocket.wait_closed())
         while not self._is_shutdown:
-            done, pending = await asyncio.wait([q_task, socket_closed_task], return_when=asyncio.FIRST_COMPLETED)
+            done, pending = await asyncio.wait(
+                [q_task, socket_closed_task], return_when=asyncio.FIRST_COMPLETED
+            )
             # If the socket was closed, wrap up.
             if socket_closed_task in done:
                 # Stop waiting on the queue.
@@ -347,7 +357,7 @@ class RenderManager:
 
     # _`read_websocket_handler`: this responds to `messages sent by the CodeChat Client <messages sent by the CodeChat Client>`.
     async def read_websocket_handler(
-        self, websocket: websockets.WebSocketServerProtocol, id_: str
+        self, websocket: websockets.WebSocketServerProtocol, id_: int
     ):
         while not self._is_shutdown:
             try:
@@ -368,10 +378,11 @@ class RenderManager:
                 # The pretext build must provide the root document and a map of {source file path: [rendered file paths]} for all files in a build. Invert this to compute the source file path given a rendered file path.
             elif msg == "navigate_to_error":
                 # TODO
-                print(f"TODO: navigate to error on line {data['line']} of file {data['file_path']}.")
+                print(
+                    f"TODO: navigate to error on line {data['line']} of file {data['file_path']}."
+                )
             else:
                 print(f"Error: unknown message {msg} with data '{data}'.")
-
 
     # `<-- <Delete step 1.>` _`Delete step 2.` `--> <Delete step 3.>` Begin the MultiClient shutdown process by sending a shutdown message to the CodeChat Client.
     async def shutdown_client(self, id: int) -> bool:

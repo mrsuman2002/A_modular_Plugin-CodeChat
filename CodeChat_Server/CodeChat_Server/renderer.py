@@ -254,6 +254,7 @@ def _read_project_conf_file(tool_or_project_path):
 
     # Make paths absolute.
     project_path = tool_or_project_path.parent
+
     def abs_path(path: Union[str, Path]) -> Path:
         path_ = Path(path)
         if not path_.is_absolute():
@@ -281,7 +282,6 @@ def _read_project_conf_file(tool_or_project_path):
     return source_path, output_path, args, data_dict["html_ext"]
 
 
-
 # Convert an project using an external renderer.
 async def _render_external_project(
     text: str, file_path_: str, _tool_or_project_path: str, co_build: Co_Build
@@ -295,10 +295,11 @@ async def _render_external_project(
 
     # Read the project configuration.
     try:
-        source_path, output_path, args, html_ext = _read_project_conf_file(tool_or_project_path)
+        source_path, output_path, args, html_ext = _read_project_conf_file(
+            tool_or_project_path
+        )
     except RuntimeError as e:
         return "", str(e)
-
 
     # Determine first guess at the location of the rendered HTML.
     file_path = Path(file_path_)
@@ -574,7 +575,7 @@ async def render_file(
     # was_performed: True if the render was performed. False if this is a project and the source file is dirty; in this case, the render is skipped.
     bool,
     # project_path: If this is a project, then ``project_path``` contains a path to the CodeChat project configuration file; otherwise, ``project_path`` is ``None``.
-    Optional[Path],
+    Optional[str],
     # rendered_file_path: A path to the rendered file.
     #
     # - If this is a project, the rendered file is different from ``file_path``, since it points to the location on disk where the external renderer wrote the HTML. In this case, the ``html`` return value is ``None``, since the HTMl should be read from the disk instead.
@@ -604,7 +605,13 @@ async def render_file(
     # Update the client's state, now that the rendering is complete.
     if is_project:
         # For projects, the rendered HTML is already on disk; a path to this rendered file is returned.
-        return True, tool_or_project_path, html_string_or_file_path, None, err_string
+        return (
+            True,
+            str(tool_or_project_path),
+            html_string_or_file_path,
+            None,
+            err_string,
+        )
     else:
         # Otherwise, the rendered HTML is returned as a string and can be directly used. Provide a path to the source file which was just rendered.
         return True, None, file_path, html_string_or_file_path, err_string

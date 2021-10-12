@@ -25,7 +25,9 @@ html {
     box-sizing: border-box;
 }
 
-*, *:before, *:after {
+*,
+*:before,
+*:after {
     box-sizing: inherit;
 }
 
@@ -36,7 +38,6 @@ body {
     /* The default of transparent makes VS Code's black show up and confuse everything. For now, make it white. */
     background: white;
 }
-
 
 /* This div contains the splitter plus both split divs. */
 #splitter {
@@ -66,7 +67,8 @@ body {
 }
 
 /* The build messages and error messages divs. */
-#build, #errors {
+#build,
+#errors {
     /* Build output is console text. */
     font-family: monospace;
     /* Wrap long lines for convenience. */
