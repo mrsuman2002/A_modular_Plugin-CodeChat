@@ -15,6 +15,14 @@ Change Log
 
     -   No changes yet.
 
+-   0.1.2, 12-Oct-2021:
+
+    -   Updated to Thrift v0.15.0.
+    -   Improved websocket shutdown process.
+    -   Added the ability for the CodeChat Client to send messages to the CodeChat Server.
+    -   Updated PreTeXt template to use current build system (pretext-cli).
+    -   Include templates in the built package.
+
 -   0.1.1, 6-Aug-2021:
 
     -   Fix 404 error on non-Windows URLs.
