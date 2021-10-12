@@ -141,7 +141,8 @@ export function activate(context: vscode.ExtensionContext) {
             try {
                 await start_server();
             } catch (err) {
-                show_error(err);
+                assert(err instanceof Error);
+                show_error(err.message);
                 return;
             }
 
@@ -395,7 +396,7 @@ async function start_server() {
                 err.code === "ENOENT"
                     ? `Error - cannot find the file ${err.path}`
                     : err;
-            reject(`While starting the CodeChat Server: ${msg}.`);
+            reject(new Error(`While starting the CodeChat Server: ${msg}.`));
         });
 
         server_process.on("exit", (code, signal) => {
@@ -403,7 +404,7 @@ async function start_server() {
             if (code === 0) {
                 resolve("");
             } else {
-                reject(`${stdout}\n${stderr}\n\nCodeChat Server exited with ${exit_str}.\n`);
+                reject(new Error(`${stdout}\n${stderr}\n\nCodeChat Server exited with ${exit_str}.\n`));
             }
         });
 
