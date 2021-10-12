@@ -12,7 +12,7 @@ In addition to native support for Markdown and reStructuredText, the CodeChat Sy
 
 -   invoke `Pandoc <https://pandoc.org/>`_ to render a wide variety of markup formats;
 -   use `Sphinx <https://www.sphinx-doc.org/>`_ to build project documentation;
--   call `Runestone <https://runestone.academy/>`_ to create interactive textbooks;
+-   call `Runestone <https://runestone.academy/>`_ or `PreTeXt <https://pretextbook.org/>`_ to create interactive textbooks;
 -   employ `Doxygen <https://www.doxygen.nl/>`_ to generate documentation from source code;
 
-... and many more.
+... and much more.

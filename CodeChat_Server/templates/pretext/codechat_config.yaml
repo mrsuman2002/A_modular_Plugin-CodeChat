@@ -22,10 +22,10 @@
 # This file defines the configuration for a CodeChat project. It contains a working `Sphinx <https://www.sphinx-doc.org/>`_ configuration.
 #
 # ``source_path``: optional; defaults to ``.`` (the current directory). A path to the root of the source tree. Relative paths are rooted in the directory containing this configuration file.
-#source_path: .
+source_path: source
 
 # ``output_path``: required. A path to the root of the HTML output produced by this renderer. Relative paths are rooted in the directory containing this configuration file.
-output_path: _build
+output_path: output/html
 
 # ``args``: required string or sequence of strings. This provides the arguments to invoke the renderer. These strings may optionally contain the following replacement values:
 #
@@ -33,7 +33,7 @@ output_path: _build
 # - ``{source_path}``: the ``source_path`` above, but as an absolute path.
 # - ``{output_path}``: the ``output_path`` above, but as an absolute path.
 #
-args: python3 /home/mathbook/pretext/pretext --component all --format html --directory {output_path} minimal.xml
+args: pretext build html
 
 # ``html_ext``: optional; defaults to ``.html``. The extension used by this renderer when generating HTML files.
 #html_ext: .html

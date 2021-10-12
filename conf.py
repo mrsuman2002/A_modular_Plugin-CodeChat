@@ -392,9 +392,7 @@ def build_template_projects(app):
         build_template("javadoc/Simple.java")
     build_template("mkdocs/docs/index.md")
     build_template("runestone/_sources/index.rst")
-    # This builder isn't pip-installable. TODO: if/when that's available, update this so it will build on RTD.
-    if not read_the_docs_build:
-        build_template("pretext/minimal.xml")
+    build_template("pretext/minimal.xml")
     build_template("sphinx/index.rst")
 
 
