@@ -21,7 +21,6 @@ User documentation
 
     README
     install
-    templates
     cli
 
 
