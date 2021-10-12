@@ -24,13 +24,13 @@
 include CodeChat_Server/CodeChat_Client/static/*
 include CodeChat_Server/CodeChat_Client/templates/*
 # Include templates for external renderers.
-graft templates
+graft CodeChat_Server/templates
 # Exclude built files.
-prune templates/*/_build
-prune templates/mkdocs/site
-prune templates/pretext/output
-prune templates/pretext/generated-assets
-exclude templates/pretext/*.log
-prune templates/runestone/__pycache__
-prune templates/runestone/build
-exclude templates/runestone/build_info templates/runestone/sphinx_settings.json
+prune CodeChat_Server/templates/*/_build
+prune CodeChat_Server/templates/mkdocs/site
+prune CodeChat_Server/templates/pretext/output
+prune CodeChat_Server/templates/pretext/generated-assets
+exclude CodeChat_Server/templates/pretext/*.log
+prune CodeChat_Server/templates/runestone/__pycache__
+prune CodeChat_Server/templates/runestone/build
+exclude CodeChat_Server/templates/runestone/build_info CodeChat_Server/templates/runestone/sphinx_settings.json

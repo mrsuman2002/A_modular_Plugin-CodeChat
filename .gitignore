@@ -44,5 +44,5 @@ node_modules/
 CodeChat_Server/venv_fedora/
 CodeChat_Server/.coverage
 CodeChat_Server/htmlcov/
-CodeChat_Server/templates/mkdocs/site
-CodeChat_Server/templates/runestone/build_info
+CodeChat_Server/CodeChat_Server/templates/mkdocs/site
+CodeChat_Server/CodeChat_Server/templates/runestone/build_info
