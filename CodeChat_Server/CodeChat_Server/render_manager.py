@@ -49,7 +49,7 @@ import websockets
 # Local imports
 # -------------
 from .constants import LOCALHOST, WEBSOCKET_PORT
-from .renderer import render_file, is_win
+from .renderer import is_win, render_file, read_project_conf_file
 
 
 # RenderManager / render thread
@@ -368,14 +368,25 @@ class RenderManager:
 
             msg, data = json.loads(ret)
             if msg == "save_file":
-                print(f"Save to {data['xml_node']} values '{data['file_contents']}'.")
+                print(
+                    f"Save to {data['xml_node']} values:\n{data['file_contents'][:77]}..."
+                )
                 # Get the location of the project file.
                 pp = self._client_state_dict[id_]._project_path
                 if not pp:
                     print("Unable to save: no project file available.")
                     continue
+                # Read the source path from it.
+                source_path, output_path, args, html_ext = read_project_conf_file(
+                    Path(pp)
+                )
 
                 # The pretext build must provide the root document and a map of {source file path: [rendered file paths]} for all files in a build. Invert this to compute the source file path given a rendered file path.
+                #
+                # For now, assume a 1-to-1 mapping,
+                source_file = Path(source_path) / data["xml_node"]
+                print(f"Writing to {source_file}...")
+                source_file.write_text(data["file_contents"])
             elif msg == "navigate_to_error":
                 # TODO
                 print(

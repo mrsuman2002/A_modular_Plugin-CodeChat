@@ -231,7 +231,7 @@ async def _render_external_file(
 # Project
 # -------
 # Read a CodeChat project configuration file.
-def _read_project_conf_file(tool_or_project_path):
+def read_project_conf_file(tool_or_project_path):
     # Read the project configuration.
     try:
         with open(tool_or_project_path, encoding="utf-8") as f:
@@ -295,7 +295,7 @@ async def _render_external_project(
 
     # Read the project configuration.
     try:
-        source_path, output_path, args, html_ext = _read_project_conf_file(
+        source_path, output_path, args, html_ext = read_project_conf_file(
             tool_or_project_path
         )
     except RuntimeError as e:
