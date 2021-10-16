@@ -13,7 +13,10 @@ Change Log
 **********
 -   `Github master <https://github.com/bjones1/CodeChat_system.git>`_:
 
-    -   No changes yet.
+    -   Use Bottle instead of Flask.
+    -   Allow PreTeXt scripts to save updated source to disk.
+    -   Add a ``project_type`` to CodeChat project configuration files.
+    -   Support the ``PreTeXt`` project type.
 
 -   0.1.2, 12-Oct-2021:
 
