@@ -30,6 +30,7 @@
 # Standard library
 # ----------------
 import logging
+from pathlib import Path
 import signal
 import socket
 import sys
@@ -39,14 +40,7 @@ import webbrowser
 
 # Third-party imports
 # -------------------
-from flask import (
-    Flask,
-    Response,
-    make_response,
-    render_template,
-    send_file,
-    abort,
-)
+import bottle
 from thrift.server import TServer
 from thrift.transport import TTransport
 from thrift.transport import TSocket
@@ -228,25 +222,28 @@ def editor_plugin_server() -> None:
 
 # Server for the CodeChat Client
 # ------------------------------
-client_app = Flask(
-    __name__,
-    # Serve CodeChat Client files statically.
-    static_url_path="/static",
-    static_folder="CodeChat_Client/static",
-    # Serve the CodeChat Client HTML as a template.
-    template_folder="CodeChat_Client/templates",
-)
+# Serve CodeChat Client files statically.
+@bottle.route("/static/<filepath:path>")
+def server_static(filepath):
+    return bottle.static_file(
+        filepath, root=str(Path(__file__).parent / "CodeChat_Client/static")
+    )
 
 
 # The endpoint to get the HTML for the CodeChat Client.
-@client_app.route("/client")
+@bottle.route("/client")
 def client_html() -> str:
-    return render_template("CodeChat_client.html", WEBSOCKET_PORT=WEBSOCKET_PORT)
+    return bottle.template(
+        str(Path(__file__).parent / "CodeChat_Client/templates/CodeChat_client.html"),
+        client_id=bottle.request.query.id,
+        WEBSOCKET_PORT=WEBSOCKET_PORT,
+        host=LOCALHOST,
+    )
 
 
 # The endpoint for files requested by a specific client, including rendered source files. Note that ``int`` by default is `positive only <https://werkzeug.palletsprojects.com/en/2.0.x/routing/#werkzeug.routing.IntegerConverter>`_.
-@client_app.route("/client/<int(signed=True):id>/<path:url_path>")
-def client_data(id: int, url_path: str) -> Union[str, Response]:
+@bottle.route("/client/<id:int>/<url_path:path>")
+def client_data(id: int, url_path: str) -> bottle.HTTPResponse:
     # On Windows, the path begins with a drive letter; otherwise, the path begins with a ``/``, which gets absorbed into the ``/`` before the ``url_path`` component of the URL. Restore it.
     if not render_manager.is_win:
         url_path = "/" + url_path
@@ -256,17 +253,18 @@ def client_data(id: int, url_path: str) -> Union[str, Response]:
     # If we have rendered HTML, return it.
     if type(html) == str:
         assert isinstance(html, str)
-        response = make_response(html)
+        response = bottle.HTTPResponse(html)
     else:
         # The file is on disk. Send it or a 404 if nothing was found.
         try:
-            # Don't allow Flask to cache files on disk, since they may change with each edit.
-            response = make_response(send_file(url_path, cache_timeout=0))  # type: ignore
+            # ``static_file`` needs a non-empty root. Windows roots start with a drive letter, while other OSes don't. Use Path to split the overall path nicely to avoid this problem.
+            url_path_ = Path(url_path)
+            response = bottle.static_file(url_path_.name, root=url_path_.parent)
         except (FileNotFoundError, PermissionError):
-            abort(404)
+            bottle.abort(404)
 
-    # Don't allow the browser to cache files. See the `Flask docs <https://flask.palletsprojects.com/en/1.1.x/api/#flask.Request.cache_control>`_ and `MDN docs <https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#Directives>`_.
-    response.cache_control.no_store = True
+    # Don't allow the browser to cache files. See the `SO <https://stackoverflow.com/a/24748094/16038919>`__, `bottle API <https://bottlepy.org/docs/dev/api.html#bottle.BaseResponse.add_header>`_, and `MDN docs <https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#Directives>`_.
+    response.add_header("Cache-Control", "no-store, max-age=0")
     return response
 
 
@@ -315,19 +313,22 @@ def run_servers() -> int:
     )
     editor_plugin_thread.start()
 
-    def flask_launcher(*args, **kwargs):
+    def webserver_launcher(*args, **kwargs):
         try:
-            client_app.run(*args, **kwargs)
+            bottle.run(*args, **kwargs)
         except Exception:
             # Shut down the server instead of allowing it to keep running in a broken state.
             shutdown_event.set()
             raise
 
     # Taken from https://stackoverflow.com/a/45017691.
-    flask_server_thread = threading.Thread(
-        target=flask_launcher, kwargs=dict(port=HTTP_PORT), name="Flask", daemon=True
+    webserver_thread = threading.Thread(
+        target=webserver_launcher,
+        kwargs=dict(port=HTTP_PORT),
+        name="Webserver",
+        daemon=True,
     )
-    flask_server_thread.start()
+    webserver_thread.start()
 
     # Start the render loop in another thread.
     handler.render_manager = render_manager.RenderManager(shutdown_event)

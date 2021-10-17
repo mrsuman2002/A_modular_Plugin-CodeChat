@@ -60,7 +60,7 @@
         </div>
 
         <script>
-            run_client({{ request.args.get("id", "") }}, "ws://127.0.0.1:{{WEBSOCKET_PORT}}/");
+            run_client({{client_id}}, "ws://{{host}}:{{WEBSOCKET_PORT}}/");
         </script>
     </body>
 </html>
