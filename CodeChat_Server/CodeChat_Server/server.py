@@ -33,8 +33,8 @@ import logging
 import signal
 import socket
 import sys
+from textwrap import dedent
 import threading
-from typing import Union
 import webbrowser
 
 # Third-party imports
@@ -105,16 +105,16 @@ class CodeChatHandler:
             ret_str = url
         elif codeChat_client_location == CodeChatClientLocation.html:
             # Redirect to the webserver.
-            ret_str = """
-<!DOCTYPE html>
-<html>
-    <head>
-    </head>
-    <body style="margin: 0px; padding: 0px; overflow: hidden">
-        <iframe src="{}" style="width: 100%; height: 100vh; border: none"></iframe>
-    </body>
-</html>""".format(
-                url
+            ret_str = dedent(
+                f"""\
+                <!DOCTYPE html>
+                <html>
+                    <head>
+                    </head>
+                    <body style="margin: 0px; padding: 0px; overflow: hidden">
+                        <iframe src="{url}" style="width: 100%; height: 100vh; border: none"></iframe>
+                    </body>
+                </html>"""
             )
         elif codeChat_client_location == CodeChatClientLocation.browser:
             # Open in an external browser.
