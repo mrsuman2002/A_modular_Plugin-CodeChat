@@ -326,7 +326,7 @@ const error_regex = new RegExp(
     //  In Sphinx 1.6.1:
     //  X:\file.rst: WARNING: document isn't included in any toctree
     //
-    // The CodeChat renderer also produces `error messages <_checkModificationTime>`_ formatted in a similar way so they'll be identified by the same regex::
+    // The CodeChat renderer also produces `error messages <checkModificationTime>`_ formatted in a similar way so they'll be identified by the same regex::
     //
     //  X:\ode.py:: ERROR: CodeChat renderer - source file older than the html file X:\_build\html\ode.py.
     //

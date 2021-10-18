@@ -44,12 +44,13 @@ import urllib.parse
 
 # Third-party imports
 # -------------------
+from lxml import etree as ElementTree
 import websockets
 
 # Local imports
 # -------------
 from .constants import LOCALHOST, WEBSOCKET_PORT
-from .renderer import is_win, render_file, read_project_conf_file
+from .renderer import is_win, ProjectConfFile, render_file
 
 
 # RenderManager / render thread
@@ -377,16 +378,40 @@ class RenderManager:
                     print("Unable to save: no project file available.")
                     continue
                 # Read the source path from it.
-                source_path, output_path, args, html_ext = read_project_conf_file(
-                    Path(pp)
-                )
-
-                # The pretext build must provide the root document and a map of {source file path: [rendered file paths]} for all files in a build. Invert this to compute the source file path given a rendered file path.
-                #
-                # For now, assume a 1-to-1 mapping,
-                source_file = Path(source_path) / data["xml_node"]
-                print(f"Writing to {source_file}...")
-                source_file.write_text(data["file_contents"])
+                project_conf = ProjectConfFile(Path(pp))
+                # Find the source file which matches this mapping.
+                xml_id_to_replace = data["xml_node"]
+                for (
+                    source_file,
+                    xml_id_list,
+                ) in project_conf.load_pretext_mapping().items():
+                    if xml_id_to_replace in xml_id_list:
+                        try:
+                            # Load in this source.
+                            src_tree = ElementTree.parse(source_file)
+                            # Parse the replacement source for it.
+                            new_node = ElementTree.fromstring(data["file_contents"])
+                        except Exception as e:
+                            print(f"Unable to load file or parse new source: {e}")
+                            break
+                        # Find the node in this source file and replace it.
+                        xml_node_to_replace = src_tree.find(
+                            f"//*[@{{http://www.w3.org/XML/1998/namespace}}id = {xml_id_to_replace}]"
+                        )
+                        if not xml_node_to_replace:
+                            print(
+                                f"Unable to save: can't find node {xml_node_to_replace} in {source_file}."
+                            )
+                            break
+                        xml_node_to_replace.getparent().replace(
+                            xml_node_to_replace, new_node
+                        )
+                        # Save the updated file.
+                        src_tree.write(source_file)
+                else:
+                    print(
+                        f"Unable to write: can't find source file containing {xml_id_to_replace}."
+                    )
             elif msg == "navigate_to_error":
                 # TODO
                 print(

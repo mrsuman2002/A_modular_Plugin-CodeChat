@@ -33,8 +33,10 @@
 import asyncio
 import codecs
 from contextlib import contextmanager
+from enum import Enum, auto
 import fnmatch
 import io
+import json
 from pathlib import Path
 import shlex
 import sys
@@ -230,56 +232,148 @@ async def _render_external_file(
 
 # Project
 # -------
-# Read a CodeChat project configuration file.
-def read_project_conf_file(tool_or_project_path):
-    # Read the project configuration.
-    try:
-        with open(tool_or_project_path, encoding="utf-8") as f:
-            data = f.read()
-    except Exception as e:
-        raise RuntimeError(f"{tool_or_project_path}:: ERROR: Unable to open. {e}")
+# Define the possible types of projects.
+class ProjectTypeEnum(Enum):
+    general = auto()
+    PreTeXt = auto()
+    Doxygen = auto()
 
-    schema = strictyaml.Map(
-        {
-            strictyaml.Optional("source_path", default="."): strictyaml.Str(),
-            "output_path": strictyaml.Str(),
-            "args": strictyaml.Str() | strictyaml.Seq(strictyaml.Str()),
-            strictyaml.Optional("html_ext", default=".html"): strictyaml.Str(),
-        }
-    )
-    try:
-        data_dict = strictyaml.load(data, schema).data
-    except strictyaml.YAMLError as e:
-        raise RuntimeError(f"{tool_or_project_path}:: ERROR: Unable to parse. {e}")
 
-    # Make paths absolute.
-    project_path = tool_or_project_path.parent
+# This class reads and interprets a project configuration file.
+class ProjectConfFile:
+    # Read and process a CodeChat project configuration file.
+    def __init__(self, project_path: Path):
+        try:
+            with open(project_path, encoding="utf-8") as f:
+                data = f.read()
+        except Exception as e:
+            raise RuntimeError(f"{project_path}:: ERROR: Unable to open. {e}")
 
-    def abs_path(path: Union[str, Path]) -> Path:
-        path_ = Path(path)
-        if not path_.is_absolute():
-            path_ = project_path / path_
-        return path_
+        schema = strictyaml.Map(
+            {
+                strictyaml.Optional("source_path", default="."): strictyaml.Str(),
+                "output_path": strictyaml.Str(),
+                "args": strictyaml.Str() | strictyaml.Seq(strictyaml.Str()),
+                strictyaml.Optional("html_ext", default=".html"): strictyaml.Str(),
+                strictyaml.Optional("project_type", default="general"): strictyaml.Enum(
+                    [x.name for x in list(ProjectTypeEnum)]
+                ),
+            }
+        )
+        try:
+            data_dict = strictyaml.load(data, schema).data
+        except strictyaml.YAMLError as e:
+            raise RuntimeError(f"{project_path}:: ERROR: Unable to parse. {e}")
 
-    source_path = abs_path(data_dict["source_path"])
-    output_path = abs_path(data_dict["output_path"])
+        # Save items that don't need processing.
+        self.project_type = ProjectTypeEnum[data_dict["project_type"]]
+        self.html_ext = data_dict["html_ext"]
 
-    # Perform replacement on the args.
-    def args_format(arg):
-        return arg.format(
-            project_path=project_path,
-            source_path=source_path,
-            output_path=output_path,
+        # Make paths absolute.
+        project_path = project_path.parent
+
+        def abs_path(path: Union[str, Path]) -> Path:
+            path_ = Path(path)
+            if not path_.is_absolute():
+                path_ = project_path / path_
+            return path_
+
+        self.source_path = abs_path(data_dict["source_path"])
+        self.output_path = abs_path(data_dict["output_path"])
+
+        # Perform replacement on the args.
+        def args_format(arg):
+            return arg.format(
+                project_path=project_path,
+                source_path=self.source_path,
+                output_path=self.output_path,
+            )
+
+        args = data_dict["args"]
+        self.args = (
+            args_format(args)
+            if isinstance(args, str)
+            else [args_format(arg) for arg in args]
         )
 
-    args = data_dict["args"]
-    args = (
-        args_format(args)
-        if isinstance(args, str)
-        else [args_format(arg) for arg in args]
-    )
+    # _`checkModificationTime`: Verify that ``source_file``` is older than the HTML file produced by this source, reporting errors if this isn't true.
+    def checkModificationTime(
+        self, source_file: Path
+    ) -> Tuple[
+        # A path to the proposed or found HTML file.
+        str,
+        # A list of error messages.
+        List[str],
+    ]:
 
-    return source_path, output_path, args, data_dict["html_ext"]
+        # Determine a first guess at the location of the rendered HTML. TODO: For Doxygen, do all the goofy character replacements.
+        error_arr = []
+        try:
+            base_html_file = self.output_path / source_file.relative_to(
+                self.source_path
+            )
+        except ValueError as e:
+            # Give some arbitrary value to the output path, since it can't be determined.
+            base_html_file = self.output_path
+            error_arr.append(
+                "{}:: ERROR: unable to compute path relative to {}. {}".format(
+                    source_file, self.source_path, e
+                )
+            )
+
+        # For PreTeXt, use the mapping of source files to XML IDs == output file name.
+        if self.project_type == ProjectTypeEnum.PreTeXt:
+            try:
+                mapping = self.load_pretext_mapping()
+            except Exception:
+                pass
+            else:
+                # Before looking up the file, ``resolve()`` it to get the canonical representation (fix case on Windows).
+                if xml_id_list := mapping.get(str(source_file.resolve())):
+                    # Pick the first mapping, since there may be several.
+                    base_html_file = self.output_path / xml_id_list[0]
+
+        # Look for the resulting HTML using this guess.
+        possible_html_file = base_html_file.with_suffix(self.html_ext)
+        if possible_html_file.exists():
+            html_file = possible_html_file
+        else:
+            possible_html_file = Path(str(base_html_file) + self.html_ext)
+            if possible_html_file.exists():
+                html_file = possible_html_file
+            else:
+                return (
+                    str(base_html_file),
+                    error_arr
+                    + [
+                        f"{source_file}:: ERROR: CodeChat renderer - unable to find the HTML output file {base_html_file}."
+                    ],
+                )
+
+        # Recall that time is measured in seconds since the epoch,
+        # so that larger = newer.
+        try:
+            if html_file.stat().st_mtime > source_file.stat().st_mtime:
+                return str(html_file), []
+            else:
+                return (
+                    str(html_file),
+                    error_arr
+                    + [
+                        f"{source_file}:: ERROR: CodeChat renderer - source file newer than the HTML file {html_file}."
+                    ],
+                )
+        except OSError as e:
+            return (
+                str(html_file),
+                error_arr
+                + [
+                    f"{source_file}:: ERROR: CodeChat renderer - unable to check modification time of the HTML file {html_file}: {e}."
+                ],
+            )
+
+    def load_pretext_mapping(self):
+        return json.loads((self.output_path / "mapping.json").read_text())
 
 
 # Convert an project using an external renderer.
@@ -287,44 +381,29 @@ async def _render_external_project(
     text: str, file_path_: str, _tool_or_project_path: str, co_build: Co_Build
 ) -> Tuple[str, str]:
     # Run from the directory containing the project file.
-    tool_or_project_path = Path(_tool_or_project_path)
-    project_path = tool_or_project_path.parent
+    project_conf_file_path = Path(_tool_or_project_path)
     await co_build(
-        f"Loading project file {tool_or_project_path}.\n",
+        f"Loading project file {project_conf_file_path}.\n",
     )
 
     # Read the project configuration.
     try:
-        source_path, output_path, args, html_ext = read_project_conf_file(
-            tool_or_project_path
-        )
+        project_conf = ProjectConfFile(project_conf_file_path)
     except RuntimeError as e:
         return "", str(e)
 
-    # Determine first guess at the location of the rendered HTML.
     file_path = Path(file_path_)
-    error_arr = []
-    try:
-        base_html_file = output_path / file_path.relative_to(source_path)
-    except ValueError as e:
-        # Give some arbitrary value to the output path, since it can't be determined.
-        base_html_file = output_path
-        error_arr.append(
-            "{}:: ERROR: unable to compute path relative to {}. {}".format(
-                file_path, source_path, e
-            )
-        )
 
     # Compare dates to see if the rendered file is current
-    html_file, error = _checkModificationTime(file_path, base_html_file, html_ext)
+    html_file, error_arr = project_conf.checkModificationTime(file_path)
 
     # If not, render and try again.
-    if error:
+    if error_arr:
         # Render.
-        stdout, stderr = await _run_subprocess(args, project_path, None, True, co_build)
-        html_file, error = _checkModificationTime(file_path, base_html_file, html_ext)
-        if error:
-            error_arr.append(error)
+        stdout, stderr = await _run_subprocess(
+            project_conf.args, project_conf_file_path.parent, None, True, co_build
+        )
+        html_file, error_arr = project_conf.checkModificationTime(file_path)
     else:
         stderr = ""
 
@@ -353,46 +432,6 @@ def _optional_temp_file(need_temp_file: bool) -> Any:
 @contextmanager
 def _dummy_context_manager() -> Generator:
     yield
-
-
-# _`_checkModificationTime`: Return False if source_file is newer than output_file; otherwise, return string with an error message.
-def _checkModificationTime(
-    source_file: Path, base_html_file: Path, html_ext: str
-) -> Tuple[str, str]:
-
-    # Look for the resulting HTML.
-    possible_html_file = base_html_file.with_suffix(html_ext)
-    if possible_html_file.exists():
-        html_file = possible_html_file
-    else:
-        possible_html_file = Path(str(base_html_file) + html_ext)
-        if possible_html_file.exists():
-            html_file = possible_html_file
-        else:
-            return (
-                str(base_html_file),
-                f"{source_file}:: ERROR: CodeChat renderer - unable to find the HTML output file {base_html_file}.",
-            )
-
-    # Recall that time is measured in seconds since the epoch,
-    # so that larger = newer.
-    try:
-        if html_file.stat().st_mtime > source_file.stat().st_mtime:
-            return str(html_file), ""
-        else:
-            return (
-                str(html_file),
-                "{}:: ERROR: CodeChat renderer - source file older than the HTML file {}.".format(
-                    source_file, html_file
-                ),
-            )
-    except OSError as e:
-        return (
-            str(html_file),
-            "{}:: ERROR: CodeChat renderer - unable to check modification time of the html file {}: {}.".format(
-                source_file, html_file, e
-            ),
-        )
 
 
 # Run a subprocess, optionally streaming the stdout.

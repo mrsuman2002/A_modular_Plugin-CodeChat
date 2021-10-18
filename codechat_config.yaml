@@ -33,14 +33,17 @@ output_path: _build
 # - ``{source_path}``: the ``source_path`` above, but as an absolute path.
 # - ``{output_path}``: the ``output_path`` above, but as an absolute path.
 #
-# The line below could also be written ``args: sphinx-build . _build``.
+# The line below could also be written ``args: sphinx-build {source_path} {output_path}``.
 args:
     # See `sphinx-build <https://www.sphinx-doc.org/en/master/man/sphinx-build.html>`_.
     -   sphinx-build
-    # The source directory.
-    -   .
-    # The output directory.
-    -   _build
+    # The source directory. It must be surrounded with quotes to avoid confusing the YAML parser.
+    -   "{source_path}"
+    # The output directory, with quotes as explained above.
+    -   "{output_path}"
 
 # ``html_ext``: optional; defaults to ``.html``. The extension used by this renderer when generating HTML files.
 #html_ext: .html
+
+# ``project_type``: optional; defaults to ``general``. Define the project type, which enables special processing based on the type. Valid values are ``general`` (no special processing), ``Doxygen``, and ``PreTeXt``.
+#project_type: general
