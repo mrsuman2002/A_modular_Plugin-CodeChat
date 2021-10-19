@@ -315,7 +315,8 @@ def run_servers() -> int:
 
     def webserver_launcher(*args, **kwargs):
         try:
-            bottle.run(*args, **kwargs)
+            # Omitting the ``quiet`` option causes the server bottle uses by default (Python's stdlib wsgiref) to die when emitting stdio if run with the ``CodeChat_Server start`` option (where the stdio/stderr gets disconnected after the server is started).
+            bottle.run(*args, quiet=True, **kwargs)
         except Exception:
             # Shut down the server instead of allowing it to keep running in a broken state.
             shutdown_event.set()
