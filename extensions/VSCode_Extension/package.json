@@ -25,6 +25,16 @@
                     "type": "string",
                     "default": "CodeChat_Server",
                     "markdownDescription": "Command to invoke the CodeChat Server executable; for example, `CodeChat_Server` (any platform), `python3 -m CodeChat_Server` (Linux/OS X), or `py -m CodeChat_Server` (Windows).\n\nIf providing an absolute path on Windows, either use a forward slash (`/`) or a double backslash (`\\\\`) for the path separator; for example, `C:/Python39/python.exe` or `C:\\\\Python39\\\\python.exe`, **not** `C:\\Python39\\python.exe`."
+                },
+                "CodeChat.CodeChatServer.ClientLocation": {
+                    "type": "string",
+                    "default": "html",
+                    "enum": ["html", "browser"],
+                    "enumDescriptions": [
+                        "A panel in Visual Studio Code",
+                        "In the default external web browser"
+                    ],
+                    "markdownDescription": "Select the location of the CodeChat Client. After changing this value, you **must** close then restart the CodeChat extension."
                 }
             }
         },

@@ -50,7 +50,7 @@ let thrift_connection: thrift.Connection | undefined = undefined;
 // The Thrift client using this connection.
 let thrift_client: EditorPlugin.Client | undefined = undefined;
 // Where the webclient resides: ``html`` for a webview panel embedded in VSCode; ``browser`` to use an external browser.
-const codechat_client_location: ttypes.CodeChatClientLocation =
+let codechat_client_location: ttypes.CodeChatClientLocation =
     ttypes.CodeChatClientLocation.html;
 // True if the subscriptions to IDE change notifications have been registered.
 let subscribed = false;
@@ -88,6 +88,26 @@ export function activate(context: vscode.ExtensionContext) {
                         start_render();
                     })
                 );
+            }
+
+            // Get the CodeChat Client's location from the VSCode configuration.
+            const codechat_client_location_str = vscode.workspace
+                .getConfiguration("CodeChat.CodeChatServer")
+                .get("ClientLocation");
+            assert(typeof codechat_client_location_str === "string");
+            switch (codechat_client_location_str) {
+                case "html":
+                    codechat_client_location =
+                        ttypes.CodeChatClientLocation.html;
+                    break;
+
+                case "browser":
+                    codechat_client_location =
+                        ttypes.CodeChatClientLocation.browser;
+                    break;
+
+                default:
+                    assert(false);
             }
 
             // Create or reveal the webview panel; if this is an external browser, we'll open it after the client is created.
