@@ -16,7 +16,7 @@ Change Log
     -   Use Bottle instead of Flask.
     -   Allow PreTeXt scripts to save updated source to disk.
     -   Add a ``project_type`` to CodeChat project configuration files.
-    -   Support the ``PreTeXt`` project type.
+    -   Support the ``PreTeXt`` and ``Doxygen`` project types.
 
 -   0.1.2, 12-Oct-2021:
 

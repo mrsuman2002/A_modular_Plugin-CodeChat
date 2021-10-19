@@ -306,15 +306,18 @@ class ProjectConfFile:
         List[str],
     ]:
 
-        # Determine a first guess at the location of the rendered HTML. TODO: For Doxygen, do all the goofy character replacements.
+        # Determine a first guess at the location of the rendered HTML.
+        prefix = (
+            self.output_path
+            if self.project_type != ProjectTypeEnum.Doxygen
+            else Path(".")
+        )
         error_arr = []
         try:
-            base_html_file = self.output_path / source_file.relative_to(
-                self.source_path
-            )
+            base_html_file = prefix / source_file.relative_to(self.source_path)
         except ValueError as e:
             # Give some arbitrary value to the output path, since it can't be determined.
-            base_html_file = self.output_path
+            base_html_file = prefix
             error_arr.append(
                 "{}:: ERROR: unable to compute path relative to {}. {}".format(
                     source_file, self.source_path, e
@@ -332,6 +335,39 @@ class ProjectConfFile:
                 if xml_id_list := mapping.get(str(source_file.resolve())):
                     # Pick the first mapping, since there may be several.
                     base_html_file = self.output_path / xml_id_list[0]
+        # For Doxygen, rename certain characters in the file name. See `util.cpp::escapeCharsInString <https://github.com/doxygen/doxygen/blob/master/src/util.cpp#L3443>`_.
+        elif self.project_type == ProjectTypeEnum.Doxygen:
+            doxygen_renamed_path = base_html_file.as_posix()
+            for old, new in (
+                [":", "_1"],
+                ["/", "_2"],
+                ["<", "_3"],
+                [">", "_4"],
+                ["*", "_5"],
+                ["&", "_6"],
+                ["|", "_7"],
+                [".", "_8"],
+                ["!", "_9"],
+                [",", "_00"],
+                [" ", "_01"],
+                ["{", "_02"],
+                ["}", "_03"],
+                ["?", "_04"],
+                ["^", "_05"],
+                ["%", "_06"],
+                ["(", "_07"],
+                [")", "_08"],
+                ["+", "_09"],
+                ["=", "_0a"],
+                ["$", "_0b"],
+                ["\\", "_0c"],
+                ["@", "_0d"],
+                ["]", "_0e"],
+                ["[", "_0f"],
+                ["#", "_0g"],
+            ):
+                doxygen_renamed_path = doxygen_renamed_path.replace(old, new)
+            base_html_file = self.output_path / doxygen_renamed_path
 
         # Look for the resulting HTML using this guess.
         possible_html_file = base_html_file.with_suffix(self.html_ext)
