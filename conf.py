@@ -387,9 +387,10 @@ def build_template_projects(app):
 
     # In the following calls, include a specific file to build, so the CodeChat Server can build only if they are out of date.
     build_template("doxygen/main.c")
-    # ReadTheDocs doesn't have javadoc installed.
+    # ReadTheDocs doesn't have these installed.
     if not read_the_docs_build:
         build_template("javadoc/Simple.java")
+        build_template("mdbook/src/chapter_1.md")
     build_template("mkdocs/docs/index.md")
     build_template("runestone/_sources/index.rst")
     build_template("pretext/source/minimal.ptx")

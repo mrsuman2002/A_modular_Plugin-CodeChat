@@ -17,6 +17,7 @@ Change Log
     -   Allow PreTeXt scripts to save updated source to disk.
     -   Add a ``project_type`` to CodeChat project configuration files.
     -   Support the ``PreTeXt`` and ``Doxygen`` project types.
+    -   Added an mdbook template.
 
 -   0.1.2, 12-Oct-2021:
 

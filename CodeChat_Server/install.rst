@@ -108,6 +108,7 @@ Template available
 ^^^^^^^^^^^^^^^^^^
 -   `Doxygen <https://www.doxygen.nl/>`_ (`rendered template <../_static/doxygen/_build/html/index.html>`__)
 -   `Javadoc <https://en.wikipedia.org/wiki/Javadoc>`_ (`rendered template <../_static/javadoc/_build/index.html>`__)
+-   `Mdbook <https://rust-lang.github.io/mdBook/>`_ (`rendered template <../_static/mdbook/book/index.html>`__)
 -   `Mkdocs <https://www.mkdocs.org/>`_ (`rendered template <../_static/mkdocs/site/index.html>`__)
 -   `PreTeXt <https://pretextbook.org/>`_ (`rendered template <../_static/pretext/_build/index.html>`__)
 -   `Runestone Components <https://runestone.academy/>`_ (`rendered template <../_static/runestone/build/runestone_template/index.html>`__)
@@ -119,8 +120,6 @@ No template available
 Please contribute your template!
 
 -   `Daux.io <https://daux.io/>`_
--   `Gitbook <https://github.com/GitbookIO/gitbook-cli>`_
--   `Mdbook <https://rust-lang.github.io/mdBook/>`_
 -   `Skydocs <https://skydocs.skyost.eu/en/>`_
 -   ... and many more. The CodeChat System can easily support other external renderers through its project configuration file.
 
