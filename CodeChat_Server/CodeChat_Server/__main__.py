@@ -241,7 +241,7 @@ def start(
             print(p.stderr.read())
             print("The server exited unexpectedly.", file=sys.stderr)
             return 1
-        sleep(0.1)
+        sleep(0.001)
     # Indicate the server started to the timeout thread, so the timeout won't kill the server now that it's started.
     server_starting = False
     return 0
