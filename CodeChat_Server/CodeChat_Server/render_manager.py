@@ -41,6 +41,7 @@ from typing import (
     Union,
 )
 import urllib.parse
+import xml.dom.minidom
 
 # Third-party imports
 # -------------------
@@ -394,20 +395,29 @@ class RenderManager:
                         except Exception as e:
                             print(f"Unable to load file or parse new source: {e}")
                             break
-                        # Find the node in this source file and replace it.
-                        xml_node_to_replace = src_tree.find(
-                            f"//*[@{{http://www.w3.org/XML/1998/namespace}}id = {xml_id_to_replace}]"
+                        # Find the node in this source file and replace it. Find only looks at children, so manually check the root element.
+                        xml_id_attrib = "{http://www.w3.org/XML/1998/namespace}id"
+                        xml_node_to_replace = src_tree.getroot() if src_tree.getroot().get(xml_id_attrib) == xml_id_to_replace else src_tree.find(
+                            f"//*[@{xml_id_attrib} = '{xml_id_to_replace}']"
                         )
-                        if not xml_node_to_replace:
+                        if xml_node_to_replace is None:
                             print(
                                 f"Unable to save: can't find node {xml_node_to_replace} in {source_file}."
                             )
                             break
-                        xml_node_to_replace.getparent().replace(
-                            xml_node_to_replace, new_node
-                        )
-                        # Save the updated file.
-                        src_tree.write(source_file)
+                        # The correct method to replace this node is either ``_setroot`` (this is is the root element) or ``replace`` (otherwise).
+                        parent = xml_node_to_replace.getparent()
+                        if parent is None:
+                            src_tree._setroot(new_node)
+                        else:
+                            parent.replace(
+                                xml_node_to_replace, new_node
+                            )
+                        # Save the updated file. I can't find a way using lxml (including looking at the `docinfo <https://lxml.de/api/lxml.etree.DocInfo-class.html>`_ class) to determine if the loaded document contained an XML declaration (the ``<?xml version="1.0" encoding="UTF-8"?>`` header) or not. The following comes from `SO <https://stackoverflow.com/a/54942605/16038919>`__.
+                        has_xml_declaration = bool(xml.dom.minidom.parse(source_file).version)
+                        src_tree.write(source_file, encoding="utf-8", xml_declaration=has_xml_declaration)
+                        print(f"Saved to {source_file}.")
+                        break
                 else:
                     print(
                         f"Unable to write: can't find source file containing {xml_id_to_replace}."
