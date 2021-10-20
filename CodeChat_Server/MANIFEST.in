@@ -27,6 +27,7 @@ include CodeChat_Server/CodeChat_Client/templates/*
 graft CodeChat_Server/templates
 # Exclude built files.
 prune CodeChat_Server/templates/*/_build
+prune CodeChat_Server/templates/mdbook/book
 prune CodeChat_Server/templates/mkdocs/site
 prune CodeChat_Server/templates/pretext/output
 prune CodeChat_Server/templates/pretext/generated-assets
