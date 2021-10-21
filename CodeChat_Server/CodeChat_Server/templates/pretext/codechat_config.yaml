@@ -19,7 +19,7 @@
 # ************************************************
 # |docname| - Configuration for a CodeChat project
 # ************************************************
-# This file defines the configuration for a CodeChat project. It contains a working `Sphinx <https://www.sphinx-doc.org/>`_ configuration.
+# This file defines the configuration for a CodeChat project. It contains a working `PreTeXt <https://pretextbook.org/>`_ configuration.
 #
 # ``source_path``: optional; defaults to ``.`` (the current directory). A path to the root of the source tree. Relative paths are rooted in the directory containing this configuration file.
 source_path: source
@@ -33,8 +33,7 @@ output_path: output/html
 # - ``{source_path}``: the ``source_path`` above, but as an absolute path.
 # - ``{output_path}``: the ``output_path`` above, but as an absolute path.
 #
-#args: pretext build html --stringparam debug.editable yes
-args: C:\Users\bjones\Documents\git\venv\Scripts\python C:\Users\bjones\Documents\git\mathbook\pretext\pretext --component all --format html --directory {output_path} -x debug.editable yes {source_path}/minimal.ptx
+args: pretext build html
 
 # ``html_ext``: optional; defaults to ``.html``. The extension used by this renderer when generating HTML files.
 #html_ext: .html

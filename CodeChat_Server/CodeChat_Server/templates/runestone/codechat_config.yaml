@@ -19,7 +19,7 @@
 # ************************************************
 # |docname| - Configuration for a CodeChat project
 # ************************************************
-# This file defines the configuration for a CodeChat project. It contains a working `Sphinx <https://www.sphinx-doc.org/>`_ configuration.
+# This file defines the configuration for a CodeChat project. It contains a working `Runestone Components <https://runestone.academy/>`_ configuration.
 #
 # ``source_path``: optional; defaults to ``.`` (the current directory). A path to the root of the source tree. Relative paths are rooted in the directory containing this configuration file.
 source_path: _sources
