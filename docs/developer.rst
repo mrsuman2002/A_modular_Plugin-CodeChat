@@ -71,18 +71,15 @@ To do
 -   Handle VS Code's themes (dark, high-contrast, etc.) correctly. To do this, we need to inherit CSS from the webview into the iframe. See https://code.visualstudio.com/api/extension-guides/webview#theming-webview-content, and also use the Developer Tools is VS Code to inspect the iframe containing the webview, which provides vars defining all the VS Code styles.
 -   Add in sync.
 -   Monitor iframe location changes and try to sync by loading another file.
--   Offer an option for VSCode to render in an external browser.
 -   Allow user-defined JSON of mapping from extensions to renderers.
 -   Provide a nicer style for docutils renders.
 -   Support all the pandoc renderers.
 -   Improve docs.
 -   Support at least one more editor.
 -   Save and restore scroll position on a per-file basis.
--   Separate the render manager code from the renderer code.
--   Provide ``codechat_config.json`` examples for common programs (doxygen, javadoc, mkdocs, etc.)
 -   Define a StrictYAML config file to replace the ``GLOB_TO_CONVERTER`` data structure more flexibly. Add in a bunch of conversions using Pandoc.
 -   Would it be easier for extension authors if the server could be invoked from the command line in client mode to communicate with the server via stdio? For example, send render requests as JSON and receive replies as JSON, or something like that? For now, wait until more extensions are developed.
--   Should I rewrite the universal client to truly run in client mode, so that a server can be run as a separate process? If so, it should auto-start the server just as any other client would.
+-   The mdbook render seems slow. Perhaps cache rendered results instead of recomputing them each time?
 
 
 Ideas:
@@ -95,4 +92,4 @@ Ideas:
 
 Footnotes
 =========
-.. [#] At this time, only the Visual Studio Code editor is supported.
+.. [#] At this time, only the Visual Studio Code editor is fully supported.
