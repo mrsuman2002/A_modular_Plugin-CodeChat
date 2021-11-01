@@ -110,10 +110,16 @@ function run_client(id, ws_address) {
             let [scrollX, scrollY] = getScroll();
             // See ideas in https://stackoverflow.com/a/16822995. Works for same-domain only.
             outputElement.onload = function () {
-                // Only run this once, not every time the user navigates in the browser.
-                outputElement.onload = undefined;
                 if (is_user_navigation) {
-                    console.log("CodeChat Client: TODO: User navigation.");
+                    console.log("CodeChat Client: User navigation.");
+                    const outputElement_location =
+                        outputElement.contentWindow.window.location;
+                    // Only send a message if the navigation occurs in the local server.
+                    if (
+                        window.location.origin == outputElement_location.origin
+                    ) {
+                        browser_navigation(outputElement_location.pathname);
+                    }
                 } else {
                     status_message.innerHTML = "Build complete.";
                     build_progress.style.display = "none";
@@ -258,7 +264,7 @@ function run_client(id, ws_address) {
 
     // Send a message to the CodeChat server.
     function send_to_codechat_server(
-        // A string, indentifying the type of message.
+        // A string, identifying the type of message.
         msg,
         // Message-specific data to send. Must be JSON-encodable.
         data
@@ -276,11 +282,17 @@ function run_client(id, ws_address) {
         });
     };
 
-    // The let statements below makes these accessible globally.
+    // The ``var`` statement below makes some of these accessible globally.
     navigate_to_error = function (file_path, line) {
         send_to_codechat_server("navigate_to_error", {
             file_path: file_path,
             line: line,
+        });
+    };
+
+    browser_navigation = function (pathname) {
+        send_to_codechat_server("browser_navigation", {
+            pathname: pathname,
         });
     };
 }

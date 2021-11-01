@@ -143,6 +143,7 @@ async def render_client_state(cs: ClientState) -> None:
     ) = await render_file(
         cs._to_render_editor_text,
         cs._to_render_file_path,
+        Path(cs._file_path) if cs._file_path else None,
         co_build,
         cs._to_render_is_dirty,
     )
@@ -436,6 +437,26 @@ class RenderManager:
                 print(
                     f"TODO: navigate to error on line {data['line']} of file {data['file_path']}."
                 )
+            elif msg == "browser_navigation":
+                # TODO
+                print(
+                    f"TODO: browser navigation to {data['pathname']}."
+                )
+                # Translate the path from a URL to a Path, removing the expected prefix of ``/client/id/``.
+                pathname_raw = urllib.parse.unquote(data["pathname"])
+                expected_pathname_prefix = f"/client/{id_}/"
+                assert pathname_raw.startswith(expected_pathname_prefix)
+                pathname = Path(pathname_raw[len(expected_pathname_prefix):])
+
+                # Update the HTML path
+                cs = self._client_state_dict[id_]
+                cs._file_path = pathname
+
+                # Get the location of the project file. TODO
+                pp = cs._project_path
+                if pp:
+                    # For projects, we need to find the source file that maps to this HTML pathname.
+                    pass
             else:
                 print(f"Error: unknown message {msg} with data '{data}'.")
 

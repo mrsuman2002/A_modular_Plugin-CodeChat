@@ -318,7 +318,7 @@ def build(path_to_build: List[Path]) -> int:
             rendered_file_path,
             html,
             err_string,
-        ) = asyncio.run(render_file(file_text(ptb), str(ptb), aprint, False))
+        ) = asyncio.run(render_file(file_text(ptb), str(ptb), None, aprint, False))
         assert was_performed
         # Print all errors produced by the render.
         print(err_string, file=sys.stderr)

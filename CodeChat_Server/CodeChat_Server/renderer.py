@@ -182,9 +182,14 @@ Co_Build = Callable[[str], Coroutine[Any, Any, None]]
 # -----------
 # Convert a single file using an external program.
 async def _render_external_file(
+    # See text_.
     text: str,
+    # See file_path_.
     file_path: str,
+    # See html_path_.
+    html_path: Optional[str],
     tool_or_project_path: List[Union[bool, str]],
+    # See co_build_.
     co_build: Co_Build,
 ) -> Tuple[str, str]:
     # Split the provided tool path.
@@ -296,12 +301,16 @@ class ProjectConfFile:
             else [args_format(arg) for arg in args]
         )
 
-    # _`checkModificationTime`: Verify that ``source_file``` is older than the HTML file produced by this source, reporting errors if this isn't true.
+    # _`checkModificationTime`: Verify that ``source_file`` is older than the HTML file produced by this source, reporting errors if this isn't true.
     def checkModificationTime(
-        self, source_file: Path
+        self,
+        # A Path to the source file to examine.
+        source_file: Path,
+        # An optional Path to the previously displayed HTML file.
+        html_path: Optional[Path],
     ) -> Tuple[
         # A path to the proposed or found HTML file.
-        str,
+        Path,
         # A list of error messages.
         List[str],
     ]:
@@ -333,8 +342,11 @@ class ProjectConfFile:
             else:
                 # Before looking up the file, ``resolve()`` it to get the canonical representation (fix case on Windows).
                 if xml_id_list := mapping.get(str(source_file.resolve())):
-                    # Pick the first mapping, since there may be several.
-                    base_html_file = self.output_path / xml_id_list[0]
+                    # See if any of the mappings match the currently-displayed file. If so, use that one. Otherwise, pick the first mapping.
+                    for id_ in reversed(xml_id_list):
+                        base_html_file = self.output_path / id_
+                        if html_path and base_html_file == html_path.with_suffix(""):
+                            break
         # For Doxygen, rename certain characters in the file name. See `util.cpp::escapeCharsInString <https://github.com/doxygen/doxygen/blob/master/src/util.cpp#L3443>`_.
         elif self.project_type == ProjectTypeEnum.Doxygen:
             doxygen_renamed_path = base_html_file.as_posix()
@@ -379,7 +391,7 @@ class ProjectConfFile:
                 html_file = possible_html_file
             else:
                 return (
-                    str(base_html_file),
+                    base_html_file,
                     error_arr
                     + [
                         f"{source_file}:: ERROR: CodeChat renderer - unable to find the HTML output file {base_html_file}."
@@ -390,10 +402,10 @@ class ProjectConfFile:
         # so that larger = newer.
         try:
             if html_file.stat().st_mtime > source_file.stat().st_mtime:
-                return str(html_file), []
+                return html_file, []
             else:
                 return (
-                    str(html_file),
+                    html_file,
                     error_arr
                     + [
                         f"{source_file}:: ERROR: CodeChat renderer - source file newer than the HTML file {html_file}."
@@ -401,7 +413,7 @@ class ProjectConfFile:
                 )
         except OSError as e:
             return (
-                str(html_file),
+                html_file,
                 error_arr
                 + [
                     f"{source_file}:: ERROR: CodeChat renderer - unable to check modification time of the HTML file {html_file}: {e}."
@@ -414,7 +426,15 @@ class ProjectConfFile:
 
 # Convert an project using an external renderer.
 async def _render_external_project(
-    text: str, file_path_: str, _tool_or_project_path: str, co_build: Co_Build
+    # See text_.
+    text: str,
+    # See file_path_.
+    file_path_: str,
+    # See html_path_.
+    html_path: Optional[Path],
+    _tool_or_project_path: str,
+    # See co_build_.
+    co_build: Co_Build,
 ) -> Tuple[str, str]:
     # Run from the directory containing the project file.
     project_conf_file_path = Path(_tool_or_project_path)
@@ -431,7 +451,7 @@ async def _render_external_project(
     file_path = Path(file_path_)
 
     # Compare dates to see if the rendered file is current
-    html_file, error_arr = project_conf.checkModificationTime(file_path)
+    html_path, error_arr = project_conf.checkModificationTime(file_path, html_path)
 
     # If not, render and try again.
     if error_arr:
@@ -439,14 +459,14 @@ async def _render_external_project(
         stdout, stderr = await _run_subprocess(
             project_conf.args, project_conf_file_path.parent, None, True, co_build
         )
-        html_file, error_arr = project_conf.checkModificationTime(file_path)
+        html_path, error_arr = project_conf.checkModificationTime(file_path, html_path)
     else:
         stderr = ""
 
     # Display an error in the main window if one exists.
     if error_arr:
         stderr += "\n".join(error_arr)
-    return html_file, stderr
+    return str(html_path), stderr
 
 
 # Support
@@ -638,11 +658,13 @@ def _select_renderer(
 
 # Run the appropriate converter for the provided file or return an error.
 async def render_file(
-    # The text to be converted. If this is a project, the text will be loaded from the disk by the external renderer instead.
+    # _`text`: The text to be converted. If this is a project, the text will be loaded from the disk by the external renderer instead.
     text: str,
-    # The path to the file which (mostly -- see ``is_dirty``) contains this text.
+    # _`file_path`: The path to the file which (mostly -- see ``is_dirty``) contains this text.
     file_path: str,
-    # A coroutine that an external renderer should call to stream build output.
+    # _`html_path`: The html file currently being displayed (if available).
+    html_path: Optional[Path],
+    # _`co_build`: A coroutine that an external renderer should call to stream build output.
     co_build: Co_Build,
     # True if the provided text hasn't been saved to disk.
     is_dirty: bool,
@@ -653,8 +675,8 @@ async def render_file(
     Optional[str],
     # rendered_file_path: A path to the rendered file.
     #
-    # - If this is a project, the rendered file is different from ``file_path``, since it points to the location on disk where the external renderer wrote the HTML. In this case, the ``html`` return value is ``None``, since the HTMl should be read from the disk instead.
-    # - Otherwise, it's the same as the ``file_path``, and the resulting rendered HTMl is returned in ``html``.
+    # - If this is a project, the rendered file is different from ``file_path``, since it points to the location on disk where the external renderer wrote the HTML. In this case, the ``html`` return value is ``None``, since the HTML should be read from the disk instead.
+    # - Otherwise, it's the same as the ``file_path``, and the resulting rendered HTML is returned in ``html``.
     str,
     # html: ``None`` for projects, or the resulting HTML otherwise; see the ``rendered_file_path`` return value.
     Optional[str],
@@ -671,7 +693,7 @@ async def render_file(
     if asyncio.iscoroutinefunction(renderer):
         # Coroutines get the queue, so they can report progress during the build.
         html_string_or_file_path, err_string = await renderer(
-            text, file_path, tool_or_project_path, co_build
+            text, file_path, html_path, tool_or_project_path, co_build
         )
     else:
         assert tool_or_project_path is None
