@@ -341,7 +341,8 @@ class ProjectConfFile:
                 pass
             else:
                 # Before looking up the file, ``resolve()`` it to get the canonical representation (fix case on Windows).
-                if xml_id_list := mapping.get(str(source_file.resolve())):
+                xml_id_list = mapping.get(str(source_file.resolve()))
+                if xml_id_list:
                     # See if any of the mappings match the currently-displayed file. If so, use that one. Otherwise, pick the first mapping.
                     for id_ in reversed(xml_id_list):
                         base_html_file = self.output_path / id_
