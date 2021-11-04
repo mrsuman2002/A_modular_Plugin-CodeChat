@@ -18,7 +18,7 @@
         <!-- Use the ``ReconnectingWebsocket`` to automatically reconnect a websocket when the network connection drops -- for example, a laptop goes to sleep then wakes back up. -->
         <script src="/static/ReconnectingWebsocket.js?v=1"></script>
         <!-- The `../static/CodeChat_client.js`. -->
-        <script src="/static/CodeChat_client.js?v=2"></script>
+        <script src="/static/CodeChat_client.js?v=3"></script>
         <!-- Styling in `../static/CodeChat_client.css`. -->
         <link
             rel="stylesheet"
@@ -41,7 +41,7 @@
                 </iframe>
             </div>
             <div>
-                <!-- Likewise, wrap the ``build_contents`` in a plain div, allowing us to assign styles via the stylesheet; the parent div's styles will be overriden by spliter JS assignments. -->
+                <!-- Likewise, wrap the ``build_contents`` in a plain div, allowing us to assign styles via the stylesheet; the parent div's styles will be overridden by splitter JS assignments. -->
                 <div id="build_contents">
                     <h2 id="build_heading">Build messages</h2>
                     <div id="build"></div>
@@ -60,7 +60,7 @@
         </div>
 
         <script>
-            run_client({{client_id}}, "ws://{{host}}:{{WEBSOCKET_PORT}}/");
+            run_client({{client_id}}, {{WEBSOCKET_PORT}});
         </script>
     </body>
 </html>

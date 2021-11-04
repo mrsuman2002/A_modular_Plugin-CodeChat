@@ -48,7 +48,12 @@ let percent_regex = new RegExp(
 // Core client
 // ===========
 // Given an ID to use, run the CodeChat Client.
-function run_client(id, ws_address) {
+function run_client(
+    // The ID of the CodeChat Client for this window.
+    id,
+    // The port to use for a websocket connection to the CodeChat Server.
+    ws_port
+) {
     // Set up variables used by the functions below
     // --------------------------------------------
     // Get commonly-used nodes in the DOM.
@@ -78,7 +83,9 @@ function run_client(id, ws_address) {
     set_splitter_percent(splitter_size[errors_or_warnings]);
 
     // Create a websocket to communicate with the CodeChat Server.
-    let ws = new ReconnectingWebSocket(ws_address);
+    let ws = new ReconnectingWebSocket(
+        `ws://${window.location.hostname}:${ws_port}`
+    );
 
     // Identify this client on connection.
     ws.onopen = () => {
