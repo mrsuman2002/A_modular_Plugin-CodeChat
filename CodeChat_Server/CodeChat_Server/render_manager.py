@@ -439,9 +439,7 @@ class RenderManager:
                 )
             elif msg == "browser_navigation":
                 # TODO
-                print(
-                    f"TODO: browser navigation to {data['pathname']}."
-                )
+                print(f"TODO: browser navigation to {data['pathname']}.")
                 # Translate the path from a URL to a Path, removing the expected prefix of ``/client/id/``.
                 pathname_raw = urllib.parse.unquote(data["pathname"])
                 expected_pathname_prefix = f"/client/{id_}/"
