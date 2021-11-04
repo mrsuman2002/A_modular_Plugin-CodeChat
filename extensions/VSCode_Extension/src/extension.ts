@@ -21,6 +21,10 @@
 // *****************************************************
 // This extension creates a webview (see `activation/deactivation`_), then uses `CodeChat services`_ to render editor text in that webview.
 //
+// Remote operation
+// ================
+// This extension doesn't fully work when running remotely. Specifically, the web browser in VSCode can't talk with the CodeChat Server via a websocket, since the server runs on the remote host while `the web browser (a WebView) runs locally <https://code.visualstudio.com/api/advanced-topics/remote-extensions#using-the-webview-api>`_. While the solutions on that page seem helpful, they don't support websocket connections (see the ``portMapping`` dropdown text in `WebViewOptions <https://code.visualstudio.com/api/references/vscode-api#WebviewOptions>`_). The workaround: use an external browser (running on the remote host).
+//
 //
 // Requirements
 // ============
@@ -128,8 +132,17 @@ export function activate(context: vscode.ExtensionContext) {
                             // Put this in the a column beside the current column.
                             viewColumn: vscode.ViewColumn.Beside,
                         },
+                        // See WebViewOptions_.
                         {
                             enableScripts: true,
+                            // Per the `docs <https://code.visualstudio.com/api/advanced-topics/remote-extensions#option-2-use-a-port-mapping>`__, map from port on the extension host machine (which may be running remotely) to the local port the webview sees (webviews always run locally). If the extension is running locally, this is a no-op.
+                            portMapping: [
+                                {
+                                    // This must match the value in `../../../CodeChat_Server/CodeChat_Server/constants.py`.
+                                    webviewPort: 5000,
+                                    extensionHostPort: 5000,
+                                },
+                            ],
                         }
                     );
                     // TODO: do I need to dispose of this and the following event handlers? I'm assuming that it will be done automatically when the object is disposed.
@@ -140,7 +153,7 @@ export function activate(context: vscode.ExtensionContext) {
                         webview_panel = undefined;
                     });
 
-                    // Render when the webveiw panel is shown.
+                    // Render when the webview panel is shown.
                     webview_panel.onDidChangeViewState((event) => {
                         start_render();
                     });
@@ -185,6 +198,9 @@ export function activate(context: vscode.ExtensionContext) {
                 let was_error: boolean = false;
 
                 thrift_connection.on("error", function (err) {
+                    console.log(
+                        `CodeChat extension: error in Thrift connection: ${err.message}`
+                    );
                     was_error = true;
                     show_error(
                         `Error communicating with the CodeChat Server: ${err.message}. Re-run the CodeChat extension to restart it.`
@@ -203,10 +219,6 @@ export function activate(context: vscode.ExtensionContext) {
                         if (hadError) {
                             show_error(
                                 "The connection to the CodeChat Server was closed due to a transmission error. Re-run the CodeChat extension to restart it."
-                            );
-                        } else {
-                            show_error(
-                                "The connection to the CodeChat Server was closed. Re-run the CodeChat extension to restart it."
                             );
                         }
                     }
@@ -238,26 +250,8 @@ export function activate(context: vscode.ExtensionContext) {
 // On deactivation, close everything down.
 export async function deactivate() {
     console.log("CodeChat extension: deactivating.");
-    // Return a promise that shuts down the server or stops the client, then do final cleanup.
-    await new Promise((resolve) => {
-        if (thrift_client !== undefined) {
-            // Otherwise, shut down the client.
-            assert(codechat_client_id !== undefined);
-            thrift_client.stop_client(codechat_client_id, (err) => {
-                thrift_client = undefined;
-                codechat_client_id = undefined;
-                resolve(err);
-            });
-        } else {
-            // With no client, there's nothing to do in this phase of the shutdown.
-            resolve("");
-        }
-    });
-    // Perform final cleanup. The next line stops the ``idle_timer`` (the client is already stopped).
     stop_client();
     webview_panel?.dispose();
-    thrift_connection?.end();
-    thrift_connection = undefined;
     console.log("CodeChat extension: deactivated.");
 }
 
@@ -349,7 +343,11 @@ function start_render() {
 // Gracefully shut down the render client if possible. Shut down the client as well.
 function stop_client() {
     console.log("CodeChat extension: stopping client.");
-    if (thrift_client !== undefined && codechat_client_id !== undefined) {
+    if (thrift_client !== undefined) {
+        assert(thrift_connection !== undefined);
+        // Make a local copy to use for calling ``.end()``. If this function is called twice, then ``thift_connection`` will be set to false; if the callback invoked from the first call hasn't fun, then this local copy will still work.
+        const local_thrift_connection = thrift_connection;
+        assert(codechat_client_id !== undefined);
         thrift_client.stop_client(
             codechat_client_id,
             function (err, stop_client_return) {
@@ -362,8 +360,16 @@ function stop_client() {
                         `Error when stopping the client: ${stop_client_return}`
                     );
                 }
+                // Close the Thrift connection in case the server is shutting down. Ideally, the server would return some sort of "shutting down now" response in ``stop_client_return``, but it's difficult for the server to know this.
+                console.log("CodeChat extension: ending Thrift connection.");
+                local_thrift_connection.end();
+                thrift_connection = undefined;
             }
         );
+    } else {
+        // See above -- assume the server will soon shut down.
+        thrift_connection?.end();
+        thrift_connection = undefined;
     }
 
     // Even though the callbacks to ``stop_client`` haven't completed yet, set this now to prevent further use of the client, which is stopping.
