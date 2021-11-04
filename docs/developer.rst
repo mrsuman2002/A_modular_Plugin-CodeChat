@@ -60,14 +60,13 @@ Contents
 
 To do
 =====
--   Better packaging.
+-   Better packaging: create a bootstrap Python script to install and configure the CodeChat server (create a venv, etc.)
 -   Lots of testing.
 -   Inform the editor plugin when the client shuts down.
 -   Handle syntax error line number click from the web client.
 -   Hyperlink the file and line, or perhaps just the line, instead of the entire error message.
 -   Provide way to do a rebuild all.
 -   Add a CodeChat Client GUI to select render language for non-project builds.
--   Use a better splitter, such as `split.js <https://split.js.org/>`_.
 -   Handle VS Code's themes (dark, high-contrast, etc.) correctly. To do this, we need to inherit CSS from the webview into the iframe. See https://code.visualstudio.com/api/extension-guides/webview#theming-webview-content, and also use the Developer Tools is VS Code to inspect the iframe containing the webview, which provides vars defining all the VS Code styles.
 -   Add in sync.
 -   Monitor iframe location changes and try to sync by loading another file.
@@ -80,6 +79,7 @@ To do
 -   Define a StrictYAML config file to replace the ``GLOB_TO_CONVERTER`` data structure more flexibly. Add in a bunch of conversions using Pandoc.
 -   Would it be easier for extension authors if the server could be invoked from the command line in client mode to communicate with the server via stdio? For example, send render requests as JSON and receive replies as JSON, or something like that? For now, wait until more extensions are developed.
 -   The mdbook render seems slow. Perhaps cache rendered results instead of recomputing them each time?
+-   Figure out how to forward websocket ports, so VSCode remote development would work. This may be insecure. See https://github.com/microsoft/vscode/issues/74085#issuecomment-494757748.
 
 
 Ideas:
