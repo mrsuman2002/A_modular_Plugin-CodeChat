@@ -550,7 +550,7 @@ class RenderManager:
         # NOTE: The ``CodeChat_Server start`` CLI command reads this line, then quits. This means (on Windows at least) that all future ``print`` statements will block, preventing the server from shutting down. Outputing info to the logger avoids this problem. Therefore, **do not include print statements after this point in the code**.
         print("The CodeChat Server is ready.\nCODECHAT_READY", file=sys.stderr)
         # Flush this since extension and test code waits for it before connecting to the server/running the rest of a test.
-        sys.stdout.flush()
+        sys.stderr.flush()
         await asyncio.gather(*[self._worker(i) for i in range(num_workers)])
 
     # Process items in the render queue.
