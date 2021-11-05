@@ -205,6 +205,9 @@ export function activate(context: vscode.ExtensionContext) {
                     show_error(
                         `Error communicating with the CodeChat Server: ${err.message}. Re-run the CodeChat extension to restart it.`
                     );
+                    // End the connection, to hopefully avoid the socketing entering the ``TIME-WAIT`` state.
+                    assert(thrift_connection);
+                    thrift_connection.end();
                     // The close event will be `emitted next <https://nodejs.org/api/net.html#net_event_error_1>`_; that will handle cleanup.
                 });
 
@@ -212,8 +215,6 @@ export function activate(context: vscode.ExtensionContext) {
                     console.log(
                         "CodeChat extension: closing Thrift connection."
                     );
-                    // BUG: on deactivation, VS Code closes this socket before calling the ``deactivate()`` method. This prevents us from shutting down the client. I'm not sure what event handler would allow me to perform cleanup before the socket is closed.
-
                     // If there was an error, the event handler above already provided the message. Note: the `parameter hadError <https://nodejs.org/api/net.html#net_event_close_1>`_ only applies to transmission errors, not to any other errors which trigger the error callback. Therefore, I'm using the ``was_error`` flag instead to catch non-transmission errors.
                     if (!was_error) {
                         if (hadError) {
