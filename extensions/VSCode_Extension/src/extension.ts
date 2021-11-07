@@ -135,14 +135,7 @@ export function activate(context: vscode.ExtensionContext) {
                         // See WebViewOptions_.
                         {
                             enableScripts: true,
-                            // Per the `docs <https://code.visualstudio.com/api/advanced-topics/remote-extensions#option-2-use-a-port-mapping>`__, map from port on the extension host machine (which may be running remotely) to the local port the webview sees (webviews always run locally). If the extension is running locally, this is a no-op.
-                            portMapping: [
-                                {
-                                    // This must match the value in `../../../CodeChat_Server/CodeChat_Server/constants.py`.
-                                    webviewPort: 5000,
-                                    extensionHostPort: 5000,
-                                },
-                            ],
+                            // Note: Per the `docs <https://code.visualstudio.com/api/advanced-topics/remote-extensions#option-2-use-a-port-mapping>`__, there's a way to map from ports on the extension host machine (which may be running remotely) to local ports the webview sees (since webviews always run locally). However, this doesn't support websockets, and should also be in place when using an external browser. Therefore, we don't supply ``portMapping``.
                         }
                     );
                     // TODO: do I need to dispose of this and the following event handlers? I'm assuming that it will be done automatically when the object is disposed.
