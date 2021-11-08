@@ -60,7 +60,7 @@ def test_1():
             SUBPROCESS_SERVER_ARGS + ["serve"], capture_output=True, text=True
         )
         # Check that it reported the ports were in use.
-        assert "Error: ports " in cp.stdout
+        assert "Error: port(s) " in cp.stdout
 
 
 # Test the plugin with invalid parameters.
