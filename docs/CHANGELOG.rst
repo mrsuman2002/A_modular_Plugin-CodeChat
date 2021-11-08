@@ -13,8 +13,12 @@ Change Log
 **********
 -   `Github master <https://github.com/bjones1/CodeChat_system.git>`_:
 
+    -   No changes yet.
+
+-   0.2.0, 8-Nov-2021:
+
     -   Improve VSCode Client shutdown to close sockets with errors.
-    -   Return non-zero exist codes from the server when an error occurs.
+    -   Return non-zero exit codes from the server when an error occurs.
     -   Remove VSCode-based port mapping; delete to SSH instead.
     -   Improve error display in VSCode.
     -   Move ports used to a more likely free area (minor version bump).
