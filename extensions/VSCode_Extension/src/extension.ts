@@ -209,12 +209,10 @@ export function activate(context: vscode.ExtensionContext) {
                         "CodeChat extension: closing Thrift connection."
                     );
                     // If there was an error, the event handler above already provided the message. Note: the `parameter hadError <https://nodejs.org/api/net.html#net_event_close_1>`_ only applies to transmission errors, not to any other errors which trigger the error callback. Therefore, I'm using the ``was_error`` flag instead to catch non-transmission errors.
-                    if (!was_error) {
-                        if (hadError) {
-                            show_error(
-                                "The connection to the CodeChat Server was closed due to a transmission error. Re-run the CodeChat extension to restart it."
-                            );
-                        }
+                    if (!was_error && hadError) {
+                        show_error(
+                            "The connection to the CodeChat Server was closed due to a transmission error. Re-run the CodeChat extension to restart it."
+                        );
                     }
                     thrift_connection = undefined;
                     // Since the connection is closed, we can't gracefully shut down the client via ``stop_client()``. Simply mark it as undefined so it will be re-created.
@@ -386,7 +384,7 @@ function show_error(message: string) {
         if (!webview_panel.webview.html.startsWith("<h1>CodeChat</h1>")) {
             webview_panel.webview.html = "<h1>CodeChat</h1>";
         }
-        webview_panel.webview.html += `<p>${escape(
+        webview_panel.webview.html += `<p style="white-space: pre-wrap;">${escape(
             message
         )}</p><p>See the <a href="https://codechat-system.readthedocs.io/en/latest/docs/common_problems.html" target="_blank" rel="noreferrer noopener">docs</a>.</p>`;
     } else {
