@@ -79,7 +79,7 @@ To do
 -   Define a StrictYAML config file to replace the ``GLOB_TO_CONVERTER`` data structure more flexibly. Add in a bunch of conversions using Pandoc.
 -   Would it be easier for extension authors if the server could be invoked from the command line in client mode to communicate with the server via stdio? For example, send render requests as JSON and receive replies as JSON, or something like that? For now, wait until more extensions are developed.
 -   The mdbook render seems slow. Perhaps cache rendered results instead of recomputing them each time?
--   Figure out how to forward websocket ports, so VSCode remote development would work. This may be insecure. See https://github.com/microsoft/vscode/issues/74085#issuecomment-494757748.
+-   Provide a way to close CodeChat when running in browser mode.
 
 
 Ideas:
