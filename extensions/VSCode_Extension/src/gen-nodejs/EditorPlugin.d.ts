@@ -11,6 +11,7 @@ import Int64 = require('node-int64');
 
 import ttypes = require('./CodeChat_Services_types');
 import CodeChatClientLocation = ttypes.CodeChatClientLocation
+import THRIFT_PORT = ttypes.THRIFT_PORT
 import RenderClientReturn = ttypes.RenderClientReturn
 
 declare class Client {

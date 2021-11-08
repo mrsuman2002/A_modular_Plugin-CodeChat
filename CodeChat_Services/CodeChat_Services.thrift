@@ -30,8 +30,8 @@
 //      -   ``void sync_to(string text, uint text_index, uint global_y_coordinate_of_cursor)``
 //      -   ``uint index, string text, enum result_type { sync, text, request_ownership } = get_results()`` returns:
 //
-//          -   The index for the next sync request made in the CodeChat Client. Valid if result_type == sync.
-//          -   Updated text for the editor. Valid if result_type == text.
+//          -   The index for the next sync request made in the CodeChat Client. Valid if ``result_type == sync``.
+//          -   Updated text for the editor. Valid if ``result_type == text``.
 //
 // -    ``void grant_ownswership(int id)``
 //
@@ -46,6 +46,13 @@
 //
 // Services for the editor/IDE extension
 // =====================================
+//
+// .. _CodeChat service port:
+//
+// The port used for the Thrift connection between text editor/IDE extensions/plugins and the CodeChat Server. All editor/IDE plugins must use this port to access CodeChat services.
+const i16 THRIFT_PORT = 27376
+
+// This defines the return value from ``get_client``.
 struct RenderClientReturn {
     // An HTML string which contains either the render client or an URL for the client.
     1: string html,
@@ -56,7 +63,7 @@ struct RenderClientReturn {
 }
 
 
-// Define the location of the CodeChat Client.
+// Define the location of the CodeChat Client; passed as a parameter to ``get_client``.
 enum CodeChatClientLocation {
     // A URL, which the CodeChat System will host in its own web browser.
     url,
@@ -67,7 +74,7 @@ enum CodeChatClientLocation {
 }
 
 // Provide CodeChat services to editor plugins.
-service EditorPlugin  {
+service EditorPlugin {
     // See if the server is running. It returns an empty string on success.
     string ping()
 

@@ -99,3 +99,4 @@ RenderClientReturn.prototype.write = function(output) {
   return;
 };
 
+ttypes.THRIFT_PORT = 27376;

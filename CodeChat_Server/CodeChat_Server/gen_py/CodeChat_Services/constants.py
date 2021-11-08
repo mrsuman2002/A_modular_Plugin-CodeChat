@@ -12,3 +12,4 @@ from thrift.TRecursive import fix_spec
 
 import sys
 from .ttypes import *
+THRIFT_PORT = 27376

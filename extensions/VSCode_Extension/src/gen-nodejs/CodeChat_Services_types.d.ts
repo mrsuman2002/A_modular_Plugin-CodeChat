@@ -22,3 +22,5 @@ declare class RenderClientReturn {
 
     constructor(args?: { html: string; id: number; error: string; });
 }
+
+declare var THRIFT_PORT: number;

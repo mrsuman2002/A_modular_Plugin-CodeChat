@@ -17,6 +17,7 @@ Change Log
     -   Return non-zero exist codes from the server when an error occurs.
     -   Remove VSCode-based port mapping; delete to SSH instead.
     -   Improve error display in VSCode.
+    -   Move ports used to a more likely free area (minor version bump).
 
 -   0.1.4, 4-Nov-2021:
 
