@@ -174,9 +174,14 @@ app = typer.Typer()
 @app.command()
 def start(
     coverage: bool = typer.Option(False, help="Run with code coverage enabled.")
-) -> int:
+) -> None:
     "Start the server."
 
+    sys.exit(_start(coverage))
+
+
+# Typer's default arguments don't work when called directly from Python. This avoid provides a function which returns a value (0 for success, a non-zero value for failure), instead of calling ``sys.exit()``. The following CLI functions follow this pattern as well.
+def _start(coverage=False) -> int:
     print(
         "Starting the server -- searching for an already-running instance...",
         file=sys.stderr,
@@ -192,7 +197,7 @@ def start(
         print("No running CodeChat Server instances found.", file=sys.stderr)
 
     # The server isn't up or has crashed. Stop any existing instances in case it crashed.
-    ret = stop()
+    ret = _stop()
     if ret:
         return ret
 
@@ -247,18 +252,17 @@ def start(
     return 0
 
 
-# Typer's default arguments don't work when called directly from Python.
-def _start(coverage=False) -> int:
-    return start(coverage)
-
-
 @app.command()
-def stop() -> int:
+def stop() -> None:
     "Stop the server."
+    sys.exit(_stop())
 
+
+def _stop() -> int:
     print("Stopping all CodeChat Server instances...", file=sys.stderr)
     # Look for the server. TODO: should I avoid hard-coding this?
     server_name = "CodeChat_Server"
+    ret = 0
     # This code was copied from the `psutil docs <https://psutil.readthedocs.io/en/latest/#find-process-by-name>`_ then lightly modified.
     for p in psutil.process_iter(["cmdline", "exe", "name", "pid"]):
         if (
@@ -283,24 +287,25 @@ def stop() -> int:
             try:
                 p.kill()
             except psutil.NoSuchProcess:
-                pass
+                # Report an error, but continue trying to kill other processes first.
+                ret = 1
 
-    return 0
+    return ret
 
 
 @app.command()
-def serve() -> int:
+def serve() -> None:
     "Run the server in the current terminal/console."
 
     # This file takes a long time to load and run. Print a status message as it starts.
     print("Loading...", file=sys.stderr)
     from .server import run_servers
 
-    return run_servers()
+    sys.exit(run_servers())
 
 
 @app.command()
-def build(path_to_build: List[Path]) -> int:
+def build(path_to_build: List[Path]) -> None:
     "Build the specified CodeChat project(s)."
 
     from .renderer import render_file
@@ -336,17 +341,17 @@ def build(path_to_build: List[Path]) -> int:
                     f"Error: file {ptb} not found, and no containing project to render was found.",
                     file=sys.stderr,
                 )
-    return 0
+                sys.exit(1)
 
 
 @app.command()
-def render(path_to_build: Path, id: int) -> int:
+def render(path_to_build: Path, id: int) -> None:
     "Render the specified CodeChat project in a web browser."
 
     print(f"Rendering {path_to_build} using ID {id}.", file=sys.stderr)
     ret = _start()
     if ret:
-        return ret
+        sys.exit(ret)
 
     # Ensure the ID is negative.
     id = -abs(id) - 1
@@ -355,7 +360,6 @@ def render(path_to_build: Path, id: int) -> int:
     path_to_build = path_to_build.resolve()
     thrift_client = get_client()
     thrift_client.start_render(file_text(path_to_build), str(path_to_build), id, False)
-    return 0
 
 
 @app.command()
@@ -369,16 +373,15 @@ def watch(
     ignore_patterns: List[str] = typer.Option(
         [], help="Patterns of files to ignore in the provided directory(s)."
     ),
-) -> int:
+) -> None:
     "Watch the specified directories; perform a render when a matching file is changed."
 
     ret = _start()
     if ret:
-        return ret
+        sys.exit(ret)
 
     wc = WatcherClient(paths, patterns, ignore_patterns)
     wc.run()
-    return 0
 
 
 if __name__ == "__main__":
