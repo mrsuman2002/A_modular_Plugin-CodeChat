@@ -292,13 +292,14 @@ def run_servers() -> int:
     logging.basicConfig(level=logging.INFO)
 
     # See if the required ports are in use, probably by another instance of this server.
-    if (
-        is_port_in_use(HTTP_PORT)
-        or is_port_in_use(WEBSOCKET_PORT)
-        or is_port_in_use(THRIFT_PORT)
-    ):
+    ports_in_use = [
+        str(port)
+        for port in (HTTP_PORT, WEBSOCKET_PORT, THRIFT_PORT)
+        if is_port_in_use(port)
+    ]
+    if ports_in_use:
         print(
-            f"Error: ports {HTTP_PORT}, {WEBSOCKET_PORT}, and/or {THRIFT_PORT} are already in use.\n"
+            f"Error: port(s) {', '.join(ports_in_use)} are already in use.\n"
             "Hopefully, this means that the CodeChat Server is already running in another process.\n"
             "Exiting.\n"
         )
@@ -315,7 +316,7 @@ def run_servers() -> int:
 
     def webserver_launcher(*args, **kwargs):
         try:
-            # Omitting the ``quiet`` option causes the server bottle uses by default (Python's stdlib wsgiref) to die when emitting stdio if run with the ``CodeChat_Server start`` option (where the stdio/stderr gets disconnected after the server is started).
+            # Omitting the ``quiet`` option causes the server Bottle uses by default (Python's stdlib wsgiref) to die when emitting stdio if run with the ``CodeChat_Server start`` option (where the stdio/stderr gets disconnected after the server is started).
             bottle.run(*args, quiet=True, **kwargs)
         except Exception:
             # Shut down the server instead of allowing it to keep running in a broken state.
