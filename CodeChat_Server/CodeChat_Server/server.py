@@ -237,7 +237,6 @@ def client_html() -> str:
         str(Path(__file__).parent / "CodeChat_Client/templates/CodeChat_client.html"),
         client_id=bottle.request.query.id,
         WEBSOCKET_PORT=WEBSOCKET_PORT,
-        host=LOCALHOST,
     )
 
 
