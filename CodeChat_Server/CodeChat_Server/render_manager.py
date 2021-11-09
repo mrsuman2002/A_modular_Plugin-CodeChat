@@ -444,7 +444,7 @@ class RenderManager:
                 pathname_raw = urllib.parse.unquote(data["pathname"])
                 expected_pathname_prefix = f"/client/{id_}/"
                 assert pathname_raw.startswith(expected_pathname_prefix)
-                pathname = Path(pathname_raw[len(expected_pathname_prefix):])
+                pathname = Path(pathname_raw[len(expected_pathname_prefix) :])
 
                 # Update the HTML path
                 cs = self._client_state_dict[id_]
