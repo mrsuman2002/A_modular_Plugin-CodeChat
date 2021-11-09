@@ -13,9 +13,38 @@ The Visual Studio Code CodeChat extension
 *****************************************
 This extension provides CodeChat's capabilities within the Visual Studio Code editor, as illustrated in `the CodeChat System for Visual Studio Code <README>` page.
 
+Remote Development
+==================
+The `VS Code Remote Development <https://code.visualstudio.com/docs/remote/remote-overview>`_ toolset allows the CodeChat System to run on another computer. Read the `/CodeChat_Server/security`, since this requires operation in insecure mode. To set this up:
+
+#.  Create an `OpenSSH configuration file <https://www.ssh.com/academy/ssh/config>`_ which forwards the HTTP and websocket ports from the client (where VSCode runs) to the server (where the CodeChat Server and the VSCode extension run). To do this, in VSCode press ctrl+shift+p, then type "Remote-SSH: Open SSH Configuration File..." The contents should include:
+
+    .. code:: text
+
+        # Replace ``Development_Ubuntu`` with a a user-friendly name for your host here.
+        Host Development_Ubuntu
+            # Replace this IP with the address of the server to connect to.
+            HostName 127.0.0.1
+            # Provide the username used to log in to the server.
+            User bob
+            # This forwards CodeChat ports from the web browser on the
+            # client to the server. Update the IP address to be the same as
+            # the address used for the ``HostName``.
+            LocalForward 27377 127.0.0.1:27377
+            LocalForward 27378 127.0.0.1:27378
+
+#.  Install the CodeChat Server on the server.
+
+#.  (Optional, but highly recommended -- it saves a lot of time) Set up `SSH key-based authentication <https://code.visualstudio.com/docs/remote/troubleshooting#_configuring-key-based-authentication>`_.
+
+#.  `Connect to the remote host <https://code.visualstudio.com/docs/remote/ssh#_connect-to-a-remote-host>`_.
+
+
+Developer documentation
+=======================
 
 From source
-===========
+-----------
 To install from source:
 
 *   Install `npm <https://nodejs.org/en/>`_.
@@ -32,7 +61,7 @@ Debugging the extension
 
 
 Notes
-=====
+-----
 *   The NPM Thrift 0.13.0 release is `broken <https://github.com/apache/thrift/pull/1947>`_. Don't install it.
 
 Tests
@@ -41,7 +70,7 @@ TODO: tests are missing.
 
 
 Contents
-========
+--------
 .. toctree::
     :maxdepth: 2
 
