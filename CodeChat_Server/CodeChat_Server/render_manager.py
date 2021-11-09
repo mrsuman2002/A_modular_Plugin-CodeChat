@@ -50,7 +50,7 @@ import websockets
 
 # Local imports
 # -------------
-from .constants import LOCALHOST, WEBSOCKET_PORT
+from .constants import WEBSOCKET_PORT
 from .renderer import is_win, ProjectConfFile, render_file
 
 
@@ -512,13 +512,13 @@ class RenderManager:
             await self._job_q.put(None)
 
     # Start the render manager.
-    def run(self, *args, debug: bool = True) -> None:
+    def run(self, *args, debug: bool = True, **kwargs) -> None:
         # The default Windows event loop doesn't support asyncio subprocesses.
         if is_win:
             asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 
         try:
-            asyncio.run(self._run(*args), debug=debug)
+            asyncio.run(self._run(*args, **kwargs), debug=debug)
         except Exception:
             # If something goes wrong, don't try a clean shutdown of this thread, since the event loop already died. This must precede the event below, so that when the main thread tries calling ``threadsafe_shutdown``, this flag is already set.
             self._is_shutdown = True
@@ -528,7 +528,7 @@ class RenderManager:
         logger.info("Render manager is shut down.")
 
     # Run the rendering thread with the given number of workers.
-    async def _run(self, num_workers: int = 1) -> None:
+    async def _run(self, server_host, num_workers: int = 1) -> None:
         self._num_workers = num_workers
         # Create a queue of jobs for the renderer to process. This must be created from within the main loop to avoid ``got Future <Future pending> attached to a different loop`` errors.
         self._job_q: asyncio.Queue = asyncio.Queue()
@@ -541,7 +541,7 @@ class RenderManager:
         self._MultiClients_deleted = asyncio.Event()
 
         self.websocket_server = await websockets.serve(
-            self.websocket_handler, LOCALHOST, WEBSOCKET_PORT
+            self.websocket_handler, server_host, WEBSOCKET_PORT
         )
         # _`CODECHAT_READY`: let the user know that the server is now ready -- this is the last piece of it to start.
         #

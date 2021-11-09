@@ -22,6 +22,7 @@ User documentation
     README
     install
     cli
+    security
 
 
 Developer documentation

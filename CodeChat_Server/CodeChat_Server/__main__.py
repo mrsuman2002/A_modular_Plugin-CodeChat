@@ -118,7 +118,7 @@ class WatcherClient:
         )
 
     # See the `docs <https://watchdog.readthedocs.io/en/latest/api.html#watchdog.events.FileSystemEventHandler.on_any_event>`__.
-    def on_any_event(self, event: FileSystemEvent):
+    def on_any_event(self, event: FileSystemEvent) -> None:
         if not event.is_directory:
             print(event, event.src_path, file=sys.stderr)
             src_path = Path(event.src_path).absolute()
@@ -141,7 +141,7 @@ class WatcherClient:
                         )
                         self.running = False
 
-    def run(self):
+    def run(self) -> None:
         self.running = True
         try:
             while self.running:
@@ -150,7 +150,7 @@ class WatcherClient:
             pass
         self.shutdown()
 
-    def shutdown(self):
+    def shutdown(self) -> None:
         print("Watcher shutting down...", file=sys.stderr)
         try:
             ret = self.thrift_client.stop_client(self.client_id)
@@ -166,22 +166,27 @@ class WatcherClient:
         print("Watcher shut down.", file=sys.stderr)
 
 
+# .. _CLI interface:
+#
 # CLI interface
 # =============
 app = typer.Typer()
 
+INSECURE_HELP = "Setting this True allows the webserver and websocket to accept connections from any address (they bind to 0.0.0.0). This is extremely dangerous and insecure. If enabled, these ports should be firewalled and carefully protected. This mode is offered to support remote development using Visual Studio Code, which provides a secure (SSH-based) connection. The default value of False allows only connections from the machine this program runs on."
+
 
 @app.command()
 def start(
-    coverage: bool = typer.Option(False, help="Run with code coverage enabled.")
+    insecure: bool = typer.Option(False, help=INSECURE_HELP),
+    coverage: bool = typer.Option(False, help="Run with code coverage enabled."),
 ) -> None:
     "Start the server."
 
-    sys.exit(_start(coverage))
+    sys.exit(_start(insecure, coverage))
 
 
 # Typer's default arguments don't work when called directly from Python. This avoid provides a function which returns a value (0 for success, a non-zero value for failure), instead of calling ``sys.exit()``. The following CLI functions follow this pattern as well.
-def _start(coverage=False) -> int:
+def _start(insecure: bool = False, coverage: bool = False) -> int:
     print(
         "Starting the server -- searching for an already-running instance...",
         file=sys.stderr,
@@ -203,8 +208,9 @@ def _start(coverage=False) -> int:
 
     # Start the server, now that any hung instances are terminated.
     cov_args = ["-m", "coverage", "run"] if coverage else []
+    args = ["--insecure"] if insecure else []
     p = subprocess.Popen(
-        [sys.executable, *cov_args, "-m", "CodeChat_Server", "serve"],
+        [sys.executable, *cov_args, "-m", "CodeChat_Server", "serve", *args],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
@@ -287,21 +293,23 @@ def _stop() -> int:
             try:
                 p.kill()
             except psutil.NoSuchProcess:
-                # Report an error, but continue trying to kill other processes first.
+                pass
+            except Exception as e:
+                print(f"Unable to kill: {e}.", file=sys.stderr)
                 ret = 1
 
     return ret
 
 
 @app.command()
-def serve() -> None:
+def serve(insecure: bool = typer.Option(False, help=INSECURE_HELP)) -> None:
     "Run the server in the current terminal/console."
 
     # This file takes a long time to load and run. Print a status message as it starts.
     print("Loading...", file=sys.stderr)
     from .server import run_servers
 
-    sys.exit(run_servers())
+    sys.exit(run_servers(insecure))
 
 
 @app.command()

@@ -419,6 +419,16 @@ async function start_server() {
     let stdout = "";
     let stderr = "";
 
+    // If running remotely, we need to allow non-local connections to the server, which is insecure.
+    //
+    // Per the `docs <https://code.visualstudio.com/api/references/vscode-api#extensions.getExtension>`__, the string is ``publisher.name``; this returns an `Extension <https://code.visualstudio.com/api/references/vscode-api#Extension>`_.
+    const extension = vscode.extensions.getExtension('codechat.codechat');
+    assert(extension);
+    // See `remote extensions docs <https://code.visualstudio.com/api/advanced-topics/remote-extensions#varying-behaviors-when-running-remotely-or-in-the-codespaces-browser-editor>`_. Per the docs referenced, "When no remote extension host exists, the value [of extensionKing] is ExtensionKind.UI."
+    if (extension.extensionKind !== vscode.ExtensionKind.UI) {
+        args.push("--insecure");
+    }
+
     return new Promise((resolve, reject) => {
         assert(typeof command === "string");
         const server_process = child_process.spawn(command, args);

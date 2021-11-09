@@ -29,6 +29,7 @@ Contents
     :maxdepth: 2
 
     templates/CodeChat_client.html
+    templates/insecure.html
     static/CodeChat_client.js
     static/CodeChat_client.css
     static/ReconnectingWebsocket.js

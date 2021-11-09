@@ -71,6 +71,7 @@ logger = logging.getLogger(__name__)
 class CodeChatHandler:
     def __init__(self):
         self.render_manager: render_manager.RenderManager
+        self.insecure: bool
 
     # _`get_client`: Return the HTML for a web client.
     def get_client(self, codeChat_client_location: int) -> RenderClientReturn:
@@ -93,7 +94,8 @@ class CodeChatHandler:
             return ret
 
         # Return what's requested.
-        url = "http://{}:{}/client?id={}".format(LOCALHOST, HTTP_PORT, id)
+        endpoint = "insecure" if self.insecure else "client"
+        url = f"http://{LOCALHOST}:{HTTP_PORT}/{endpoint}?id={id}"
         if codeChat_client_location == CodeChatClientLocation.url:
             # Just return the URL.
             ret_str = url
@@ -240,6 +242,17 @@ def client_html() -> str:
     )
 
 
+# Inform users if running in insecure mode.
+@bottle.route("/insecure")
+def insecure_warning():
+    return bottle.template(
+        str(Path(__file__).parent / "CodeChat_Client/templates/insecure.html"),
+        THRIFT_PORT=THRIFT_PORT,
+        HTTP_PORT=HTTP_PORT,
+        WEBSOCKET_PORT=WEBSOCKET_PORT,
+    )
+
+
 # The endpoint for files requested by a specific client, including rendered source files. Note that ``int`` by default is `positive only <https://werkzeug.palletsprojects.com/en/2.0.x/routing/#werkzeug.routing.IntegerConverter>`_.
 @bottle.route("/client/<id:int>/<url_path:path>")
 def client_data(id: int, url_path: str) -> bottle.HTTPResponse:
@@ -285,7 +298,10 @@ def excepthook(type, value, traceback):
 
 
 # Run both servers. This does not (usually) return.
-def run_servers() -> int:
+def run_servers(
+    # See ``INSECURE_HELP`` in the `CLI Interface`.
+    insecure=False,
+) -> int:
 
     print(f"The CodeChat Server, v.{__version__}\n")
     logging.basicConfig(level=logging.INFO)
@@ -308,6 +324,7 @@ def run_servers() -> int:
     sys.excepthook = excepthook
 
     # Both servers block when run, so place them in a thread. Mark the servers as a daemon, so they will be killed when the program shuts down.
+    handler.insecure = insecure
     editor_plugin_thread = threading.Thread(
         target=editor_plugin_server, name="Editor plugin server", daemon=True
     )
@@ -322,10 +339,10 @@ def run_servers() -> int:
             shutdown_event.set()
             raise
 
-    # Taken from https://stackoverflow.com/a/45017691.
+    server_host = "0.0.0.0" if insecure else LOCALHOST
     webserver_thread = threading.Thread(
         target=webserver_launcher,
-        kwargs=dict(port=HTTP_PORT),
+        kwargs=dict(host=server_host, port=HTTP_PORT),
         name="Webserver",
         daemon=True,
     )
@@ -334,7 +351,7 @@ def run_servers() -> int:
     # Start the render loop in another thread.
     handler.render_manager = render_manager.RenderManager(shutdown_event)
     render_manager_thread = threading.Thread(
-        target=handler.render_manager.run, name="asyncio"
+        target=handler.render_manager.run, name="asyncio", args=(server_host,)
     )
     render_manager_thread.start()
 
