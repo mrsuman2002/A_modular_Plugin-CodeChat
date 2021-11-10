@@ -15,21 +15,21 @@ This extension provides CodeChat's capabilities within the Visual Studio Code ed
 
 Remote Development
 ==================
-The `VS Code Remote Development <https://code.visualstudio.com/docs/remote/remote-overview>`_ toolset allows the CodeChat System to run on another computer. Read the `/CodeChat_Server/security`, since this requires operation in insecure mode. To set this up:
+The `VS Code Remote Development <https://code.visualstudio.com/docs/remote/remote-overview>`_ toolset allows the CodeChat System to run on another computer. To set this up:
 
 #.  Create an `OpenSSH configuration file <https://www.ssh.com/academy/ssh/config>`_ which forwards the HTTP and websocket ports from the client (where VSCode runs) to the server (where the CodeChat Server and the VSCode extension run). To do this, in VSCode press ctrl+shift+p, then type "Remote-SSH: Open SSH Configuration File..." The contents should include:
 
     .. code:: text
 
-        # Replace ``Development_Ubuntu`` with a a user-friendly name for your host here.
+        # Replace ``Development_Ubuntu`` with a a user-friendly name for your
+        # host here.
         Host Development_Ubuntu
-            # Replace this IP with the address of the server to connect to.
-            HostName 127.0.0.1
+            # Replace this IP with the IP or address of the server to connect
+            # to.
+            HostName 1.2.3.4
             # Provide the username used to log in to the server.
             User bob
-            # This forwards CodeChat ports from the web browser on the
-            # client to the server. Update the IP address to be the same as
-            # the address used for the ``HostName``.
+            # Don't change this.
             LocalForward 27377 127.0.0.1:27377
             LocalForward 27378 127.0.0.1:27378
 
