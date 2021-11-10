@@ -15,6 +15,10 @@ Change Log
 
     -   No changes yet.
 
+-   0.2.1, 10-Nov-2021:
+
+    -   Added insecure mode.
+
 -   0.2.0, 8-Nov-2021:
 
     -   Improve VSCode Client shutdown to close sockets with errors.
