@@ -155,7 +155,8 @@ setup(
     # putting the files in :doc:`MANIFEST.in <MANIFEST.in>`. See `including data
     # files <http://pythonhosted.org/setuptools/setuptools.html#including-data-files>`_.
     include_package_data=True,
-    python_requires=">=3.6",
+    # _`Python version support`: the program uses ``asyncio.run``, which was introduced in Python 3.7. `Tox` tests also run beginning at Python 3.7.
+    python_requires=">=3.7",
     # Make it easy to run the server.
     entry_points={
         "console_scripts": ["CodeChat_Server = CodeChat_Server.__main__:app"]
