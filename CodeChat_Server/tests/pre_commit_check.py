@@ -29,7 +29,7 @@ def checks():
         # fmt: off
         "black --check .",
         "flake8",
-        "mypy",
+        "mypy --install-types --non-interactive",
         "pytest",
         # fmt: on
     )
