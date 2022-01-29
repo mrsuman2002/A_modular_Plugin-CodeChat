@@ -226,6 +226,7 @@ exclude_patterns = [
 
     # Misc
     "CodeChat_Server/venv_fedora",
+    ".venv",
 ]
 
 

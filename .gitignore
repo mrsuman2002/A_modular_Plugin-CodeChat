@@ -39,6 +39,7 @@ dist/
 # Others
 .mypy_cache/
 .tox/
+.venv/
 thrift*.exe
 node_modules/
 CodeChat_Server/venv_fedora/

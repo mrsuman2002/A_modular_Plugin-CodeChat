@@ -10,8 +10,6 @@ exclude = '''/
     CodeChat_Server\/gen_py|
     # File generated for the templates.
     templates|
-    # Venv
-    venv_fedora
 /'''
 
 [tool.pytest.ini_options]
