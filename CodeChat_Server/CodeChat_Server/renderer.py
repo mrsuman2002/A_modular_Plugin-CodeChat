@@ -292,6 +292,7 @@ class ProjectConfFile:
                 project_path=project_path,
                 source_path=self.source_path,
                 output_path=self.output_path,
+                sys_executable=sys.executable,
             )
 
         args = data_dict["args"]

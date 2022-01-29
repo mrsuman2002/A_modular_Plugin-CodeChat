@@ -33,6 +33,7 @@ output_path: book
 # - `{project_path}`: an absolute path to the directory containing this file.
 # - `{source_path}`: the ``source_path`` above, but as an absolute path.
 # - `{output_path}`: the ``output_path`` above, but as an absolute path.
+# - ``{sys_executable}``: the value of the running Python's `sys.executable <https://docs.python.org/3/library/sys.html#sys.executable>`_.
 args: mdbook build
 
 # `html_ext`: optional; defaults to ``.html``. The extension used by this renderer when generating HTML files.
