@@ -61,6 +61,7 @@ Contents
 To do
 =====
 -   Better packaging: create a bootstrap Python script to install and configure the CodeChat server (create a venv, etc.)
+-   Make it easy to create a new project by offering a ``CodeChat_Server create <template name> <optional dest dir>`` command.
 -   Lots of testing.
 -   Inform the editor plugin when the client shuts down.
 -   Handle syntax error line number click from the web client.

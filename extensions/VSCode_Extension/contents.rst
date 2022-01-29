@@ -13,6 +13,33 @@ The Visual Studio Code CodeChat extension
 *****************************************
 This extension provides CodeChat's capabilities within the Visual Studio Code editor, as illustrated in `the CodeChat System for Visual Studio Code <README>` page.
 
+
+Installation
+============
+First, install `Visual Studio Code <https://code.visualstudio.com/>`_ then install the `CodeChat extension for Visual Studio code <https://marketplace.visualstudio.com/items?itemName=CodeChat.codechat>`_. Next:
+
+#.  `Install the CodeChat Server <../../CodeChat_Server/contents>`, which performs all the back-end work and is required for the extension to work.
+#.  (Recommended) `switch to a light theme <https://code.visualstudio.com/docs/getstarted/themes>`_, since the CodeChat System only provides a light theme.
+
+
+.. _use CodeChat:
+
+Use
+===
+#.  Open a file that CodeChat can render (`most source files <https://codechat.readthedocs.io/en/master/CodeChat/CommentDelimiterInfo.py.html#supported-languages>`_, along with ``.rst``, ``.md``, and ``.html`` files).
+#.  Open the `Visual Studio Code command palette <https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette>`_ by pressing ``Ctrl+Shift+P``. Type ``CodeChat``, then press enter to run the extension. After a moment, the rendered file should load. If it doesn't:
+
+    #.  Determine the location of the ``CodeChat_Server`` by entering ``which CodeChat_Server`` (Linux/OS X) or ``where CodeChat_Server`` (Windows) at the terminal/command line.
+    #.  Open the Visual Studio Code settings for CodeChat by navigating to ``File`` > ``Preferences`` > ``Settings`` then typing ``CodeChat`` in the search box. Enter this path for the ``Code Chat.Code Chat Server: Command``. **Important**: in Windows, replace ``\`` in the location you determined with either ``\\`` or ``/``.
+    #.  Run the extension again (``Ctrl+Shift+P`` then select CodeChat).
+
+At any time, run the CodeChat extension again (``Ctrl+Shift+P``, then ``CodeChat``) to show the CodeChat panel, re-start the CodeChat Server if it's not running, then reconnect with the server. Close the CodeChat panel then run the extension for a more complete reset.
+
+The CodeChat Server runs in an `integrated terminal <https://code.visualstudio.com/docs/editor/integrated-terminal>`_. You may hide this window (the X button at the top right of the pane) if you wish. To stop the server, either press any key in the terminal or click the trash can icon near the top right of the pane; re-run the CodeChat extension to restart it.
+
+See the `CodeChat tutorial <https://codechat.readthedocs.io/en/master/docs/tutorial.html>`_ for step-by-step instructions on authoring literate programming documents using Sphinx. For other documentation systems, create a `project configuration file <../../codechat_config.yaml>` then place it in the root directory of your project.
+
+
 Remote Development
 ==================
 The `VS Code Remote Development <https://code.visualstudio.com/docs/remote/remote-overview>`_ toolset allows the CodeChat System to run on another computer. To set this up:
@@ -39,41 +66,33 @@ The `VS Code Remote Development <https://code.visualstudio.com/docs/remote/remot
 
 #.  `Connect to the remote host <https://code.visualstudio.com/docs/remote/ssh#_connect-to-a-remote-host>`_.
 
+Remote containers
+-----------------
+This is preliminary. It's slow to attach this way. I'd prefer to SSH directly to the running container -- perhaps this `SO <https://stackoverflow.com/questions/57040499/automate-starting-ssh-service-after-running-the-container>`__ post? Even better -- find a way to run ``docker-tools shell`` before VSCode runs its stuff. Things that don't work:
 
-Developer documentation
-=======================
+    -   Adding the following to my SSH config::
 
-From source
------------
-To install from source:
+            # Taken from `SO <https://unix.stackexchange.com/a/417373>`__. VSCode ignores this, unfortunately.
+            RemoteCommand /home/ubuntu/.local/bin/docker-tools shell
+            # To avoid the error ``the input device is not a TTY``.
+            RequestTTY force
 
-*   Install `npm <https://nodejs.org/en/>`_.
-*   Install this extension's manifest (`package.json <https://code.visualstudio.com/api/references/extension-manifest>`_): from this directory, open a command prompt/terminal then execute::
+        It works as expected from a command prompt, but VSCode seems to ignore it.
 
-        npm install
-        npm build
+#.  Install the `Docker for Visual Studio Code extension <https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-docker>`_.
+#.  In the setting for that plugin, set ``docker.host`` to ``username@address`` of the server running Docker.
+#.  Set up `SSH key-based authentication`_ and make sure the `SSH agent is running locally <https://code.visualstudio.com/docs/remote/troubleshooting#_setting-up-the-ssh-agent>`_.
 
-Debugging the extension
------------------------
-*   Open this folder from VSCode, then press F5 or click start debugging under the Debug menu.
-*   A new instance of VSCode will start in a special mode (Extension Development Host) which contains the CodeChat extension.
-*   Open any source code, then press Ctrl+Shift+P and type "CodeChat" to run the CodeChat extension. You will be able to see the rendered version of your active window.
+Helpful links:
 
-
-Notes
------
-*   The NPM Thrift 0.13.0 release is `broken <https://github.com/apache/thrift/pull/1947>`_. Don't install it.
-
-Tests
------
-TODO: tests are missing.
+-   `Connect to remote Docker over SSH <https://code.visualstudio.com/docs/containers/ssh>`_.
+-   `Develop on a remote Docker host <https://code.visualstudio.com/remote/advancedcontainers/develop-remote-host>`_.
+-   `Remote Development Tips and Tricks <https://code.visualstudio.com/docs/remote/troubleshooting>`_.
 
 
-Contents
---------
+See also the `developer docs <developer>`.
+
 .. toctree::
-    :maxdepth: 2
+    :hidden:
 
-    README
-    install
-    src/extension.ts
+    developer

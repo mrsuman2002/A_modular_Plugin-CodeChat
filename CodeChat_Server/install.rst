@@ -79,11 +79,12 @@ To update the CodeChat Server, repeat steps 1, 5, and 6.
 
 CodeChat extension/plugin installation
 ======================================
-Install a `CodeChat plugin or extension <../extensions/contents>` to use the CodeChat System (the final step of the installation steps above).
+Install a `CodeChat plugin or extension <../extensions/contents>` to use the CodeChat System (the final required step of the installation steps above).
+
 
 Renderers
 =========
-Renderers transform a textual source document into HTML, which the CodeChat System can then display.
+Renderers transform a textual source document into HTML, which the CodeChat System can then display. The CodeChat System `includes several renderers <included renderers_>`_; you may also optionally install `additional renderers`_.
 
 Included renderers
 ------------------
@@ -93,7 +94,7 @@ Additional renderers
 --------------------
 The CodeChat System has (limited) support for `Pandoc <https://pandoc.org/>`_. Install this and ensure it's in the path; the CodeChat Server will then use it to render a wider range of files.
 
-The CodeChat System can also work with project-based external renderers, by providing a CodeChat project configuration file (`example <../codechat_config.yaml>`) for that renderer. The ``templates/`` directory provides templates demonstrating a basic project for the following external renderers; each template includes the correct CodeChat project configuration file. To use these, install the external renderer, make a copy of the appropriate template, then open a file from the copied template in the CodeChat System to edit and render them. These files are available via `Github <https://github.com/bjones1/CodeChat_system/tree/master/CodeChat_Server/templates>`_, installed with the CodeChat Server via ``pip``/your favorite Python package manager, and also available via the "show source" link on these web pages.
+The CodeChat System also works with project-based external renderers, by providing a CodeChat project configuration file (`example <../codechat_config.yaml>`) for that renderer. The ``templates/`` directory provides templates demonstrating a basic project for the following external renderers; each template includes the correct CodeChat project configuration file.
 
 .. Docs note: since the ``conf.py`` for this project includes the ``templates/`` directory in the ``html_static_path`` list, then all the third-party build docs are copied there after a build. Hence, the paths to ``../static``.
 
@@ -106,6 +107,12 @@ Templates
 -   `PreTeXt <https://pretextbook.org/>`_ (`rendered template <../_static/pretext/_build/index.html>`__)
 -   `Runestone Components <https://runestone.academy/>`_ (`rendered template <../_static/runestone/build/runestone_template/index.html>`__)
 -   `Sphinx <https://www.sphinx-doc.org/en/master/index.html>`_ (`rendered template <../_static/sphinx/_build/index.html>`__) -- note that this documentation is produced using CodeChat with Sphinx; see `../codechat_config.yaml` and `../conf.py`.
+
+To use these templates:
+
+#.  Install the external renderer.
+#.  Make a copy of the appropriate template. These files are available via `Github <https://github.com/bjones1/CodeChat_system/tree/master/CodeChat_Server/CodeChat_Server/templates>`_, installed with the CodeChat Server via ``pip``/your favorite Python package manager, and also available via the "show source" link on these web pages.
+#.  Open a file from the copied template in the CodeChat System to edit and render them.
 
 To use the CodeChat System with an external renderer not listed above:
 

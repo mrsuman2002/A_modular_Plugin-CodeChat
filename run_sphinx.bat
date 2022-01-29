@@ -19,6 +19,6 @@ REM
 REM ******************************************************
 REM |docname| - Run the Sphinx build from the command line
 REM ******************************************************
-REM Below is an easy way to build additional builders in.
+REM Below is an easy way to include additional builders in the build.
 REM PATH = %PATH%;c:\Program Files\doxygen\bin;c:\Program Files\Java\jdk-16.0.2\bin
 sphinx-build -d _build\doctrees . _build
