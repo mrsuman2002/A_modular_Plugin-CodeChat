@@ -13,6 +13,10 @@ Change Log
 **********
 -   `Github master <https://github.com/bjones1/CodeChat_system.git>`_:
 
+    -   No changes yet.
+
+-   0.2.2, 29-Jan-2022:
+
     -   Add the ``sys_executable`` replacement string to CodeChat project configuration files.
     -   Correct the `minimum supported Python version <Python version support>` to 3.7.
 
