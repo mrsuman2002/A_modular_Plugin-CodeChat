@@ -13,7 +13,7 @@ Change Log
 **********
 -   `Github master <https://github.com/bjones1/CodeChat_system.git>`_:
 
-    -   No changes yet.
+    -   Fixes to Sphinx template.
 
 -   0.2.2, 29-Jan-2022:
 
