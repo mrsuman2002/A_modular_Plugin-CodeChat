@@ -35,7 +35,7 @@ import sys
 import subprocess
 import threading
 from time import sleep
-from typing import List, Sequence
+from typing import List, Optional, Sequence
 
 # Third-party imports
 # -------------------
@@ -171,6 +171,23 @@ class WatcherClient:
 # CLI interface
 # =============
 app = typer.Typer()
+
+
+# Add a ``--version`` optional globally.
+def version_callback(value: bool) -> None:
+    if value:
+        typer.echo(f"The CodeChat Server, v.{__version__}")
+        sys.exit(0)
+
+
+@app.callback()
+def common(
+    version: Optional[bool] = typer.Option(
+        None, "--version", callback=version_callback, is_eager=True
+    ),
+) -> None:
+    pass
+
 
 INSECURE_HELP = "Setting this True allows the webserver and websocket to accept connections from any address (they bind to 0.0.0.0). This is extremely dangerous and insecure. If enabled, these ports should be firewalled and carefully protected. This mode is offered to support remote development using Visual Studio Code, which provides a secure (SSH-based) connection. The default value of False allows only connections from the machine this program runs on."
 
