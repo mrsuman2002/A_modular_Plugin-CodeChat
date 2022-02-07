@@ -378,6 +378,8 @@ def run_servers(
 # Inspired by Stack Overflow. The original post used ``connect_ex``, which is very slow (~2 seconds).
 def is_port_in_use(port):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        # Allow reusing sockets in the TIME_WAIT state -- see the `Python docs <https://docs.python.org/3/library/socket.html#notes-on-socket-timeouts>`_.
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         try:
             s.bind((LOCALHOST, port))
         except OSError:
