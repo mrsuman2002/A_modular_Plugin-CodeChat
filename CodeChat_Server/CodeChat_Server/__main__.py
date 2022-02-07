@@ -210,7 +210,7 @@ def _start(insecure: bool = False, coverage: bool = False) -> int:
     cov_args = ["-m", "coverage", "run"] if coverage else []
     args = ["--insecure"] if insecure else []
     p = subprocess.Popen(
-        [sys.executable, *cov_args, "-m", "CodeChat_Server", "serve", *args],
+        [sys.executable, *cov_args, "-m", "CodeChat_Server", "serve", "--quiet", *args],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
@@ -302,14 +302,17 @@ def _stop() -> int:
 
 
 @app.command()
-def serve(insecure: bool = typer.Option(False, help=INSECURE_HELP)) -> None:
+def serve(
+    insecure: bool = typer.Option(False, help=INSECURE_HELP),
+    quiet: bool = typer.Option(False, help="Omit diagnostic messages."),
+) -> None:
     "Run the server in the current terminal/console."
 
     # This file takes a long time to load and run. Print a status message as it starts.
     print("Loading...", file=sys.stderr)
     from .server import run_servers
 
-    sys.exit(run_servers(insecure))
+    sys.exit(run_servers(insecure, quiet))
 
 
 @app.command()

@@ -296,8 +296,10 @@ def excepthook(type, value, traceback):
 
 # Run both servers. This does not (usually) return.
 def run_servers(
-    # See ``INSECURE_HELP`` in the `CLI Interface`.
+    # See ``INSECURE_HELP`` in the `CLI interface`.
     insecure=False,
+    # See the ``--quiet`` option in the `CLI interface`.
+    quiet=False,
 ) -> int:
 
     print(f"The CodeChat Server, v.{__version__}\n")
@@ -317,6 +319,11 @@ def run_servers(
         )
         return 1
 
+    # Implement quiet option for all loggers.
+    if quiet:
+        # Set root logger options.
+        logging.getLogger("").setLevel(logging.WARNING)
+
     # Shut down if any unhandled exception occurs.
     sys.excepthook = excepthook
 
@@ -329,8 +336,8 @@ def run_servers(
 
     def webserver_launcher(*args, **kwargs):
         try:
-            # Omitting the ``quiet`` option causes the server Bottle uses by default (Python's stdlib wsgiref) to die when emitting stdio if run with the ``CodeChat_Server start`` option (where the stdio/stderr gets disconnected after the server is started).
-            bottle.run(*args, quiet=True, **kwargs)
+            # Omitting the ``quiet`` option causes the server Bottle uses by default (Python's stdlib wsgiref) to die when emitting stdio if run with the ``CodeChat_Server start`` option (where the stdio/stderr gets disconnected after the server is started). Therefore, the ``CodeChat_Server start`` command always invokes ``CodeChat_Server serve --quiet``.
+            bottle.run(*args, quiet=quiet, **kwargs)
         except Exception:
             # Shut down the server instead of allowing it to keep running in a broken state.
             shutdown_event.set()
