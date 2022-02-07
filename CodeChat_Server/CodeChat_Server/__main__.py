@@ -49,6 +49,7 @@ from watchdog.events import FileSystemEvent, PatternMatchingEventHandler
 
 # Local application imports
 # -------------------------
+from . import __version__
 from .constants import LOCALHOST, THRIFT_PORT
 from .gen_py.CodeChat_Services import EditorPlugin
 from .gen_py.CodeChat_Services.ttypes import (
@@ -93,12 +94,12 @@ class WatcherClient:
         try:
             ret = self.thrift_client.get_client(CodeChatClientLocation.browser)
         except ConnectionResetError as e:
-            print(f"Unable to connect to the CodeChat Server: {e}.", file=sys.stderr)
+            typer.echo(f"Unable to connect to the CodeChat Server: {e}.", err=True)
             sys.exit(1)
         if ret.error:
-            print(
+            typer.echo(
                 f"Error connecting to the CodeChat Server: {ret.error}.",
-                file=sys.stderr,
+                err=True,
             )
             sys.exit(1)
         assert ret.html == ""
@@ -112,15 +113,14 @@ class WatcherClient:
             # See the `docs <https://watchdog.readthedocs.io/en/latest/api.html#watchdog.observers.api.BaseObserver.schedule>`__.
             self.observer.schedule(self.event_handler, pathname, recursive=True)
         self.observer.start()
-        print(
+        typer.echo(
             f"Watcher started, monitoring the path(s) {directories} containing patterns {patterns} but ignoring {ignore_patterns}.",
-            file=sys.stderr,
         )
 
     # See the `docs <https://watchdog.readthedocs.io/en/latest/api.html#watchdog.events.FileSystemEventHandler.on_any_event>`__.
     def on_any_event(self, event: FileSystemEvent) -> None:
         if not event.is_directory:
-            print(event, event.src_path, file=sys.stderr)
+            typer.echo(event, event.src_path, file=sys.stderr)
             src_path = Path(event.src_path).absolute()
             with open(src_path, encoding="utf-8", errors="backslashreplace") as f:
                 try:
@@ -128,16 +128,16 @@ class WatcherClient:
                         f.read(), str(src_path), self.client_id, False
                     )
                 except TTransport.TTransportException as e:
-                    print(
+                    typer.echo(
                         f"Unable to communicate with the CodeChat Server when requesting a render: {e}.",
-                        file=sys.stderr,
+                        err=True,
                     )
                     self.running = False
                 else:
                     if ret:
-                        print(
+                        typer.echo(
                             f"Error requesting a render from the CodeChat Server: {ret}.",
-                            file=sys.stderr,
+                            err=True,
                         )
                         self.running = False
 
@@ -151,19 +151,20 @@ class WatcherClient:
         self.shutdown()
 
     def shutdown(self) -> None:
-        print("Watcher shutting down...", file=sys.stderr)
+        typer.echo("Watcher shutting down...")
         try:
             ret = self.thrift_client.stop_client(self.client_id)
         except TTransport.TTransportException as e:
-            print(
-                f"Unable to communicate when the CodeChat Server when shutting down the CodeChat Client: {e}."
+            typer.echo(
+                f"Unable to communicate when the CodeChat Server when shutting down the CodeChat Client: {e}.",
+                err=True,
             )
         else:
             if ret:
-                print(f"Error shutting down the CodeChat Client: {ret}.")
+                typer.echo(f"Error shutting down the CodeChat Client: {ret}.", err=True)
         self.observer.stop()
         self.observer.join()
-        print("Watcher shut down.", file=sys.stderr)
+        typer.echo("Watcher shut down.")
 
 
 # .. _CLI interface:
@@ -204,19 +205,18 @@ def start(
 
 # Typer's default arguments don't work when called directly from Python. This avoid provides a function which returns a value (0 for success, a non-zero value for failure), instead of calling ``sys.exit()``. The following CLI functions follow this pattern as well.
 def _start(insecure: bool = False, coverage: bool = False) -> int:
-    print(
+    typer.echo(
         "Starting the server -- searching for an already-running instance...",
-        file=sys.stderr,
     )
 
     # Try pinging the server to see if it's up.
     try:
         client = get_client()
         assert client.ping() == ""
-        print("A running CodeChat Server instance was found.", file=sys.stderr)
+        typer.echo("A running CodeChat Server instance was found.")
         return 0
     except Exception:
-        print("No running CodeChat Server instances found.", file=sys.stderr)
+        typer.echo("No running CodeChat Server instances found.")
 
     # The server isn't up or has crashed. Stop any existing instances in case it crashed.
     ret = _stop()
@@ -240,9 +240,9 @@ def _start(insecure: bool = False, coverage: bool = False) -> int:
         sleep(10)
         if server_starting:
             p.terminate()
-            print(
+            typer.echo(
                 "The server failed to start before the timeout expired.",
-                file=sys.stderr,
+                err=True,
             )
 
     # Make this a daemon thread, so it will exit when the main thread finishes.
@@ -250,7 +250,7 @@ def _start(insecure: bool = False, coverage: bool = False) -> int:
     timeout_thread.start()
 
     # Wait for the server to start.
-    print("Waiting for the server to start...", file=sys.stderr)
+    typer.echo("Waiting for the server to start...")
     out = ""
     line = ""
     while "CODECHAT_READY\n" not in line:
@@ -259,15 +259,15 @@ def _start(insecure: bool = False, coverage: bool = False) -> int:
         p.stderr.flush()
         line = p.stderr.readline()
         out += line
-        print(line, end="")
+        typer.echo(line, nl=False)
         if p.poll() is not None:
             # The server shut down. Print the output collected to help the user understand what went wrong.
             #
             # Make mypy happy.
             assert p.stdout is not None
-            print(p.stdout.read())
-            print(p.stderr.read())
-            print("The server exited unexpectedly.", file=sys.stderr)
+            typer.echo(p.stdout.read())
+            typer.echo(p.stderr.read(), err=True)
+            typer.echo("The server exited unexpectedly.", err=True)
             return 1
         sleep(0.001)
     # Indicate the server started to the timeout thread, so the timeout won't kill the server now that it's started.
@@ -282,7 +282,7 @@ def stop() -> None:
 
 
 def _stop() -> int:
-    print("Stopping all CodeChat Server instances...", file=sys.stderr)
+    typer.echo("Stopping all CodeChat Server instances...")
     # Look for the server. TODO: should I avoid hard-coding this?
     server_name = "CodeChat_Server"
     ret = 0
@@ -302,9 +302,8 @@ def _stop() -> int:
             # If we have the command line, then "serve" must be in it.
             and (not p.info["cmdline"] or "serve" in p.info["cmdline"])
         ):
-            print(
+            typer.echo(
                 f"Killing server process {p.pid} named {p.info['name']} with command line {p.info['cmdline']}.",
-                file=sys.stderr,
             )
             # Killing the parent of a CodeChat Server process will kill the child; ignore the exception in this case.
             try:
@@ -312,7 +311,7 @@ def _stop() -> int:
             except psutil.NoSuchProcess:
                 pass
             except Exception as e:
-                print(f"Unable to kill: {e}.", file=sys.stderr)
+                typer.echo(f"Unable to kill: {e}.", file=sys.stderr)
                 ret = 1
 
     return ret
@@ -326,7 +325,7 @@ def serve(
     "Run the server in the current terminal/console."
 
     # This file takes a long time to load and run. Print a status message as it starts.
-    print("Loading...", file=sys.stderr)
+    typer.echo("Loading...")
     from .server import run_servers
 
     sys.exit(run_servers(insecure, quiet))
@@ -339,12 +338,13 @@ def build(path_to_build: List[Path]) -> None:
     from .renderer import render_file
 
     async def aprint(_str):
-        print(_str, end="")
+        typer.echo(_str, err=True, nl=False)
 
     # Build each path provided.
     for ptb in path_to_build:
         ptb = ptb.resolve()
-        print(f"Building {ptb}...", file=sys.stderr)
+        # In this function, send ALL status messages to stderr, so that a build can produce only the build output to stdout.
+        typer.echo(f"Building {ptb}...", err=True)
         (
             was_performed,
             rendered_project_path,
@@ -354,20 +354,20 @@ def build(path_to_build: List[Path]) -> None:
         ) = asyncio.run(render_file(file_text(ptb), str(ptb), None, aprint, False))
         assert was_performed
         # Print all errors produced by the render.
-        print(err_string, file=sys.stderr)
+        typer.echo(err_string, err=True)
         # Dump the HTML produced.
         if html is None:
-            print(
+            typer.echo(
                 f"The rendered result is stored in {rendered_file_path}.",
-                file=sys.stderr,
+                err=True,
             )
         else:
             if ptb.is_file():
-                print(html)
+                typer.echo(html)
             else:
-                print(
+                typer.echo(
                     f"Error: file {ptb} not found, and no containing project to render was found.",
-                    file=sys.stderr,
+                    err=True,
                 )
                 sys.exit(1)
 
@@ -376,7 +376,7 @@ def build(path_to_build: List[Path]) -> None:
 def render(path_to_build: Path, id: int) -> None:
     "Render the specified CodeChat project in a web browser."
 
-    print(f"Rendering {path_to_build} using ID {id}.", file=sys.stderr)
+    typer.echo(f"Rendering {path_to_build} using ID {id}.")
     ret = _start()
     if ret:
         sys.exit(ret)
