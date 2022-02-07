@@ -13,6 +13,10 @@ Change Log
 **********
 -   `Github master <https://github.com/bjones1/CodeChat_system.git>`_:
 
+    -   No changes yet.
+
+-   0.2.3, 6-Feb-2022:
+
     -   Fixes to Sphinx template.
     -   Fix problem on Linux where CodeChat doesn't start due to socket in use.
     -   Fix bug on OS X/Linux: non-project renders weren't working.
