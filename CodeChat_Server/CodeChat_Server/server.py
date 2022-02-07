@@ -256,9 +256,6 @@ def insecure_warning():
 # The endpoint for files requested by a specific client, including rendered source files. Note that ``int`` by default is `positive only <https://werkzeug.palletsprojects.com/en/2.0.x/routing/#werkzeug.routing.IntegerConverter>`_.
 @bottle.route("/client/<id:int>/<url_path:path>")
 def client_data(id: int, url_path: str) -> bottle.HTTPResponse:
-    # On Windows, the path begins with a drive letter; otherwise, the path begins with a ``/``, which gets absorbed into the ``/`` before the ``url_path`` component of the URL. Restore it.
-    if not render_manager.is_win:
-        url_path = "/" + url_path
     # See if we rendered this file.
     html = handler.render_manager.threadsafe_get_render_results(id, url_path)
 
