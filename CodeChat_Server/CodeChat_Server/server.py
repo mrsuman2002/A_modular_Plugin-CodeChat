@@ -315,7 +315,8 @@ def run_servers(
         print(
             f"Error: port(s) {', '.join(ports_in_use)} are already in use.\n"
             "Hopefully, this means that the CodeChat Server is already running in another process.\n"
-            "Exiting.\n"
+            "Exiting.\n",
+            file=sys.stderr,
         )
         return 1
 
