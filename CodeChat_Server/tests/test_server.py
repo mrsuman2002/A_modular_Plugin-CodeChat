@@ -141,7 +141,7 @@ def test_8():
 
 
 # Requires updated CodeChat for this test to pass.
-def xtest_9():
+def test_9():
     # Make sure the zero-input case works.
     _render_CodeChat("", "")
 
@@ -153,5 +153,11 @@ def xtest_9():
     assert "<em>hello</em>" in rst
 
 
+# Misc
+# ----
 def test_10():
-    pass
+    cp = subprocess.run(
+        SUBPROCESS_SERVER_ARGS + ["--version"], capture_output=True, text=True
+    )
+    # Check that it reported the ports were in use.
+    assert "The CodeChat Server, v." in cp.stdout
