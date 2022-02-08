@@ -13,7 +13,8 @@ Change Log
 **********
 -   `Github master <https://github.com/bjones1/CodeChat_system.git>`_:
 
-    -   No changes yet.
+    -   Improve use of stdout/stderr.
+    -   Add a ``--version`` option.
 
 -   0.2.3, 6-Feb-2022:
 
