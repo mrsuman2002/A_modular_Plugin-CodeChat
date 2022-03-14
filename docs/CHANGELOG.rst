@@ -15,6 +15,7 @@ Change Log
 
     -   Improve use of stdout/stderr.
     -   Add a ``--version`` option.
+    -   Make running an external renderer more platform-independent.
 
 -   0.2.3, 6-Feb-2022:
 
