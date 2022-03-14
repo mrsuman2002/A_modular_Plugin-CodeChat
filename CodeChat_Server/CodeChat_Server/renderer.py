@@ -37,8 +37,10 @@ from enum import Enum, auto
 import fnmatch
 import io
 import json
+import os
 from pathlib import Path
 import shlex
+import shutil
 import sys
 from tempfile import NamedTemporaryFile
 from typing import (
@@ -503,6 +505,19 @@ async def _run_subprocess(
     # If the args were provided a single string, split it since the asyncio subprocess doesn't accept a string (the standard subprocess does).
     if isinstance(args, str):
         args = shlex.split(args, posix=not is_win)
+
+    # Turn ``args[0]`` into a fully-qualified path to avoid `platform-specific behavior <https://docs.python.org/3/library/subprocess.html#subprocess.Popen>`_.
+    #
+    # If the path isn't absolute, work on it.
+    if not Path(args[0]).is_absolute():
+        args[0] = (
+            # If this is a relative path, then prepend cwd.
+            str(cwd / args[0])
+            # Relative paths have a path separator.
+            if os.sep in args[0] or os.altsep in args[0]
+            # Otherwise, search the PATH. If it's not found, then go with the original value, which should raise an error when subprocess can't find it.
+            else shutil.which(args[0]) or ""
+        )
 
     # Explain what's going on.
     await co_build("{} > {}\n".format(cwd, " ".join(args)))
