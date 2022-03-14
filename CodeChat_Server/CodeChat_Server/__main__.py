@@ -120,7 +120,7 @@ class WatcherClient:
     # See the `docs <https://watchdog.readthedocs.io/en/latest/api.html#watchdog.events.FileSystemEventHandler.on_any_event>`__.
     def on_any_event(self, event: FileSystemEvent) -> None:
         if not event.is_directory:
-            typer.echo(event, event.src_path, file=sys.stderr)
+            typer.echo(event, event.src_path, err=True)
             src_path = Path(event.src_path).absolute()
             with open(src_path, encoding="utf-8", errors="backslashreplace") as f:
                 try:
@@ -311,7 +311,7 @@ def _stop() -> int:
             except psutil.NoSuchProcess:
                 pass
             except Exception as e:
-                typer.echo(f"Unable to kill: {e}.", file=sys.stderr)
+                typer.echo(f"Unable to kill: {e}.", err=True)
                 ret = 1
 
     return ret
