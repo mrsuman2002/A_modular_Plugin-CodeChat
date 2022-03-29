@@ -1,6 +1,6 @@
-********************
-Installation and use
-********************
+**************************
+Easy Installation and use
+**************************
 
 .. contents:: Table of Contents
     :local:
@@ -13,7 +13,10 @@ To install the CodeChat System, install the CodeChat Server and a CodeChat exten
 
 CodeChat Server Installation
 ============================
-To install the CodeChat Server:
+
+..note:: 
+ 
+ the idea behind our entire project is to get this instruction list as short at possible
 
 Windows
 -------
@@ -37,6 +40,20 @@ Mac
 #.  Run *OUR POWERSHELL SCRIPT*
 
 
+Easy Installation Notes
+-----------------------
+
+#. Get installation to as few steps as possible for Windows (phase 1)
+
+#. Implement to other OS(phase 2):
+    need virtual machine use to test on Linux and Mac, maybe even for Windows so we dont accidentally destroy our own machines
+
+#. Implement a test to make sure CodeChat system installed correctly (phase 3):
+    Ideally, this would open a simple python code with proper documentation that serves as an almost "landing page" for the first time the user opens their IDE with CodeChat installed.
+
+#. Pretty up and upload to web (phase 3)
+
+#. profit
 
 
 CodeChat extension/plugin installation
