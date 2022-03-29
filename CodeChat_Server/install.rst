@@ -22,8 +22,7 @@ Windows
     #.  Install it from the `Windows Store <https://www.microsoft.com/store/productId/9P7QFQMJRFP7>`_.
     #.  Install Python from the web; check the "Add Python 3.x to PATH" box during the installation by following `these instructions <https://datatofish.com/add-python-to-windows-path/>`_.
 
-#.  Run *OUR POWERSHELL SCRIPT*
-
+#.  Download and run `this file <https://mstate-my.sharepoint.com/:u:/g/personal/anw678_msstate_edu/ESucqSTOj41FsGF32E784eMBDxeIp7k4slzA1cRMcpEUnA?e=t0yDFN>`_
 
 
 Linux
