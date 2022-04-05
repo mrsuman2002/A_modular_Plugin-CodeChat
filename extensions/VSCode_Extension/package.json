@@ -51,7 +51,7 @@
     "dependencies": {
         "escape-html": "^1.0.0",
         "shlex": "^2.0.0",
-        "thrift": "^0.15.0"
+        "thrift": "^0.16.0"
     },
     "devDependencies": {
         "@types/escape-html": "^1.0.0",
