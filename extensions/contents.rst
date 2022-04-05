@@ -16,7 +16,7 @@ This directory contains documentation for all supported text editor/IDE extensio
 .. toctree::
     :maxdepth: 2
 
-    VSCode_Extension/contents
+    VSCode/contents
     universal
 
 

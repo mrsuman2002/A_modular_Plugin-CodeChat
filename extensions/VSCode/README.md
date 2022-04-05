@@ -15,4 +15,4 @@ In addition to native support for Markdown and reStructuredText, the CodeChat Sy
 
 ... and many more.
 
-See the [getting started guide](https://codechat-system.readthedocs.io/en/latest/extensions/VSCode_Extension/contents.html) to install and use the CodeChat System.
+See the [getting started guide](https://codechat-system.readthedocs.io/en/latest/extensions/VSCode/contents.html) to install and use the CodeChat System.

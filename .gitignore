@@ -25,8 +25,8 @@ syntax: glob
 _build/
 
 # TypeScript transpiles.
-extensions/VSCode_Extension/out
-extensions/VSCode_Extension/.vscode
+extensions/VSCode/out
+extensions/VSCode/.vscode
 
 # Python-generated files
 __pycache__/
