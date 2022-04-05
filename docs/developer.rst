@@ -94,4 +94,4 @@ Ideas:
 
 Footnotes
 =========
-.. [#] At this time, only the Visual Studio Code editor is fully supported.
+.. [#] At this time, only the Visual Studio Code editor is fully supported; there is basic support for Vim and most editors. See `../extensions/contents`.
