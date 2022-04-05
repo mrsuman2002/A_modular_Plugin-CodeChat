@@ -22,7 +22,13 @@ Windows
     #.  Install it from the `Windows Store <https://www.microsoft.com/store/productId/9P7QFQMJRFP7>`_.
     #.  Install Python from the web; check the "Add Python 3.x to PATH" box during the installation by following `these instructions <https://datatofish.com/add-python-to-windows-path/>`_.
 
-#.  Download and run `this file <https://mstate-my.sharepoint.com/:u:/g/personal/anw678_msstate_edu/ESucqSTOj41FsGF32E784eMBDxeIp7k4slzA1cRMcpEUnA?e=t0yDFN>`_
+#.  Click `this link <https://raw.githubusercontent.com/scarbroughzach/CodeChat_system/master/CodeChat_Server/windows_installer.ps1>`_
+
+#. When this opens the powershell script in a new page, right click and save as the webpage
+
+#. remove the ".txt" extension from the file save bar so that it reads only "windows_installer.ps1"
+
+#. go to this file in file explorer, right click, and run in powershell
 
 
 Linux
