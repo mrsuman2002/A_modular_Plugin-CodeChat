@@ -26,7 +26,7 @@ Windows
 
 #. When this opens the powershell script in a new page, right click and save as the webpage
 
-#. remove the ".txt" extension from the file save bar so that it reads only "windows_installer.ps1"
+#. remove the ".txt" extension from the file save bar so that it reads only "windows_installer.ps1" and change the file type to "all files"
 
 #. go to this file in file explorer, right click, and run in powershell
 
