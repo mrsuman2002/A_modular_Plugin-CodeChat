@@ -1,6 +1,6 @@
-********************
-Installation and use
-********************
+**************************
+Easy Installation and use
+**************************
 
 .. contents:: Table of Contents
     :local:
@@ -13,7 +13,10 @@ To install the CodeChat System, install the CodeChat Server and a CodeChat exten
 
 CodeChat Server Installation
 ============================
-To install the CodeChat Server:
+
+..note:: 
+ 
+ the idea behind our entire project is to get this instruction list as short at possible
 
 Windows
 -------
@@ -22,13 +25,8 @@ Windows
     #.  Install it from the `Windows Store <https://www.microsoft.com/store/productId/9P7QFQMJRFP7>`_.
     #.  Install Python from the web; check the "Add Python 3.x to PATH" box during the installation by following `these instructions <https://datatofish.com/add-python-to-windows-path/>`_.
 
-#.  Click `this link <https://raw.githubusercontent.com/scarbroughzach/CodeChat_system/master/CodeChat_Server/windows_installer.ps1>`_
+#.  Run *OUR POWERSHELL SCRIPT*
 
-#. When this opens the powershell script in a new page, right click and save as the webpage
-
-#. remove the ".txt" extension from the file save bar so that it reads only "windows_installer.ps1" and change the file type to "all files"
-
-#. go to this file in file explorer, right click, and run in powershell
 
 
 Linux
@@ -42,6 +40,20 @@ Mac
 #.  Run *OUR POWERSHELL SCRIPT*
 
 
+Easy Installation Notes
+-----------------------
+
+#. Get installation to as few steps as possible for Windows (phase 1)
+
+#. Implement to other OS(phase 2):
+    need virtual machine use to test on Linux and Mac, maybe even for Windows so we dont accidentally destroy our own machines
+
+#. Implement a test to make sure CodeChat system installed correctly (phase 3):
+    Ideally, this would open a simple python code with proper documentation that serves as an almost "landing page" for the first time the user opens their IDE with CodeChat installed.
+
+#. Pretty up and upload to web (phase 3)
+
+#. profit
 
 
 CodeChat extension/plugin installation
