@@ -14,7 +14,7 @@ To install the CodeChat System, install the CodeChat Server and a CodeChat exten
 CodeChat Server Installation
 ============================
 
-..note:: 
+.. note:: 
  
  the idea behind our entire project is to get this instruction list as short at possible
 
