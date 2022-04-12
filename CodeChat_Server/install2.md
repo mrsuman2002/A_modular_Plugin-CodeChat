@@ -26,7 +26,14 @@ To update the CodeChat Server, repeat steps 1, 4, and 5.
 
 # Updated Install Instructions (Linux)
 
-1. profit
+1. download codechat.sh (link)
+2. chmod 700 codechat.sh
+3. bash codechat.sh
+
+ .. NOTE::
+
+  (although now we will still have to nicely explain what's going on as is done in the current instructions in case something goes wrong)
+
 
 # Current Shell Script (Linux)
 
@@ -39,33 +46,55 @@ To update the CodeChat Server, repeat steps 1, 4, and 5.
     # then run:
     # $ bash install.sh
 
-    # add comments about what each line is doing
+    # https://stackoverflow.com/questions/6141581/detect-python-version-in-shell-script
 
     # check for python
-    # add error checking
+    if ! hash python; then
+        echo "Python is not installed"
+        exit 1
+    fi
+
+    # todo: if no python, echo commands to install
+
+    # todo: check python version
+
+    # install / upgrade pip
     python3 -m pip install --user --upgrade pip
+
+    # create virtual environment (no harm doing this multiple times)
     python3 -m venv codechat
+
+    # activate virtual environment
     source codechat/bin/activate
-    # add check to see if this is done to be able to have a single install/update/run script
-    python3 -m pip install --upgrade CodeChat_Server
-    which CodeChat_Server
+    # . codechat/bin/activate  (alternate command?)
+
+    # check to see if CodeChat is already installed
+    # todo: check version number
+
+    if [[ -d codechat ]]; then
+        echo "CodeChat already installed"
+    else
+        python3 -m pip install --upgrade CodeChat_Server
+    fi
 
     # echo server directory to user
+    which CodeChat_Server
 
 # Errors (Linux)
 
 - ~~`source codechat/bin/activate` - should `(codechat) $` but does nothing~~ Run with `bash` not `./`
 
+- virtual environment still not activating
+
 - install codechat server errors @ `Building wheels for collected packages: strictyaml, thrift`
 
 
 # Todo (Linux)
-
-- debug shell script
-- check python version
-- Provide Python installation links
-- shorten installation instructions 
-- Fix broken links in Codechat documentation 
+- debug/improve shell script
+- rewrite installation instructions
+- Fix broken links in Codechat documentation
+- rewrite extension installation instructions (if not found)
+- Convert to rst and combine with current install.rst
 
 # Todo (Windows)
 
@@ -86,11 +115,14 @@ To update the CodeChat Server, repeat steps 1, 4, and 5.
 
 # Tests
 
-- TBD
+- Test subject has agreed to participate
 
 ## Scrum 2
 
 - ask Dr. Jones about installation errors
+- second guess shell script install method
+- get help with virtual environment bug
+- get required version of python
 
 -----
 

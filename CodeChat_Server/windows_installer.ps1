@@ -16,9 +16,31 @@ set-executionpolicy remotesigned
 # 
 # code sample::
 # 
-#   $pythonVersion = python --version
-#   if([string]::IsNullOrEmpty($pythonVersion))
-#   This is where you put the function to download python. If already installed, the if statement will be skipped and the programmed will continue uninterrupted
+$pythonVersion = python --version
+$pythonVersionReq = #whatever this needs to be
+if([string]::IsNullOrEmpty($pythonVersion)){
+    $response = Read-Host -Prompt "You do not have Python installed, would you like to install the required version ($pythonVersion) (y/n)?"
+    if($response == "y"){
+        # install Python
+    }
+    [else{
+        echo "Please install the required version of python: $pythonVersionReq"
+        exit
+    }]
+}
+[elseif ($pythonVersion != $pythonVersionReq){
+    $response = Read-Host -Prompt "You have Python version ($pythonVersion) installed, would you like to install the required version ($pythonVersion) (y/n)?"
+    if($response == "y"){
+        echo "Installing Python Version ($pythonVersionReq)"
+        # install Python
+    }
+    [else{
+        echo "Please install the required version of python: $pythonVersionReq"
+        exit
+    }]
+}]
+
+
 # 
 # code sample::
 # 
