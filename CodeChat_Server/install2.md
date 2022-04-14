@@ -10,7 +10,7 @@ https://codechat-system.readthedocs.io/en/latest/CodeChat_Server/install.html
 
 1. [Open a terminal.](https://www.howtogeek.com/howto/22283/four-ways-to-get-instant-access-to-a-terminal-in-linux/)
 
-2. Make sure pip, the Python installer, is [up to date](https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/#linux-and-macos): at the terminal, type `python3 -m pip install --user --upgrade pip`.
+2. Make sure pip, the Python installer, is at least V. 3.7 (https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/#linux-and-macos): at the terminal, type `python3 -m pip install --user --upgrade pip`.
 
 3. [Create a virtual environment](https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/#creating-a-virtual-environment) named *codechat* by typing `python3 -m venv codechat`. This keeps the installation of the CodeChat System from interfering with other installed Python programs and vice versa.
 
