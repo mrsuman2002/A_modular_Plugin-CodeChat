@@ -29,8 +29,6 @@ python3 -m venv codechat
 codechat/bin/python3 -m pip install --upgrade CodeChat_Server
 
 # echo server directory to user
+echo
 echo "CodeChat installation complete!"
-echo "Install directory:"
-which CodeChat_Server
-
-
+echo "Install directory: ${PWD}/codechat/bin"
