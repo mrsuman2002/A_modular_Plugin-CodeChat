@@ -25,13 +25,8 @@ python3 -m pip install --user --upgrade pip
 # create virtual environment
 python3 -m venv codechat
 
-# check if codechat already installed
-if [[ -d codechat ]]; then
-    echo "CodeChat already installed"
-    exit 1
-else
-    codechat/bin/python3 -m pip install --upgrade CodeChat_Server
-fi
+# install CodeChat
+codechat/bin/python3 -m pip install --upgrade CodeChat_Server
 
 # echo server directory to user
 echo "CodeChat installation complete!"
