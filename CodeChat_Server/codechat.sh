@@ -1,5 +1,5 @@
 #!/bin/bash
-# install CodeChat
+# installs CodeChat
 
 # Run (without the pound or dollar signs):
 
@@ -15,7 +15,9 @@ fi
 # check python version
 python3 -c 'import sys'
 
-if ! python3 -c 'import sys; assert sys.version_info >= (3,6)' > /dev/null; then
+## redirect to stderr
+
+if ! python3 -c 'import sys; assert sys.version_info >= (4,6)' 2> /dev/null; then
     echo "Upgrade Python to version 3.6 or above"
     exit 1
 fi
@@ -23,10 +25,18 @@ fi
 # install / upgrade pip
 python3 -m pip install --user --upgrade pip
 
+# test here
+
 # create virtual environment (no harm doing this multiple times)
 python3 -m venv codechat
 
 
+# just make pure install script
+# separate script for running
+# path to codechat server   codechat server start
+# just tell path to binary
+
+# check
 if [[ -d codechat ]]; then
     # echo "CodeChat already installed"
     codechat/bin/CodeChat_Server serve
