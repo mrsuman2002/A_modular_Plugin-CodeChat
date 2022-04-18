@@ -42,7 +42,7 @@ Linux
 
 #.  `Open a terminal <https://www.howtogeek.com/howto/22283/four-ways-to-get-instant-access-to-a-terminal-in-linux/>`__.
 
-#.  Copy/paste ``wget https://raw.githubusercontent.com/JoeKenn1118/CodeChat_system/master/CodeChat_Server/codechat.sh && bash codechat.sh`` and press Enter.
+#.  Highlight this entire command: ``wget https://raw.githubusercontent.com/JoeKenn1118/CodeChat_system/master/CodeChat_Server/codechat.sh && bash codechat.sh`` and press Ctrl-C to copy. Go to the terminal window and press Ctrl-Shift-V. Press Enter.
 
 or
 
