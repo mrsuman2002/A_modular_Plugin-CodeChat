@@ -22,21 +22,42 @@ Windows
     #.  Install it from the `Windows Store <https://www.microsoft.com/store/productId/9P7QFQMJRFP7>`_.
     #.  Install Python from the web; check the "Add Python 3.x to PATH" box during the installation by following `these instructions <https://datatofish.com/add-python-to-windows-path/>`_.
 
-#.  Got to this `link <https://github.com/JoeKenn1118/CodeChat_system/releases/tag/v0.0.1>`_ and download the powershell script (``.ps1``)
+#.  Go to this `link <https://github.com/JoeKenn1118/CodeChat_system/releases/tag/v0.0.1>`_ and download the Powershell script (``.ps1``)
 
-#. Go to this file in file explorer, right click, and run in powershell
+#. Go to this file in file explorer, right click, and run in Powershell
+
+Troubleshooting
+^^^^^^^^^^^^^^^^
+
+.. figure:: ./docs/Powershell_Error.PNG
+
+- If Powershell shows an error informing you that running scripts is forbidden on your system, follow these additional steps
+    - Open Powershell in administator mode
+    - type ``Set-ExecutionPolicy RemoteSigned``
+    - Run Powershell Script again
 
 
 Linux
 -----
-#.  Install Python. There are two options:
 
-    #.  Install it from the `Windows Store <https://www.microsoft.com/store/productId/9P7QFQMJRFP7>`_.
-    #.  Install Python from the web; check the "Add Python 3.x to PATH" box during the installation by following `these instructions <https://datatofish.com/add-python-to-windows-path/>`_.
+#.  `Open a terminal <https://www.howtogeek.com/howto/22283/four-ways-to-get-instant-access-to-a-terminal-in-linux/>`__.
 
-#.  Got to this `link (placeholder)` and download the shell script (`.sh`)
+#.  Type ``wget https://raw.githubusercontent.com/JoeKenn1118/CodeChat_system/master/CodeChat_Server/codechat.sh && bash codechat.sh``
 
-#. ?
+or
+
+#.  Download `codechat.sh <https://github.com/JoeKenn1118/CodeChat_system/releases>`__ to the directory where you want to install it.
+
+#.  `Open a terminal <https://www.howtogeek.com/howto/22283/four-ways-to-get-instant-access-to-a-terminal-in-linux/>`__ in that directory.
+
+#.  Type ``bash codechat.sh``
+
+Troubleshooting
+^^^^^^^^^^^^^^^^
+
+- If you don't have permission to run codechat.sh, type ``chmod 700 codechat.sh`` and try again.
+
+- CodeChat requires `an up-to-date installation of Python 3 <https://www.geeksforgeeks.org/how-to-download-and-install-python-latest-version-on-linux/>`__. 
 
 
 
@@ -61,21 +82,9 @@ Mac
 To update the CodeChat Server, repeat steps 1, 5, and 6.
 
 
-Trouble Shooting
-----------------
-
-Windows
-^^^^^^^
-.. figure:: ./docs/Powershell_Error.PNG
-
-- If Powershell shows an error informing you that running scripts is forbidden on your system, follow these additional steps
-    - Open Powershell in administator mode
-    - type ``Set-ExecutionPolicy RemoteSigned``
-    - Run Powershell Script again
-
 CodeChat extension/plugin installation
 ======================================
-Install a `CodeChat plugin or extension <../extensions/contents>` to use the CodeChat System (the final required step of the installation steps above).
+Install a `CodeChat plugin or extension <https://codechat-system.readthedocs.io/en/latest/extensions/contents.html>`_ to use the CodeChat System (the final required step of the installation steps above).
 
 
 Renderers
