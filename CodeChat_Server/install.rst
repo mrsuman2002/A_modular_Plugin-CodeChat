@@ -22,7 +22,7 @@ Windows
     #.  Install it from the `Windows Store <https://www.microsoft.com/store/productId/9P7QFQMJRFP7>`_.
     #.  Install Python from the web; check the "Add Python 3.x to PATH" box during the installation by following `these instructions <https://datatofish.com/add-python-to-windows-path/>`_.
 
-#.  Got to this `link <https://github.com/JoeKenn1118/CodeChat_system/releases/tag/v0.0.1>`_ and download the powershell script (`.ps1`)
+#.  Got to this `link <https://github.com/JoeKenn1118/CodeChat_system/releases/tag/v0.0.1>`_ and download the powershell script (``.ps1``)
 
 #. Go to this file in file explorer, right click, and run in powershell
 
@@ -42,10 +42,36 @@ Linux
 
 Mac
 ---
-#.  Run *OUR POWERSHELL SCRIPT*
+#.  `Open a terminal <https://support.apple.com/guide/terminal/open-or-quit-terminal-apd5265185d-f365-44cb-8b09-71a064a42125/mac>`__.
+
+#.  `Install modern Python <https://opensource.com/article/19/5/python-3-default-mac>`_.
+
+#.  Make sure pip, the Python installer, is `up to date`_: at the terminal, type ``python3 -m pip install --user --upgrade pip``.
+
+#.  `Create a virtual environment`_ named *codechat* by typing ``python3 -m venv codechat``. This keeps the installation of the CodeChat System from interfering with other installed Python programs and vice versa.
+
+#.  `Activate this virtual environment`_ by typing ``source codechat/bin/activate``.
+
+#.  Install the CodeChat Server by typing ``python3 -m pip install --upgrade CodeChat_Server``.
+
+#.  Determine the location of the installed CodeChat Server by typing ``which CodeChat_Server``. You'll need to enter this path when setting up the CodeChat plugin/extension in your IDE.
+
+#.  Install the `CodeChat extension/plugin <../extensions/contents>`_ for your IDE or text editor.
+
+To update the CodeChat Server, repeat steps 1, 5, and 6.
 
 
+Trouble Shooting
+----------------
 
+Windows
+^^^^^^^
+.. figure:: ./docs/Powershell_Error.PNG
+
+- If Powershell shows an error informing you that running scripts is forbidden on your system, follow these additional steps
+    - Open Powershell in administator mode
+    - type ``Set-ExecutionPolicy RemoteSigned``
+    - Run Powershell Script again
 
 CodeChat extension/plugin installation
 ======================================
