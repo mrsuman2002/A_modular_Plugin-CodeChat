@@ -50,9 +50,9 @@ import ttypes = require("./gen-nodejs/CodeChat_Services_types");
 // These globals are truly global: only one is needed for this entire plugin.
 //
 // The Thrift network connection to the CodeChat Server.
-let thrift_connection: thrift.Connection | undefined = undefined;
+let thrift_connection: thrift.Connection | undefined;
 // The Thrift client using this connection.
-let thrift_client: EditorPlugin.Client | undefined = undefined;
+let thrift_client: EditorPlugin.Client | undefined;
 // Where the webclient resides: ``html`` for a webview panel embedded in VSCode; ``browser`` to use an external browser.
 let codechat_client_location: ttypes.CodeChatClientLocation =
     ttypes.CodeChatClientLocation.html;
@@ -62,11 +62,11 @@ let subscribed = false;
 // A unique instance of these variables is required for each CodeChat panel. However, this code doesn't have a good UI way to deal with multiple panels, so only one is supported at this time.
 //
 // The id of this render client, assigned by the CodeChat Server.
-let codechat_client_id: number | undefined = undefined;
+let codechat_client_id: number | undefined;
 // The webview panel used to display the CodeChat Client
-let webview_panel: vscode.WebviewPanel | undefined = undefined;
+let webview_panel: vscode.WebviewPanel | undefined;
 // A timer used to wait for additional events (keystrokes, etc.) before performing a render.
-let idle_timer: NodeJS.Timeout | undefined = undefined;
+let idle_timer: NodeJS.Timeout | undefined;
 
 // Activation/deactivation
 // =======================
@@ -313,7 +313,7 @@ function start_render() {
         // ... schedule a render after 300 ms.
         idle_timer = setTimeout(() => {
             if (can_render()) {
-                console.log(`CodeChat extension: starting render.`);
+                console.log("CodeChat extension: starting render.");
                 thrift_client!.start_render(
                     vscode.window.activeTextEditor!.document.getText(),
                     vscode.window.activeTextEditor!.document.fileName,
@@ -419,7 +419,10 @@ async function start_server() {
     assert(typeof codechat_server_command === "string");
 
     // Split it into a command and args.
-    let [command, ...args] = [...shlex.split(codechat_server_command), "start"];
+    const [command, ...args] = [
+        ...shlex.split(codechat_server_command),
+        "start",
+    ];
     let stdout = "";
     let stderr = "";
 
@@ -427,7 +430,7 @@ async function start_server() {
         assert(typeof command === "string");
         const server_process = child_process.spawn(command, args);
         server_process.on("error", (err: NodeJS.ErrnoException) => {
-            let msg =
+            const msg =
                 err.code === "ENOENT"
                     ? `Error - cannot find the file ${err.path}`
                     : err;
@@ -435,7 +438,7 @@ async function start_server() {
         });
 
         server_process.on("exit", (code, signal) => {
-            let exit_str = code ? `code ${code}` : `signal ${signal}`;
+            const exit_str = code ? `code ${code}` : `signal ${signal}`;
             if (code === 0) {
                 resolve("");
             } else {
