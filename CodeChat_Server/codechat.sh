@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Installs CodeChat
-
+# test
 # To download this script and automatically run it, run in a terminal (without the # or $ signs):
 # $ wget https://raw.githubusercontent.com/JoeKenn1118/CodeChat_system/master/CodeChat_Server/codechat.sh && bash codechat.sh
 
