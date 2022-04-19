@@ -36,6 +36,7 @@ Troubleshooting
     - type ``Set-ExecutionPolicy RemoteSigned``
     - Run Powershell Script again
 
+- If Powershell is not recognizing your python installation, try installing python from the Microsoft Store
 
 Linux
 -----

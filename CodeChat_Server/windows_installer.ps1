@@ -18,31 +18,46 @@ set-executionpolicy remotesigned
 cd $env:USERPROFILE
 
 $pythonVersion = python --version
-$pythonVersionReq = #whatever this needs to be
+# Version of python required for codechat put into array to be easier to parse
+$pythonVersionReq = '3.7.0'
+$pythonVersionReqArray = '3','7','0'
+
+$pythonVersion = $pythonVersion.Split()[1]
+$pythonVersionMaj = $pythonVersion.Split('.')[0]
+$pythonVersionMin = $pythonVersion.Split('.')[1]
+
 if([string]::IsNullOrEmpty($pythonVersion)){
     $response = Read-Host -Prompt "You do not have Python installed, would you like to install the required version ($pythonVersion) (y/n)?"
     if($response == "y"){
         # echo "Installing Python Version ($pythonVersionReq)"
         # install Python using Invoke-WebRequest?
         echo "Not Implemented yet, please install python version $pythonVersionReq or later"
-    }
-    [else{
-        echo "Please install the required version of python: $pythonVersionReq"
         exit
-    }]
+    }
+    else{
+        echo "Please install the required version of python: $pythonVersionReq or later"
+        exit
+    }
 }
-[elseif ($pythonVersion != $pythonVersionReq){
-    $response = Read-Host -Prompt "You have Python version ($pythonVersion) installed, would you like to install the required version ($pythonVersion) (y/n)?"
-    if($response == "y"){
-        # echo "Installing Python Version ($pythonVersionReq)"
-        # install Python
-        echo "Not Implemented yet, please install python version $pythonVersionReq or later"
+
+# Version Checking
+# if the version we have is not greater than or equal to the required version, an updated version must be installed
+# checking negative case so that if it evaluates as true (version is less than required) then warning is output
+if ($pythonVersionMaj -lt $pythonVersionReqArray[0]){
+    if($pythonVersionMin -lt $pythonVersionReqArray[1]){
+        $response = Read-Host -Prompt "You do not have Python installed, would you like the script to install the required version ($pythonVersion) (y/n)?"
+        if($response -eq "y"){
+            # echo "Installing Python Version ($pythonVersionReq)"
+            # install Python using Invoke-WebRequest?
+            echo "Not Implemented yet, please install python version $pythonVersionReq or later"
+            exit
+        }
+        else{
+            echo "Please install the required version of python: $pythonVersionReq or later"
+            exit
+        }
     }
-    [else{
-        echo "Please install the required version of python: $pythonVersionReq"
-        exit
-    }]
-}]
+}
 
 
 # 
