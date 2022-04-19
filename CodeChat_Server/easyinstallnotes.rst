@@ -11,8 +11,8 @@ To install the CodeChat System, install the CodeChat Server and a CodeChat exten
 
 .. _install CodeChat Server:
 
-CodeChat Server Installation
-============================
+CodeChat Server Installation Notes
+==================================
 
 .. note:: 
  
@@ -20,24 +20,35 @@ CodeChat Server Installation
 
 Windows
 -------
-#.  Install Python. There are two options:
+#.  Go to this `link <https://github.com/JoeKenn1118/CodeChat_system/releases/tag/v0.0.1>`_ and download the Powershell script (``windows_installer.ps1``)
 
-    #.  Install it from the `Windows Store <https://www.microsoft.com/store/productId/9P7QFQMJRFP7>`_.
-    #.  Install Python from the web; check the "Add Python 3.x to PATH" box during the installation by following `these instructions <https://datatofish.com/add-python-to-windows-path/>`_.
+#. Open up Powershell in Admin mode
 
-#.  Run *OUR POWERSHELL SCRIPT*
+#. ``cd`` to the file location
+
+#. Run ``windows_installer.ps1``
 
 
 
 Linux
 -----
-#.  Run *OUR POWERSHELL SCRIPT*
+#.  `Open a terminal <https://www.howtogeek.com/howto/22283/four-ways-to-get-instant-access-to-a-terminal-in-linux/>`__.
+
+#.  Highlight this entire command: `wget <https://raw.githubusercontent.com/JoeKenn1118/CodeChat_system/master/CodeChat_Server/codechat.sh && bash codechat.sh>`_ and press Ctrl-C to copy. Go to the terminal window and press Ctrl-Shift-V. Press Enter.
+
+or
+
+#.  Download `codechat.sh <https://github.com/JoeKenn1118/CodeChat_system/releases>`__ to the directory where you want to install it.
+
+#.  `Open a terminal <https://www.howtogeek.com/howto/22283/four-ways-to-get-instant-access-to-a-terminal-in-linux/>`__ in that directory.
+
+#.  Type ``bash codechat.sh``
 
 
 
 Mac
 ---
-#.  Run *OUR POWERSHELL SCRIPT*
+#.  Run something
 
 
 Easy Installation Notes
@@ -52,6 +63,8 @@ Easy Installation Notes
     Ideally, this would open a simple python code with proper documentation that serves as an almost "landing page" for the first time the user opens their IDE with CodeChat installed.
 
 #. Pretty up and upload to web (phase 3)
+
+#. Convert scripts into executables and tars for even easier installation.
 
 #. profit
 
