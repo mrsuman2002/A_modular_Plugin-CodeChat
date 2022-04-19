@@ -46,11 +46,11 @@ Linux
 
 #.  `Open a terminal <https://www.howtogeek.com/howto/22283/four-ways-to-get-instant-access-to-a-terminal-in-linux/>`__.
 
-#.  Highlight this entire command: `wget <https://raw.githubusercontent.com/JoeKenn1118/CodeChat_system/master/CodeChat_Server/codechat.sh && bash codechat.sh>`_ and press Ctrl-C to copy. Go to the terminal window and press Ctrl-Shift-V. Press Enter.
+#.  Highlight this entire command: `wget <https://raw.githubusercontent.com/bjones1/CodeChat_system/master/CodeChat_Server/codechat.sh && bash codechat.sh>`_ and press Ctrl-C to copy. Go to the terminal window and press Ctrl-Shift-V. Press Enter.
 
 or
 
-#.  Download `codechat.sh <https://github.com/JoeKenn1118/CodeChat_system/releases>`__ to the directory where you want to install it.
+#.  Download `codechat.sh <https://github.com/bjones1/CodeChat_system/releases>`__ to the directory where you want to install it.
 
 #.  `Open a terminal <https://www.howtogeek.com/howto/22283/four-ways-to-get-instant-access-to-a-terminal-in-linux/>`__ in that directory.
 
@@ -61,7 +61,7 @@ Troubleshooting
 
 - If you don't have permission to run codechat.sh, type ``chmod 700 codechat.sh`` and try again.
 
-- CodeChat requires `an up-to-date installation of Python 3 <https://www.geeksforgeeks.org/how-to-download-and-install-python-latest-version-on-linux/>`__. 
+- CodeChat requires `an up-to-date installation of Python 3 <https://www.geeksforgeeks.org/how-to-download-and-install-python-latest-version-on-linux/>`__.
 
 
 
