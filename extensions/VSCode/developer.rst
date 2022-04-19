@@ -37,3 +37,6 @@ Contents
 
     README
     src/extension.ts
+    package.json
+    tsconfig.json
+    .eslintrc.yml
