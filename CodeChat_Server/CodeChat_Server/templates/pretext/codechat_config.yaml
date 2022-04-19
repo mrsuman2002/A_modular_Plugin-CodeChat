@@ -34,8 +34,7 @@ output_path: output/html
 # - ``{output_path}``: the ``output_path`` above, but as an absolute path.
 # - ``{sys_executable}``: the value of the running Python's `sys.executable <https://docs.python.org/3/library/sys.html#sys.executable>`_.
 #
-#args: pretext build html --stringparam debug.editable yes
-args: C:\Users\bjones\Documents\git\CodeChat_System\.venv\Scripts\python C:\Users\bjones\Documents\git\mathbook\pretext\pretext --component all --format html --directory {output_path} {source_path}/minimal.ptx -x debug.editable yes
+args: pretext build html
 
 # ``html_ext``: optional; defaults to ``.html``. The extension used by this renderer when generating HTML files.
 #html_ext: .html

@@ -24,7 +24,6 @@ along with MathBook XML.  If not, see <http://www.gnu.org/licenses/>.
         <macros>
         \newcommand{\doubler}[1]{2#1}
         </macros>
-        <document-id>pretext-SA</document-id>
     </docinfo>
 
     <article xml:id="minimal">

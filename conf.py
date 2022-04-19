@@ -400,7 +400,7 @@ def build_template_projects(app):
 
 def setup(app):
     # A good idea from `Breathe <https://breathe.readthedocs.io/en/latest/readthedocs.html#a-more-involved-setup>`_.
-    #app.connect("builder-inited", build_template_projects)
+    app.connect("builder-inited", build_template_projects)
 
     # return the usual `extension metadata <https://www.sphinx-doc.org/en/master/extdev/index.html#extension-metadata>`_.
     return dict(parallel_read_safe=True)
