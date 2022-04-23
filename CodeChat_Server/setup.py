@@ -30,24 +30,18 @@
 #   MANIFEST.in
 #
 #
-# To package
-# ==========
-# Create a source distribution, a built distribution, then upload both to
-# `CodeChat_Server at PyPI <https://pypi.python.org/pypi/CodeChat_Server>`_:
+# Release procedure
+# =================
+# - Update the version in `CodeChat_Server/__init__.py`.
+# - Run `tests/pre_commit_check.py`.
+# - Create a source distribution, a built distribution, then upload both to `CodeChat_Server at PyPI <https://pypi.python.org/pypi/CodeChat_Server>`_:
 #
-# .. code-block:: console
-#   :linenos:
+#   .. code-block:: console
+#       :linenos:
 #
-#   python -m pip install -U pip setuptools wheel twine
-#   python setup.py sdist bdist_wheel
-#   python -m twine upload dist/*
-#
-# To create an RPM, first manually edit the ``name=`` setting to add a ``python3-`` prefix and lowercase the name (e.g. ``name=python3-codechat``, not ``name=python3-CodeChat``). Perform ``sudo dnf install python3-devel rpm-build``. Then, use (on an RPM-based Linux distribution):
-#
-# .. code-block:: console
-#   :linenos:
-#
-#   python setup.py bdist_rpm
+#       python -m pip install -U pip setuptools wheel twine
+#       python setup.py sdist bdist_wheel
+#       python -m twine upload dist/*
 #
 # For `development
 # <https://pythonhosted.org/setuptools/setuptools.html#development-mode>`_:

@@ -58,9 +58,16 @@ Contents
     ../.gitignore
 
 
+Release procedures
+==================
+A release of the CodeChat System involves releasing the CodeChat Server and all extensions/plugins. See the follow developer docs for instructions:
+
+-   `CodeChat Server <CodeChat_Server/developer>`
+-   `Extensions <extensions/developer>`
+
+
 To do
 =====
--   Update to Thrift 0.16.0. As of 14-Mar-2022, the new package is `available on NPM <https://www.npmjs.com/package/thrift>`_ and from the `Thrift site <https://thrift.apache.org/download>`_, but not yet `published on PyPI <https://pypi.org/project/thrift/>`_.
 -   Better packaging: create a bootstrap Python script to install and configure the CodeChat server (create a venv, etc.)
 -   Make it easy to create a new project by offering a ``CodeChat_Server create <template name> <optional dest dir>`` command.
 -   Lots of testing.

@@ -25,11 +25,11 @@ User documentation
     security
 
 
-Developer documentation
-=======================
-.. toctree::
-    :maxdepth: 2
+Developer docs
+==============
+See also the `developer docs <developer>`.
 
-    CodeChat_Server/__init__.py
-    setup.py
-    tests/contents
+.. toctree::
+    :hidden:
+
+    developer
