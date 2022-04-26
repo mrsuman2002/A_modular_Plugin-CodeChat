@@ -341,7 +341,7 @@ function stop_client() {
     console.log("CodeChat extension: stopping client.");
     if (thrift_client !== undefined) {
         assert(thrift_connection !== undefined);
-        // Make a local copy to use for calling ``.end()``. If this function is called twice, then ``thift_connection`` will be set to false; if the callback invoked from the first call hasn't fun, then this local copy will still work.
+        // Make a local copy to use for calling ``.end()``. If this function is called twice, then ``thrift_connection`` will be set to false; if the callback invoked from the first call hasn't fun, then this local copy will still work.
         const local_thrift_connection = thrift_connection;
         assert(codechat_client_id !== undefined);
         thrift_client.stop_client(
