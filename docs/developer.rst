@@ -68,22 +68,23 @@ A release of the CodeChat System involves releasing the CodeChat Server and all 
 
 To do
 =====
--   Better packaging: create a bootstrap Python script to install and configure the CodeChat server (create a venv, etc.)
+-   Implement `settings system`.
+-   Better packaging: create a bootstrap Python script to install and configure the CodeChat server (create a venv, etc.). In progress -- see the ``installer`` branch.
 -   Make it easy to create a new project by offering a ``CodeChat_Server create <template name> <optional dest dir>`` command.
 -   Lots of testing.
 -   Inform the editor plugin when the client shuts down.
--   Handle syntax error line number click from the web client.
--   Hyperlink the file and line, or perhaps just the line, instead of the entire error message.
+-   Handle syntax error line number click from the web client. In progress -- see the ``hyperlink-errors`` branch.
+-   Hyperlink the file and line, or perhaps just the line, instead of the entire error message. In progress -- see the ``hyperlink-errors`` branch.
 -   Provide way to do a rebuild all.
 -   Add a CodeChat Client GUI to select render language for non-project builds.
--   Handle VS Code's themes (dark, high-contrast, etc.) correctly. To do this, we need to inherit CSS from the webview into the iframe. See https://code.visualstudio.com/api/extension-guides/webview#theming-webview-content, and also use the Developer Tools is VS Code to inspect the iframe containing the webview, which provides vars defining all the VS Code styles.
--   Add in sync.
+-   Handle VS Code's themes (dark, high-contrast, etc.) correctly. To do this, we need to inherit CSS from the webview into the iframe. See https://code.visualstudio.com/api/extension-guides/webview#theming-webview-content, and also use the Developer Tools is VS Code to inspect the iframe containing the webview, which provides vars defining all the VS Code styles. In process. Instead of tying this to VS themes, CodeChat will have its own set of themes. See the ``dark-mode`` branch.
+-   Add in sync. In progress -- see the ``sync`` branch.
 -   Monitor iframe location changes and try to sync by loading another file.
 -   Allow user-defined JSON of mapping from extensions to renderers.
 -   Provide a nicer style for docutils renders.
 -   Support all the pandoc renderers.
 -   Improve docs.
--   Support at least one more editor.
+-   Support at least one more editor. In progress -- see the ``Intellij`` and ``notepad++_extension`` branches.
 -   Save and restore scroll position on a per-file basis.
 -   Define a StrictYAML config file to replace the ``GLOB_TO_CONVERTER`` data structure more flexibly. Add in a bunch of conversions using Pandoc.
 -   Would it be easier for extension authors if the server could be invoked from the command line in client mode to communicate with the server via stdio? For example, send render requests as JSON and receive replies as JSON, or something like that? For now, wait until more extensions are developed.
