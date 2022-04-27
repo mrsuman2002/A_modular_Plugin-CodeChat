@@ -36,7 +36,6 @@ import child_process = require("child_process");
 // Third-party packages
 // --------------------
 import escape = require("escape-html");
-import shlex = require("shlex");
 import thrift = require("thrift");
 import vscode = require("vscode");
 
@@ -73,173 +72,183 @@ let idle_timer: NodeJS.Timeout | undefined;
 // This is invoked when the extension is activated. It either creates a new CodeChat instance or reveals the currently running one.
 export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(
-        vscode.commands.registerCommand("extension.codeChat", async () => {
-            console.log("CodeChat extension starting.");
+        vscode.commands.registerCommand(
+            "extension.codeChatDeactivate",
+            deactivate
+        ),
+        vscode.commands.registerCommand(
+            "extension.codeChatActivate",
+            async () => {
+                console.log("CodeChat extension starting.");
 
-            if (!subscribed) {
-                subscribed = true;
+                if (!subscribed) {
+                    subscribed = true;
 
-                // Render when the text is changed by listening for the correct `event <https://code.visualstudio.com/docs/extensionAPI/vscode-api#Event>`_.
-                context.subscriptions.push(
-                    vscode.workspace.onDidChangeTextDocument((event) => {
-                        start_render();
-                    })
-                );
+                    // Render when the text is changed by listening for the correct `event <https://code.visualstudio.com/docs/extensionAPI/vscode-api#Event>`_.
+                    context.subscriptions.push(
+                        vscode.workspace.onDidChangeTextDocument((event) => {
+                            start_render();
+                        })
+                    );
 
-                // Render when the active editor changes.
-                context.subscriptions.push(
-                    vscode.window.onDidChangeActiveTextEditor((event) => {
-                        start_render();
-                    })
-                );
-            }
+                    // Render when the active editor changes.
+                    context.subscriptions.push(
+                        vscode.window.onDidChangeActiveTextEditor((event) => {
+                            start_render();
+                        })
+                    );
+                }
 
-            // Get the CodeChat Client's location from the VSCode configuration.
-            const codechat_client_location_str = vscode.workspace
-                .getConfiguration("CodeChat.CodeChatServer")
-                .get("ClientLocation");
-            assert(typeof codechat_client_location_str === "string");
-            switch (codechat_client_location_str) {
-                case "html":
-                    codechat_client_location =
-                        ttypes.CodeChatClientLocation.html;
-                    break;
+                // Get the CodeChat Client's location from the VSCode configuration.
+                const codechat_client_location_str = vscode.workspace
+                    .getConfiguration("CodeChat.CodeChatServer")
+                    .get("ClientLocation");
+                assert(typeof codechat_client_location_str === "string");
+                switch (codechat_client_location_str) {
+                    case "html":
+                        codechat_client_location =
+                            ttypes.CodeChatClientLocation.html;
+                        break;
 
-                case "browser":
-                    codechat_client_location =
-                        ttypes.CodeChatClientLocation.browser;
-                    break;
+                    case "browser":
+                        codechat_client_location =
+                            ttypes.CodeChatClientLocation.browser;
+                        break;
 
-                default:
-                    assert(false);
-            }
+                    default:
+                        assert(false);
+                }
 
-            // Create or reveal the webview panel; if this is an external browser, we'll open it after the client is created.
-            if (
-                codechat_client_location === ttypes.CodeChatClientLocation.html
-            ) {
+                // Create or reveal the webview panel; if this is an external browser, we'll open it after the client is created.
+                if (
+                    codechat_client_location ===
+                    ttypes.CodeChatClientLocation.html
+                ) {
+                    if (webview_panel !== undefined) {
+                        // As below, don't take the focus when revealing.
+                        webview_panel.reveal(undefined, true);
+                    } else {
+                        // Create a webview panel.
+                        webview_panel = vscode.window.createWebviewPanel(
+                            "CodeChat",
+                            "CodeChat",
+                            {
+                                // Without this, the focus becomes this webview; setting this allows the code window open before this command was executed to retain the focus and be immediately rendered.
+                                preserveFocus: true,
+                                // Put this in the a column beside the current column.
+                                viewColumn: vscode.ViewColumn.Beside,
+                            },
+                            // See WebViewOptions_.
+                            {
+                                enableScripts: true,
+                                // Note: Per the `docs <https://code.visualstudio.com/api/advanced-topics/remote-extensions#option-2-use-a-port-mapping>`__, there's a way to map from ports on the extension host machine (which may be running remotely) to local ports the webview sees (since webviews always run locally). However, this doesn't support websockets, and should also be in place when using an external browser. Therefore, we don't supply ``portMapping``.
+                            }
+                        );
+                        // TODO: do I need to dispose of this and the following event handlers? I'm assuming that it will be done automatically when the object is disposed.
+                        webview_panel.onDidDispose((event) => {
+                            // Shut down the render client when the webview panel closes.
+                            console.log(
+                                "CodeChat extension: shut down webview."
+                            );
+                            stop_client();
+                            webview_panel = undefined;
+                        });
+
+                        // Render when the webview panel is shown.
+                        webview_panel.onDidChangeViewState((event) => {
+                            start_render();
+                        });
+                    }
+                }
+
+                // Provide a simple status display while the CodeChat System is starting up.
                 if (webview_panel !== undefined) {
-                    // As below, don't take the focus when revealing.
-                    webview_panel.reveal(undefined, true);
+                    // If we have an ID, then the GUI is already running; don't replace it.
+                    if (codechat_client_id === undefined) {
+                        webview_panel.webview.html =
+                            "<h1>CodeChat</h1><p>Loading...</p>";
+                    }
                 } else {
-                    // Create a webview panel.
-                    webview_panel = vscode.window.createWebviewPanel(
-                        "CodeChat",
-                        "CodeChat",
+                    vscode.window.showInformationMessage(
+                        "CodeChat is loading in an external browser..."
+                    );
+                }
+
+                // Start the server.
+                try {
+                    await start_server();
+                } catch (err) {
+                    assert(err instanceof Error);
+                    show_error(err.message);
+                    return;
+                }
+
+                if (thrift_connection === undefined) {
+                    console.log("CodeChat extension: creating Thrift client.");
+                    // The client should never exist if there's no connection.
+                    assert(thrift_client === undefined);
+
+                    // Try to connect to the CodeChat Server. The `createConnection function <https://github.com/apache/thrift/blob/master/lib/nodejs/lib/thrift/connection.js#L258>`_ wraps `net.createConnection <https://nodejs.org/api/net.html#net_net_createconnection_options_connectlistener>`_ then returns a `Connection object <https://github.com/apache/thrift/blob/master/lib/nodejs/lib/thrift/connection.js#L35>`_.
+                    //
+                    // This must use the `CodeChat service port <CodeChat service port>`.
+                    thrift_connection = thrift.createConnection(
+                        "localhost",
+                        ttypes.THRIFT_PORT,
                         {
-                            // Without this, the focus becomes this webview; setting this allows the code window open before this command was executed to retain the focus and be immediately rendered.
-                            preserveFocus: true,
-                            // Put this in the a column beside the current column.
-                            viewColumn: vscode.ViewColumn.Beside,
-                        },
-                        // See WebViewOptions_.
-                        {
-                            enableScripts: true,
-                            // Note: Per the `docs <https://code.visualstudio.com/api/advanced-topics/remote-extensions#option-2-use-a-port-mapping>`__, there's a way to map from ports on the extension host machine (which may be running remotely) to local ports the webview sees (since webviews always run locally). However, this doesn't support websockets, and should also be in place when using an external browser. Therefore, we don't supply ``portMapping``.
+                            transport: thrift.TBufferedTransport,
+                            protocol: thrift.TBinaryProtocol,
                         }
                     );
-                    // TODO: do I need to dispose of this and the following event handlers? I'm assuming that it will be done automatically when the object is disposed.
-                    webview_panel.onDidDispose((event) => {
-                        // Shut down the render client when the webview panel closes.
-                        console.log("CodeChat extension: shut down webview.");
-                        stop_client();
-                        webview_panel = undefined;
-                    });
 
-                    // Render when the webview panel is shown.
-                    webview_panel.onDidChangeViewState((event) => {
-                        start_render();
-                    });
-                }
-            }
+                    let was_error: boolean = false;
 
-            // Provide a simple status display while the CodeChat System is starting up.
-            if (webview_panel !== undefined) {
-                // If we have an ID, then the GUI is already running; don't replace it.
-                if (codechat_client_id === undefined) {
-                    webview_panel.webview.html =
-                        "<h1>CodeChat</h1><p>Loading...</p>";
-                }
-            } else {
-                vscode.window.showInformationMessage(
-                    "CodeChat is loading in an external browser..."
-                );
-            }
-
-            // Start the server.
-            try {
-                await start_server();
-            } catch (err) {
-                assert(err instanceof Error);
-                show_error(err.message);
-                return;
-            }
-
-            if (thrift_connection === undefined) {
-                console.log("CodeChat extension: creating Thrift client.");
-                // The client should never exist if there's no connection.
-                assert(thrift_client === undefined);
-
-                // Try to connect to the CodeChat Server. The `createConnection function <https://github.com/apache/thrift/blob/master/lib/nodejs/lib/thrift/connection.js#L258>`_ wraps `net.createConnection <https://nodejs.org/api/net.html#net_net_createconnection_options_connectlistener>`_ then returns a `Connection object <https://github.com/apache/thrift/blob/master/lib/nodejs/lib/thrift/connection.js#L35>`_.
-                //
-                // This must use the `CodeChat service port <CodeChat service port>`.
-                thrift_connection = thrift.createConnection(
-                    "localhost",
-                    ttypes.THRIFT_PORT,
-                    {
-                        transport: thrift.TBufferedTransport,
-                        protocol: thrift.TBinaryProtocol,
-                    }
-                );
-
-                let was_error: boolean = false;
-
-                thrift_connection.on("error", function (err) {
-                    console.log(
-                        `CodeChat extension: error in Thrift connection: ${err.message}`
-                    );
-                    was_error = true;
-                    show_error(
-                        `Error communicating with the CodeChat Server: ${err.message}. Re-run the CodeChat extension to restart it.`
-                    );
-                    // End the connection, to hopefully avoid the socketing entering the ``TIME-WAIT`` state.
-                    assert(thrift_connection);
-                    thrift_connection.end();
-                    // The close event will be `emitted next <https://nodejs.org/api/net.html#net_event_error_1>`_; that will handle cleanup.
-                });
-
-                thrift_connection.on("close", (hadError) => {
-                    console.log(
-                        "CodeChat extension: closing Thrift connection."
-                    );
-                    // If there was an error, the event handler above already provided the message. Note: the `parameter hadError <https://nodejs.org/api/net.html#net_event_close_1>`_ only applies to transmission errors, not to any other errors which trigger the error callback. Therefore, I'm using the ``was_error`` flag instead to catch non-transmission errors.
-                    if (!was_error && hadError) {
+                    thrift_connection.on("error", function (err) {
+                        console.log(
+                            `CodeChat extension: error in Thrift connection: ${err.message}`
+                        );
+                        was_error = true;
                         show_error(
-                            "The connection to the CodeChat Server was closed due to a transmission error. Re-run the CodeChat extension to restart it."
+                            `Error communicating with the CodeChat Server: ${err.message}. Re-run the CodeChat extension to restart it.`
+                        );
+                        // End the connection, to hopefully avoid the socketing entering the ``TIME-WAIT`` state.
+                        assert(thrift_connection);
+                        thrift_connection.end();
+                        // The close event will be `emitted next <https://nodejs.org/api/net.html#net_event_error_1>`_; that will handle cleanup.
+                    });
+
+                    thrift_connection.on("close", (hadError) => {
+                        console.log(
+                            "CodeChat extension: closing Thrift connection."
+                        );
+                        // If there was an error, the event handler above already provided the message. Note: the `parameter hadError <https://nodejs.org/api/net.html#net_event_close_1>`_ only applies to transmission errors, not to any other errors which trigger the error callback. Therefore, I'm using the ``was_error`` flag instead to catch non-transmission errors.
+                        if (!was_error && hadError) {
+                            show_error(
+                                "The connection to the CodeChat Server was closed due to a transmission error. Re-run the CodeChat extension to restart it."
+                            );
+                        }
+                        thrift_connection = undefined;
+                        // Since the connection is closed, we can't gracefully shut down the client via ``stop_client()``. Simply mark it as undefined so it will be re-created.
+                        thrift_client = undefined;
+                        codechat_client_id = undefined;
+                        idle_timer = undefined;
+                    });
+
+                    thrift_connection.on("connect", () => {
+                        assert(thrift_connection !== undefined);
+                        get_render_client(thrift_connection);
+                    });
+                } else {
+                    // If this was invoked while a connection is still pending, let that connection run its course.
+                    if (!thrift_connection.connection.connecting) {
+                        get_render_client(thrift_connection);
+                    } else {
+                        console.log(
+                            "CodeChat extension: connection already pending, so a new client wasn't created."
                         );
                     }
-                    thrift_connection = undefined;
-                    // Since the connection is closed, we can't gracefully shut down the client via ``stop_client()``. Simply mark it as undefined so it will be re-created.
-                    thrift_client = undefined;
-                    codechat_client_id = undefined;
-                    idle_timer = undefined;
-                });
-
-                thrift_connection.on("connect", () => {
-                    assert(thrift_connection !== undefined);
-                    get_render_client(thrift_connection);
-                });
-            } else {
-                // If this was invoked while a connection is still pending, let that connection run its course.
-                if (!thrift_connection.connection.connecting) {
-                    get_render_client(thrift_connection);
-                } else {
-                    console.log(
-                        "CodeChat extension: connection already pending, so a new client wasn't created."
-                    );
                 }
             }
-        })
+        )
     );
 }
 
@@ -418,17 +427,12 @@ async function start_server() {
         .get("Command");
     assert(typeof codechat_server_command === "string");
 
-    // Split it into a command and args.
-    const [command, ...args] = [
-        ...shlex.split(codechat_server_command),
-        "start",
-    ];
     let stdout = "";
     let stderr = "";
-
     return new Promise((resolve, reject) => {
-        assert(typeof command === "string");
-        const server_process = child_process.spawn(command, args);
+        const server_process = child_process.spawn(codechat_server_command, [
+            "start",
+        ]);
         server_process.on("error", (err: NodeJS.ErrnoException) => {
             const msg =
                 err.code === "ENOENT"

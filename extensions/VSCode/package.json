@@ -24,7 +24,7 @@
                 "CodeChat.CodeChatServer.Command": {
                     "type": "string",
                     "default": "CodeChat_Server",
-                    "markdownDescription": "Command to invoke the CodeChat Server executable; for example, `CodeChat_Server` (any platform), `python3 -m CodeChat_Server` (Linux/OS X), or `py -m CodeChat_Server` (Windows).\n\nIf providing an absolute path on Windows, either use a forward slash (`/`) or a double backslash (`\\\\`) for the path separator; for example, `C:/Python39/python.exe` or `C:\\\\Python39\\\\python.exe`, **not** `C:\\Python39\\python.exe`."
+                    "markdownDescription": "A path to the CodeChat Server executable; for example, `CodeChat_Server`."
                 },
                 "CodeChat.CodeChatServer.ClientLocation": {
                     "type": "string",
@@ -43,17 +43,21 @@
         },
         "commands": [
             {
-                "command": "extension.codeChat",
-                "title": "CodeChat"
+                "command": "extension.codeChatActivate",
+                "title": "Enable CodeChat"
+            },
+            {
+                "command": "extension.codeChatDeactivate",
+                "title": "Disable CodeChat"
             }
         ]
     },
     "activationEvents": [
-        "onCommand:extension.codeChat"
+        "onCommand:extension.codeChatActivate",
+        "onCommand:extension.codeChatDeactivate"
     ],
     "dependencies": {
         "escape-html": "^1.0.0",
-        "shlex": "^2.0.0",
         "thrift": "^0.16.0"
     },
     "devDependencies": {
