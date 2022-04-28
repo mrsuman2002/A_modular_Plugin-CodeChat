@@ -15,7 +15,9 @@ To install from source:
 
 Debugging the extension
 =======================
-*   From VSCode, select File | Add Folder to Workspace... then choose the folder containing this file. Press F5 or click start debugging under the Debug menu.
+*   From VSCode, select File | Add Folder to Workspace... then choose the folder containing this file.
+*   Press ctrl+shift+B to compile the extension.
+*   Press F5 or click start debugging under the Debug menu.
 *   A new instance of VSCode will start in a special mode (Extension Development Host) which contains the CodeChat extension.
 *   Open any source code, then press Ctrl+Shift+P and type "CodeChat" to run the CodeChat extension. You will be able to see the rendered version of your active window.
 

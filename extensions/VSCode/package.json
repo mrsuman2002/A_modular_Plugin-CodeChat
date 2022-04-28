@@ -24,7 +24,7 @@
                 "CodeChat.CodeChatServer.Command": {
                     "type": "string",
                     "default": "CodeChat_Server",
-                    "markdownDescription": "A path to the CodeChat Server executable; for example, `CodeChat_Server`."
+                    "markdownDescription": "Path to the CodeChat Server executable; for example, `CodeChat_Server`."
                 },
                 "CodeChat.CodeChatServer.ClientLocation": {
                     "type": "string",
