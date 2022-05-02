@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<!-- *******************************************************
+     |docname| - The web page containing the CodeChat Client
+     *******************************************************
+     This fairly simple web page contains IDs and classes to allow CSS/JS to style and manipulate the contents.
+-->
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>CodeChat Client</title>
+        <!-- Provide a `splitter <https://github.com/andrienko/splitter>`_ between the output and build panes. -->
+        <script src="/static/splitter.js?v=1"></script>
+        <link
+            rel="stylesheet"
+            type="text/css"
+            href="/static/splitter.css?v=1"
+        />
+        <!-- Use the ``ReconnectingWebsocket`` to automatically reconnect a websocket when the network connection drops -- for example, a laptop goes to sleep then wakes back up. -->
+        <script src="/static/ReconnectingWebsocket.js?v=1"></script>
+        <!-- The `../static/CodeChat_client.js`. -->
+        <script src="/static/CodeChat_client.js?v=3"></script>
+        <!-- Styling in `../static/CodeChat_client.css`. -->
+        <link
+            rel="stylesheet"
+            type="text/css"
+            href="/static/CodeChat_client.css?v=1"
+        />
+    </head>
+    <body>
+        <div class="horizontally_divided" id="splitter">
+            <div>
+                <!-- The children of the splitter div must be divs, which the splitter JS will assign styles to. So, wrap the iframe in a div. -->
+                <iframe
+                    id="output"
+                    srcdoc="
+                <html>
+                    <h1>CodeChat</h1>
+                    <p>Waiting for initial render. Switch the active source code window to begin.</p>
+                </html>"
+                >
+                </iframe>
+            </div>
+            <div>
+                <!-- Likewise, wrap the ``build_contents`` in a plain div, allowing us to assign styles via the stylesheet; the parent div's styles will be overridden by splitter JS assignments. -->
+                <div id="build_contents">
+                    <h2 id="build_heading">Build messages</h2>
+                    <div id="build"></div>
+                    <div id="errors"></div>
+                </div>
+            </div>
+        </div>
+        <div id="status_div">
+            <span id="status_left">
+                <span id="status_message">Waiting...</span>
+            </span>
+            <span id="status_right">
+                <span id="status_errors"></span>
+                <progress id="build_progress" max="100"></progress>
+            </span>
+        </div>
+
+        <script>
+            run_client({{client_id}}, {{WEBSOCKET_PORT}});
+        </script>
+    </body>
+</html>

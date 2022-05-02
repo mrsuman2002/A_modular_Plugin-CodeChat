@@ -1,54 +1,40 @@
-Welcome to CodeChat Plugin Documentation!
-==========================================
-
-The CodeChat plugin transforms source code into a web page, allowing software developers to view their source code as a beautiful and descriptive document by adding headings, formatting, hyperlinks, images, and diagrams. However, this plugin requires use of a little-known text editor, Enki. To broaden its impact, this project presents the creation of a modular plug-in architecture for CodeChat, enabling its use with a Visual Studio Code.
+.. include:: README.rst
 
 
-.. digraph:: mydiagram
+Getting started
+===============
+To get started, follow the `CodeChat_Server/install` instructions.
 
-    bgcolor="transparent"
 
-    CodeChat_plugin [label="\nCodeChat Plugin for VS Code \n \n",shape=rectangle]
+Help
+====
+First read the `docs/common_problems` page then `open an issue <https://github.com/bjones1/CodeChat_system/issues/new>`_. See also the `docs/CHANGELOG`.
 
-    Thrift [label="\n\nThrift\n\n", shape=circle]
-    CodeChat_plugin -> Thrift [ label="Consists"];
 
-    CodeChat_Extention [label="CodeChat\n Extension", shape=circle]
-    CodeChat_plugin -> CodeChat_Extention [label="Consists"];
+Development and Contributors
+============================
+For insight into the design of this software, see the `docs/developer`. The following developers provided valuable help in creating the CodeChat System.
 
-    PythonServer [label ="\n Python\n Server \n", shape=circle]
-    Thrift  -> PythonServer  [label="Consists"];
-
-    JavaScriptClient [label ="JavaScript\nClient", shape=circle]
-    PythonServer   -> JavaScriptClient [label="Consists"];
-
-    Thrift -> JavaScriptClient [label="Consists"];
-    JavaScriptClient -> CodeChat_Extention [label="Talks to"];
-
-    CodeChatLibrary [label= "CodeChat\nLibrary", shape=square]
-    CodeChatLibrary -> PythonServer  [label="Consists"];
-
-    Webview [label="Webview", shape=circle]
-    CodeChat_Extention -> Webview [label="Generates"];
-
-This approach bridges the services CodeChat provides, which are provided in the Python programming language, to the variety of programming languages which various text editors require. To accomplish this, this project (1) employs Apache Thrift, which provides scalable cross-language service development; (2) develops a CodeChat server to provide the needed services; and (3) creates a JavaScript plugin client for Visual Studio Code, a free and popular crossplatform text editor.
-
-Contents:
+-   `Bryan A. Jones <https://github.com/bjones1/>`_
+-   `Suman Adhikari <https://github.com/mrsuman2002>`_
+-   Christian Bush
+-   Jack Betbeze
 
 .. toctree::
-    :maxdepth: 2
+    :hidden:
 
-    Readme.rst
-    CodeChat_Extension/index.rst
-    Thrift/Thrift_Readme.rst
-    conf.py
-    .gitignore
-    sbuild.bat
+    docs/common_problems
+    docs/developer
 
 
-Indices and tables
-==================
+License
+=======
+Copyright (C) 2012-2022 Bryan A. Jones.
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+This file is part of the CodeChat System.
+
+The CodeChat System is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+The CodeChat System is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a `copy of the GNU General Public License <docs/LICENSE>` along with the CodeChat System.  If not, see http://www.gnu.org/licenses/.

@@ -16,34 +16,21 @@
 #   along with the CodeChat System.  If not, see
 #   <http://www.gnu.org/licenses/>.
 #
-# ***********************************
-# |docname| - Files for Git to ignore
-# ***********************************
-syntax: glob
+# *****************************
+# |docname| - Module definition
+# *****************************
+# Give the version number, which is read by `../setup.py` during packaging.
+# This is chosen following the `version convention
+# <http://packaging.python.org/en/latest/tutorial.html#version>`_.
+__version__ = "0.2.4"
 
-# CodeChat-generated files
-_build/
-
-# TypeScript transpiles.
-extensions/VSCode/out
-extensions/VSCode/.vscode
-
-# Python-generated files
-__pycache__/
-build/
-dist/
-*.egg-info/
-
-# Mypy-generated files
-
-# Others
-.mypy_cache/
-.tox/
-.venv/
-thrift*.exe
-node_modules/
-CodeChat_Server/venv_fedora/
-CodeChat_Server/.coverage
-CodeChat_Server/htmlcov/
-CodeChat_Server/CodeChat_Server/templates/mkdocs/site
-CodeChat_Server/CodeChat_Server/templates/runestone/build_info
+# Contents:
+#
+# .. toctree::
+#   :maxdepth: 2
+#
+#   server.py
+#   render_manager.py
+#   renderer.py
+#   __main__.py
+#   constants.py

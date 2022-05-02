@@ -1,0 +1,9 @@
+# *******************************************************************
+# |docname| - Python requirements file for building the documentation
+# *******************************************************************
+# This is used by `../readthedocs.yml` for that build process.
+-e CodeChat_Server
+mkdocs
+myst-parser
+runestone
+pretextbook

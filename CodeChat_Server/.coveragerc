@@ -1,0 +1,9 @@
+; ***********************************
+; |docname| - Configure code coverage
+; ***********************************
+[run]
+source=CodeChat_Server
+# Omit all Thrift-generated code from coverage.
+omit=*/gen_py/*
+# _`parallel=True` is required for `code_coverage` to work correctly.
+parallel=True

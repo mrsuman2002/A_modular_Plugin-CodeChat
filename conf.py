@@ -1,23 +1,24 @@
-# .. Copyright (C) 2012-2018 Bryan A. Jones.
+# .. Copyright (C) 2012-2022 Bryan A. Jones.
 #
-#    This file is part of CodeChat.
+#   This file is part of the CodeChat System.
 #
-#    CodeChat is free software: you can redistribute it and/or modify it under
-#    the terms of the GNU General Public License as published by the Free
-#    Software Foundation, either version 3 of the License, or (at your option)
-#    any later version.
+#   The CodeChat System is free software: you can redistribute it and/or
+#   modify it under the terms of the GNU General Public License as
+#   published by the Free Software Foundation, either version 3 of the
+#   License, or (at your option) any later version.
 #
-#    CodeChat is distributed in the hope that it will be useful, but WITHOUT ANY
-#    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-#    FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
-#    details.
+#   The CodeChat System is distributed in the hope that it will be
+#   useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+#   of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#   General Public License for more details.
 #
-#    You should have received a copy of the GNU General Public License along
-#    with CodeChat.  If not, see <http://www.gnu.org/licenses/>.
+#   You should have received a copy of the GNU General Public License
+#   along with the CodeChat System.  If not, see
+#   <http://www.gnu.org/licenses/>.
 #
-# ****************************************************************************
-# Template configuration file for a Sphinx CodeChat project
-# ****************************************************************************
+# ***********************************************************
+# |docname| - The CodeChat System documentation configuration
+# ***********************************************************
 # This file configures Sphinx, which transforms restructured text (reST) into
 # html. See Sphinx `build configuration file docs
 # <http://sphinx-doc.org/config.html>`_ for more information on the settings
@@ -33,7 +34,30 @@
 # * All configuration values have a default; values that are commented out serve
 #   to show the default.
 #
-import sys, os
+# Contents
+# ========
+# The following files also configure the documentation.
+#
+# .. toctree::
+#   :maxdepth: 1
+#
+#   codechat_config.yaml
+#   readthedocs.yml
+#
+# Imports
+# =======
+import sys
+import os
+import subprocess
+
+from sphinx.util import logging
+import CodeChat.CodeToRest
+
+# Ensure the path to these docs available in order to import the version number.
+sys.path.insert(0, os.path.abspath('CodeChat_Server'))
+from CodeChat_Server import __version__
+
+logger = logging.getLogger(__name__)
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -45,8 +69,8 @@ import sys, os
 # `project <http://sphinx-doc.org/config.html#confval-project>`_  and
 # `copyright <http://sphinx-doc.org/config.html#confval-copyright>`_:
 # General information about the project. **Change this** for your project.
-project = 'CodeChat Plugin'
-copyright = '2017, Author'
+project = "The CodeChat System"
+copyright = "2021, Bryan A. Jones"
 
 # The version info for the project you're documenting, acts as replacement for
 # ``|version|`` and ``|release|``, also used in various other places throughout
@@ -54,10 +78,10 @@ copyright = '2017, Author'
 #
 # `version <http://sphinx-doc.org/config.html#confval-version>`_: The short X.Y
 # version.
-version = '1.0'
+version = __version__
 # `release <http://sphinx-doc.org/config.html#confval-release>`_: The full
 # version, including alpha/beta/rc tags.
-release = 'version 1.0'
+release = __version__
 
 # There are two options for replacing ``|today|``:
 #
@@ -70,11 +94,11 @@ release = 'version 1.0'
 
 # `highlight_language <http://sphinx-doc.org/config.html#confval-highlight_language>`_:
 # The default language to highlight source code in.
-highlight_language = 'python3'
+highlight_language = "python3"
 
 # `pygments_style <http://sphinx-doc.org/config.html#confval-pygments_style>`_:
 # The style name to use for Pygments highlighting of source code.
-pygments_style = 'sphinx'
+pygments_style = "sphinx"
 
 # `add_function_parentheses <http://sphinx-doc.org/config.html#confval-add_function_parentheses>`_:
 # If true, '()' will be appended to ``:func:`` etc. cross-reference text.
@@ -105,30 +129,35 @@ pygments_style = 'sphinx'
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones. **CodeChat
 # note:** The ``CodeChat.CodeToRestSphinx`` extension is mandatory; without it,
 # CodeChat will not translate source code to reST and then (via Sphinx) to html.
-extensions = ['CodeChat.CodeToRestSphinx', 'sphinx.ext.graphviz']
+extensions = ["CodeChat.CodeToRestSphinx", "sphinx.ext.graphviz", "myst_parser"]
 
 # `templates_path <http://sphinx-doc.org/config.html#confval-templates_path>`_:
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+templates_path = ["_templates"]
 
 # `rst_epilog <http://www.sphinx-doc.org/en/stable/config.html#confval-rst_epilog>`_:
 # A string of reStructuredText that will be included at the end of every source
 # file that is read.
 rst_epilog = (
-# .. _docname substitution:
-#
-# ``|docname|`` substitution
-# --------------------------
-# Provide a convenient way to refer to a source file's name.
-"""
+    # .. _docname substitution:
+    #
+    # ``|docname|`` substitution
+    # --------------------------
+    # Provide a convenient way to refer to a source file's name.
+    """
 
 .. |docname| replace:: :docname:`name`
+"""
+
+    # A commonly-used link.
+    """
+.. _PEP 8: http://www.python.org/dev/peps/pep-0008/#imports
 """
 )
 
 # `source_suffix <http://sphinx-doc.org/config.html#confval-source_suffix>`_:
 # The suffix of source filenames.
-source_suffix = '.rst'
+source_suffix = ".rst"
 
 # **CodeChat note:** _`CodeChat_lexer_for_glob` is a dict of {glob_,
 # lexer_alias}, which uses lexer_alias (e.g. a lexer's `short name
@@ -138,25 +167,26 @@ source_suffix = '.rst'
 CodeChat_lexer_for_glob = {
     # CSS files are auto-detected as a CSS + Lasso file by Pygments,
     # causing it to display incorrectly. Define them as CSS only.
-    '*.css': 'CSS',
-    # These` files use # as a comment. So does Perl. Ugly, no?
-    '.gitignore': 'Perl',
+    "*.css": "CSS",
+    # These files use # as a comment. So does Perl. Ugly, no?
+    ".gitignore": "Perl",
+    "MANIFEST.in": "Perl",
+    "docs-requirements.txt": "Perl",
+    # Treat JavaScript as plain JavaScript; the auto-detect code finds something else.
+    "*.js": "JavaScript",
+    # The coverage config files is INI.
+    ".coveragerc": "INI",
+    # Misc.
+    ".flake8": "INI",
 }
 
-# **CodeChat note:** _`CodeChat_excludes` is a list of exclude_patterns_ which
-# applies only to source documents; in constrast, exclude_patterns_ will exclude
-# the given files from all of Sphinx (for example, exclude_patterns_ files
-# won't be included even if they're mentioned in html_static_path_).
-CodeChat_excludes = [
-    'CodeChat.css'
-]
 # `source_encoding <http://sphinx-doc.org/config.html#confval-source_encoding>`_:
 # The encoding of source files.
 ##source_encoding = 'utf-8-sig'
 
 # `master_doc <http://sphinx-doc.org/config.html#confval-master_doc>`_: The
 # master toctree document.
-master_doc = 'index'
+master_doc = "index"
 
 # `language <http://sphinx-doc.org/config.html#confval-language>`_:
 # The language for content autogenerated by Sphinx. Refer to documentation for a
@@ -166,34 +196,43 @@ master_doc = 'index'
 # `exclude_patterns <http://sphinx-doc.org/config.html#confval-exclude_patterns>`_:
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-#
-# **Important:** Do **NOT** add ``CodeChat.css`` to this list; this will
-# instruct Sphinx not to copy it to the ``_static`` directory, where it
-# is needed to properly lay out CodeChat output. Instead, to exclude it
-# from the documents produced by Sphinx, add it to CodeChat_excludes_.
 exclude_patterns = [
     # Misc files.
-    'Thumbs.db',
-    '.DS_Store',
-    # **CodeChat notes:**
-    #
-    # By default, Enki will instruct Sphinx to place all Sphinx output in
-    # ``_build``; this directory should therefore be excluded from the list of
-    # source files.
-    '_build',
-    # The ``CodeToRestSphinx`` extension creates a file named
-    # ``sphinx-enki-info.txt``, which should be ignored by Sphinx.
-    'sphinx-enki-info.txt',
-    'CodeChat_Extension/node_modules',
-    '**/gen-*',
-    'Thrift/Python_Server/out.html',
+    "Thumbs.db",
+    ".DS_Store",
+    "**/.pytest_cache",
+    "**/.mypy_cache",
+    "CodeChat_Server/.tox",
+    "README.rst",
+    "CodeChat_Server/htmlcov",
 
+    # Sphinx build output
+    "_build",
+
+    # JavaScript/TypeScript generated files
+    "extensions/VSCode/node_modules",
+    "extensions/VSCode/out",
+    "extensions/VSCode/.vscode",
+    "**/gen-*",
+    "**/gen_*",
+
+    # Files generated by packaging.
+    "CodeChat_Server/build",
+    "CodeChat_Server/dist",
+    "**/*.egg-info",
+
+    # Libraries
+    "CodeChat_Server/CodeChat_Server/CodeChat_Client/static/splitter.*",
+
+    # Misc
+    "CodeChat_Server/venv_fedora",
+    ".venv",
 ]
 
 
 # `default_role <http://sphinx-doc.org/config.html#confval-default_role>`_: The
 # reST default role (used for this markup: ```text```) to use for all documents.
-default_role = 'any'
+default_role = "any"
 
 # `keep_warnings <http://sphinx-doc.org/config.html#confval-keep_warnings>`_: If
 # true, keep warnings as "system message" paragraphs in the built documents.
@@ -207,7 +246,7 @@ keep_warnings = True
 # ======================================================================================
 # `html_theme <http://sphinx-doc.org/config.html#confval-html_theme>`_: The
 # theme to use for HTML and HTML Help pages.
-html_theme = 'alabaster'
+html_theme = "alabaster"
 
 # `html_theme_options <http://sphinx-doc.org/config.html#confval-html_theme_options>`_:
 # Theme options are theme-specific and customize the look and feel of a theme
@@ -246,13 +285,13 @@ html_theme = 'alabaster'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files, so
 # a file named ``default.css`` will overwrite the builtin ``default.css``.
-# **CodeChat note:** This must always include ``CodeChat.css``.
-html_static_path = ['CodeChat.css']
+# **CodeChat note:** Include the path to CodeChat's static files.
+html_static_path = CodeChat.CodeToRest.html_static_path() + ["CodeChat_Server/CodeChat_Server/templates"]
 
 # `html_last_updated_fmt <http://sphinx-doc.org/config.html#confval-html_last_updated_fmt>`_:
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
-html_last_updated_fmt = '%b, %d, %Y'
+html_last_updated_fmt = "%b, %d, %Y"
 
 # `html_sidebars <http://sphinx-doc.org/config.html#confval-html_sidebars>`_:
 # Custom sidebar templates, maps document names to template names.
@@ -286,7 +325,7 @@ html_show_sourcelink = True
 # `html_sourcelink_suffix <http://sphinx-doc.org/config.html#confval-html_sourcelink_suffix>`_:
 # Suffix to be appended to source links (see html_show_sourcelink), unless they
 # have this suffix already.
-html_sourcelink_suffix = ''
+html_sourcelink_suffix = ""
 
 # `html_show_sphinx <http://sphinx-doc.org/config.html#confval-html_show_sphinx>`_:
 # If true, "Created using Sphinx" is shown in the HTML footer. Default is True.
@@ -305,3 +344,63 @@ html_sourcelink_suffix = ''
 # `html_file_suffix <http://sphinx-doc.org/config.html#confval-html_file_suffix>`_:
 # This is the file name suffix for HTML files (e.g. ".xhtml").
 ##html_file_suffix = None
+
+
+# Intersphinx
+# ===========
+# `intersphinx_mapping <https://www.sphinx-doc.org/en/master/usage/extensions/intersphinx.html#confval-intersphinx_mapping>`_:
+# This config value contains the locations and names of other projects that should be linked to in this documentation.
+intersphinx_mapping = {
+    "CodeChat": (
+        "https://codechat.readthedocs.io/en/latest/", (
+            None,
+            # An optional local file location -- useful when updating both Sphinx builds before the updates are pushed to the server.
+            "../CodeChat/_build/objects.inv",
+        ),
+    )
+}
+
+
+# Options for `Graphviz output <https://www.sphinx-doc.org/master/usage/extensions/graphviz.html>`_
+# ===========================================================================================================
+# The output format for Graphviz when building HTML files.
+graphviz_output_format = "svg"
+
+
+# Given the name of a template to build, do so.
+def build_template(template_name):
+    cmd = ["CodeChat_Server", "build", f"CodeChat_Server/CodeChat_Server/templates/{template_name}"]
+    cmd_str = ' '.join(cmd)
+    logger.info(f"Running {cmd_str}...")
+    try:
+        cp = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Build of {template_name} template failed:\n{e.output}")
+    except FileNotFoundError as e:
+        logger.error(f"{e} when executing {cmd_str}.")
+    else:
+        print(cp.stdout)
+
+
+def build_template_projects(app):
+    # Determine if we're running an `RTD build <https://docs.readthedocs.io/en/latest/faq.html#how-do-i-change-behavior-when-building-with-read-the-docs>`_.
+    read_the_docs_build = os.environ.get("READTHEDOCS", None) == "True"
+
+    # In the following calls, include a specific file to build, so the CodeChat Server can build only if they are out of date.
+    build_template("doxygen/main.c")
+    # ReadTheDocs doesn't have these installed.
+    if not read_the_docs_build:
+        build_template("javadoc/Simple.java")
+        build_template("mdbook/src/chapter_1.md")
+    build_template("mkdocs/docs/index.md")
+    build_template("runestone/_sources/index.rst")
+    build_template("pretext/source/minimal.ptx")
+    build_template("sphinx/index.rst")
+
+
+def setup(app):
+    # A good idea from `Breathe <https://breathe.readthedocs.io/en/latest/readthedocs.html#a-more-involved-setup>`_.
+    app.connect("builder-inited", build_template_projects)
+
+    # return the usual `extension metadata <https://www.sphinx-doc.org/en/master/extdev/index.html#extension-metadata>`_.
+    return dict(parallel_read_safe=True)
