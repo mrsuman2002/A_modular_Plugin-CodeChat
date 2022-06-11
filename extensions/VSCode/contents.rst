@@ -35,9 +35,13 @@ Use
 
 At any time, run the CodeChat extension again (``Ctrl+Shift+P``, then ``CodeChat``) to show the CodeChat panel, re-start the CodeChat Server if it's not running, then reconnect with the server. Close the CodeChat panel then run the extension for a more complete reset.
 
-The CodeChat Server runs in an `integrated terminal <https://code.visualstudio.com/docs/editor/integrated-terminal>`_. You may hide this window (the X button at the top right of the pane) if you wish. To stop the server, either press any key in the terminal or click the trash can icon near the top right of the pane; re-run the CodeChat extension to restart it.
-
 See the `CodeChat tutorial <https://codechat.readthedocs.io/en/master/docs/tutorial.html>`_ for step-by-step instructions on authoring literate programming documents using Sphinx. For other documentation systems, create a `project configuration file <../../codechat_config.yaml>` then place it in the root directory of your project.
+
+
+Usage tips
+==========
+Documentation using CodeChat often involves long lines. To wrap lines, `enable word wrap <https://docs.microsoft.com/en-us/visualstudio/ide/reference/how-to-manage-word-wrap-in-the-editor?view=vs-2022>`_.
+
 
 
 Remote Development
@@ -90,6 +94,8 @@ Helpful links:
 -   `Remote Development Tips and Tricks <https://code.visualstudio.com/docs/remote/troubleshooting>`_.
 
 
+Developer docs
+==============
 See also the `developer docs <developer>`.
 
 .. toctree::

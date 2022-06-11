@@ -14,3 +14,7 @@ In VIM, enter ``:nmap <C-X> :w<cr>:!CodeChat_Server render % 1<cr>`` to define t
 -   If you'd like to render files in a separate window, replace the ``1`` with any other number of your choice.
 -   If the ``CodeChat_Server`` is not in your path, simply prepend the path: for example, ``:nmap <C-X> :w<cr>:!/path/to/CodeChat_Server render % 1<cr>``.
 -   To make this mapping permanent, add it to your ``.vimrc`` file.
+
+Usage tips
+----------
+Documentation using CodeChat often involves long lines. To wrap lines, `enable automatic word wrapping <https://vim.fandom.com/wiki/Automatic_word_wrapping>`_.
