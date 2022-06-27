@@ -513,8 +513,8 @@ async def _run_subprocess(
         args[0] = (
             # If this is a relative path, then prepend cwd.
             str(cwd / args[0])
-            # Relative paths have a path separator.
-            if os.sep in args[0] or os.altsep in args[0]
+            # Relative paths have a path separator. Note that `os.altsep <https://docs.python.org/3/library/os.html#os.altsep>`_ may be ``None``.
+            if os.sep in args[0] or (os.altsep or "") in args[0]
             # Otherwise, search the PATH. If it's not found, then go with the original value, which should raise an error when subprocess can't find it.
             else shutil.which(args[0]) or ""
         )

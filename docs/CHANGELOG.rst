@@ -13,7 +13,7 @@ Change Log
 **********
 -   `Github master <https://github.com/bjones1/CodeChat_system.git>`_:
 
-    -   No changes yet.
+    -   Fix renderer bug on Linux/OS X.
 
 -   0.2.5, 27-Jun-2022:
 
