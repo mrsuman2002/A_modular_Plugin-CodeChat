@@ -27,7 +27,7 @@ Release procedure
 -   Update the version of the plugin in `package.json`.
 -   Run ``npm update``.
 -   Verify that the extension still works after upgrading these packages.
--   Run ``vsce publish``.
+-   Run ``npx vsce publish`` (`docs <https://code.visualstudio.com/api/working-with-extensions/publishing-extension>`__) and ``npx ovsx publish -p <token>`` (`docs <https://github.com/eclipse/openvsx/wiki/Publishing-Extensions#5-package-and-upload>`__).
 
 
 Notes
