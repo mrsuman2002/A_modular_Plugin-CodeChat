@@ -13,9 +13,13 @@ Change Log
 **********
 -   `Github master <https://github.com/bjones1/CodeChat_system.git>`_:
 
+    -   No changes yet.
+
+-   0.2.5, 27-Jun-2022:
+
     -   Fix: Change the VSCode extension to not parse the provided command line. This means there's no need to escape backslashes, but also no support for running ``python -m CodeChat_Server`` or similar commands.
     -   Add enable/disable CodeChat commands to the VSCode extension.
-    -   Add: Initial version of the IntelliJ CodeChat plugin.
+    -   Support open-source variants of Visual Studio Code by publishing the CodeChat extension on the `Open VSX Registery <https://open-vsx.org/>`_.
 
 -   0.2.4, 19-Apr-2022:
 
