@@ -62,8 +62,8 @@ Release procedures
 ==================
 A release of the CodeChat System involves releasing the CodeChat Server and all extensions/plugins. See the follow developer docs for instructions:
 
--   `CodeChat Server <CodeChat_Server/developer>`
--   `Extensions <extensions/developer>`
+-   `CodeChat Server <../CodeChat_Server/developer>`
+-   `Extensions <../extensions/developer>`
 
 
 To do

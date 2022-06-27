@@ -4,7 +4,7 @@ Developer documentation
 
 Release procedures
 ==================
-Each extension has a unique publish procedure. See each extension/plugin's developer docs.
+Each extension/plugin has a unique release procedure. See each extension/plugin's developer docs.
 
 -   `Visual studio code <VSCode/developer>`
 -   `IntelliJ <IntelliJ/developer>`

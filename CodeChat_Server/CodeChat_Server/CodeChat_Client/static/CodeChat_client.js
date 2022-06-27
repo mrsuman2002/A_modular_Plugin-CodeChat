@@ -328,31 +328,39 @@ function scroll_to_bottom(element) {
 
 // This regex parses the error string to determine get the number of warnings and errors.
 const error_regex = new RegExp(
-    // Common docutils error messages read::
+    // Common docutils error messages read:
+    //
+    // .. code:: none
+    //  :number-lines:
     //
     //  <string>:1589: (ERROR/3) Unknown interpreted text role "ref".
-    //
     //  X:\ode.py:docstring of sympy:5: (ERROR/3) Unexpected indentation.
     //
-    // and common Sphinx errors read::
+    // Common Sphinx errors read:
+    //
+    // .. code:: none
+    //  :number-lines:
     //
     //  X:\SVM_train.m.rst:2: SEVERE: Title overline & underline mismatch.
-    //
     //  X:\indexs.rst:None: WARNING: image file not readable: a.jpg
-    //
     //  X:\conf.py.rst:: WARNING: document isn't included in any toctree
-    //
-    //  In Sphinx 1.6.1:
+    //  # In Sphinx 1.6.1:
     //  X:\file.rst: WARNING: document isn't included in any toctree
     //
-    // The CodeChat renderer also produces `error messages <checkModificationTime>`_ formatted in a similar way so they'll be identified by the same regex::
+    // The CodeChat renderer also produces `error messages <checkModificationTime>`_ formatted in a similar way so they'll be identified by the same regex:
+    //
+    // .. code:: none
+    //  :number-lines:
     //
     //  X:\ode.py:: ERROR: CodeChat renderer - source file older than the html file X:\_build\html\ode.py.
     //
     // Each error/warning occupies one line. The following `regular
     // expression <https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions>`_ is designed to find the error position (1589/None) and message type (ERROR/WARNING/SEVERE). Extra spaces are added to show which parts of the example string it matches.
     //
-    // Examining the following expression one element at a time::
+    // Examining the following expression one element at a time:
+    //
+    // .. code::
+    //  :number-lines:
     //
     //   <string>:1589:        (ERROR/3)Unknown interpreted text role "ref".
     //
