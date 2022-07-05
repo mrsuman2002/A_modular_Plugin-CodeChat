@@ -83,8 +83,14 @@ function run_client(
     set_splitter_percent(splitter_size[errors_or_warnings]);
 
     // Create a websocket to communicate with the CodeChat Server.
+    //
+    // If the hosting page uses HTTPS, then use a secure websocket (WSS protocol); otherwise, use an insecure websocket (WS).
+    const protocol = window.location.protocol === "http:" ? "ws" : "wss";
+    // The pathname is all but the last element of the hosting page's page.
+    const pathname = window.location.pathname.split("/").slice(0, -2).join("/");
     let ws = new ReconnectingWebSocket(
-        `ws://${window.location.hostname}:${ws_port}`
+        // Transform the hosting page's URL for the websocket. For example, transform from ``http://foo.org/client?id=0`` into ``ws://foo.org:27377``.
+        `${protocol}://${window.location.hostname}${pathname}/${ws_port}`
     );
 
     // Identify this client on connection.
