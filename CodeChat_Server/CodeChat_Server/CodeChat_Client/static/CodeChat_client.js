@@ -86,11 +86,14 @@ function run_client(
     //
     // If the hosting page uses HTTPS, then use a secure websocket (WSS protocol); otherwise, use an insecure websocket (WS).
     const protocol = window.location.protocol === "http:" ? "ws" : "wss";
-    // The pathname is all but the last element of the hosting page's page.
-    const pathname = window.location.pathname.split("/").slice(0, -2).join("/");
-    let ws = new ReconnectingWebSocket(
+    const is_cocalc = window.location.hostname === "cocalc.com";
+    // A special case for CoCalc: use a different URL per the `CoCalc docs <https://doc.cocalc.com/howto/webserver.html>`_.
+    const separator = is_cocalc ? "/" : ":";
+    // The pathname is all but the last one or two elements of the hosting page's pathname: transform ``/a/long/path/to/the/client`` to ``/a/long/path/to/the``. For CoCalc, this transforms ``/f1d3f8ac-39da-48fe-9357-7d5c4ee132de/server/27377/client`` into ``/f1d3f8ac-39da-48fe-9357-7d5c4ee132de/server``.
+    const pathname = window.location.pathname.split("/").slice(0, is_cocalc ? -2 : -1).join("/");
+    const ws = new ReconnectingWebSocket(
         // Transform the hosting page's URL for the websocket. For example, transform from ``http://foo.org/client?id=0`` into ``ws://foo.org:27377``.
-        `${protocol}://${window.location.hostname}${pathname}/${ws_port}`
+        `${protocol}://${window.location.hostname}${pathname}${separator}${ws_port}`
     );
 
     // Identify this client on connection.
