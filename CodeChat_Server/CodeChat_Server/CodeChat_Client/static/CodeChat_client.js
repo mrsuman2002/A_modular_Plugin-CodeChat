@@ -32,7 +32,7 @@ const GetResultType = {
 };
 
 // A regex to match a percentage: one or more digits, optionally followed by a period and one or more digits, and ending with a percent sign.
-let percent_regex = new RegExp(
+const percent_regex = new RegExp(
     // Capture the number in front of the percent sign.
     "(" +
     // Look for one or more digits, ...
@@ -57,13 +57,13 @@ function run_client(
     // Set up variables used by the functions below
     // --------------------------------------------
     // Get commonly-used nodes in the DOM.
-    let status_message = document.getElementById("status_message");
-    let build_progress = document.getElementById("build_progress");
-    let status_errors_div = document.getElementById("status_errors");
-    let outputElement = document.getElementById("output");
-    let build_div = document.getElementById("build");
-    let build_contents = document.getElementById("build_contents");
-    let errors_div = document.getElementById("errors");
+    const status_message = document.getElementById("status_message");
+    const build_progress = document.getElementById("build_progress");
+    const status_errors_div = document.getElementById("status_errors");
+    const outputElement = document.getElementById("output");
+    const build_div = document.getElementById("build");
+    const build_contents = document.getElementById("build_contents");
+    const errors_div = document.getElementById("errors");
 
     // True if the output/errors should be cleared on the next result.
     let clear_output = true;
@@ -120,7 +120,7 @@ function run_client(
                 `CodeChat Client: URL ${result.text} received; loading...`
             );
             // Save and restore scroll location through the content update, if we can.
-            let [scrollX, scrollY] = getScroll();
+            const [scrollX, scrollY] = getScroll();
             // See ideas in https://stackoverflow.com/a/16822995. Works for same-domain only.
             outputElement.onload = function () {
                 if (is_user_navigation) {
@@ -193,7 +193,7 @@ function run_client(
                 build_div.textContent += result.text;
             }
             // Look for a percentage, to update the progress bar.
-            let percent_matches = result.text.match(percent_regex);
+            const percent_matches = result.text.match(percent_regex);
             if (percent_matches !== null) {
                 // Update the progress bar with the percentage from the last match.
                 build_progress.value = parseFloat(
@@ -323,7 +323,7 @@ function get_splitter() {
 
 // Set the splitter percentage
 function set_splitter_percent(percent) {
-    let splitter = get_splitter();
+    const splitter = get_splitter();
     splitter.percent = percent;
     splitMe.update(splitter);
 }
@@ -401,7 +401,7 @@ function parse_for_errors(errors_html) {
             }
 
             // Unsanitize the file name.
-            let div = document.createElement("div");
+            const div = document.createElement("div");
             div.innerHTML = file_path;
             file_path = div.textContent;
             // Make an unspecified filename empty.
