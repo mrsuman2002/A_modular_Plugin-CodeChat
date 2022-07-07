@@ -8,7 +8,10 @@
     <head>
         <meta charset="utf-8" />
         <title>CodeChat Client</title>
-        <!-- Provide a `splitter <https://github.com/andrienko/splitter>`_ between the output and build panes. -->
+        <!-- Provide a `splitter <https://github.com/andrienko/splitter>`_ between the output and build panes.
+
+             Note that all URLs are relative, not absolute (``static/splitter.js`` instead of ``/static/spliter.js``). This allows CoCalc to run, since CoCalc prepends several elements to the pathname of the url, breaking absolute URLs. See the `CoCalc docs <https://doc.cocalc.com/howto/webserver.html>`_.
+        -->
         <script src="static/splitter.js?v=1"></script>
         <link
             rel="stylesheet"
