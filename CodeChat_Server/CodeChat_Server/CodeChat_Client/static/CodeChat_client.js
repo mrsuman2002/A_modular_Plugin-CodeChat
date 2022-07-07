@@ -162,7 +162,8 @@ function run_client(
                 window.location.pathname +
                 "/" +
                 id +
-                "/" +
+                // Windows pathnames don't begin with a slash; Linux/Mac pathnames do. Avoid repeating the slash on Linux/Mac to get prettier URLs.
+                (result.text[0] === "/" ? "" : "/") +
                 result.text;
             // The next build output received will apply to the new build, so set the flag.
             clear_output = true;
