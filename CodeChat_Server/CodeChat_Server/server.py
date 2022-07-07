@@ -31,8 +31,10 @@
 # ----------------
 import logging
 from pathlib import Path
+import re
 import signal
 import socket
+import subprocess
 import sys
 from textwrap import dedent
 import threading
@@ -64,6 +66,36 @@ UNKNOWN_CLIENT = "Unknown client id {}."
 
 logger = logging.getLogger(__name__)
 
+# This follows the `Python recommendations <https://docs.python.org/3/library/sys.html#sys.platform>`_.
+IS_WIN = sys.platform == "win32"
+IS_LINUX = sys.platform.startswith("linux")
+
+# On CoCalc, ``uname --nodename`` returns a string like ``project-f1d3f8ac-39da-48fe-9357-7d5c4ee132de\n``. Create a regex to match this.
+COCALC_PROJECT_ID_REGEX = re.compile(
+    r"project-([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\n"
+)
+
+
+# Utilities
+# =========
+# Get CoCalc project id. Returns the CoCalc project ID, or "" if this system isn't CoCalc.
+def get_cocalc_project_id() -> str:
+    if not IS_LINUX:
+        return ""
+
+    try:
+        # On CoCalc, this returns a string like ``project-f1d3f8ac-39da-48fe-9357-7d5c4ee132de\n``.
+        cp = subprocess.run(["uname", "--nodename"], capture_output=True, text=True)
+    except subprocess.SubprocessError:
+        # If anything goes wrong, assume we're not on CoCalc.
+        return ""
+    else:
+        # If we can parse this to the expected CoCalc result, assume it's CoCalc.
+        match = COCALC_PROJECT_ID_REGEX.match(cp.stdout)
+        if not match:
+            return ""
+        return match.group(1)
+
 
 # Service provider
 # ================
@@ -72,6 +104,7 @@ class CodeChatHandler:
     def __init__(self):
         self.render_manager: render_manager.RenderManager
         self.insecure: bool
+        self.cocalc_project_id = get_cocalc_project_id()
 
     # _`get_client`: Return the HTML for a web client.
     def get_client(self, codeChat_client_location: int) -> RenderClientReturn:
@@ -95,7 +128,12 @@ class CodeChatHandler:
 
         # Return what's requested.
         endpoint = "insecure" if self.insecure else "client"
-        url = f"http://{LOCALHOST}:{HTTP_PORT}/{endpoint}?id={id}"
+        url = (
+            # On CoCalc, use a special URL (see the `CoCalc docs <https://doc.cocalc.com/howto/webserver.html>`_).
+            f"https://cocalc.com/{self.cocalc_project_id}/server/{HTTP_PORT}/{endpoint}?id={id}"
+            if self.cocalc_project_id
+            else f"http://{LOCALHOST}:{HTTP_PORT}/{endpoint}?id={id}"
+        )
         if codeChat_client_location == CodeChatClientLocation.url:
             # Just return the URL.
             ret_str = url
@@ -332,8 +370,11 @@ def run_servers(
     # Shut down if any unhandled exception occurs.
     sys.excepthook = excepthook
 
-    # Both servers block when run, so place them in a thread. Mark the servers as a daemon, so they will be killed when the program shuts down.
+    # Run in insecure mode if commanded to, or if running under CoCalc.
+    insecure = insecure or bool(handler.cocalc_project_id)
     handler.insecure = insecure
+
+    # Both servers block when run, so place them in a thread. Mark the servers as a daemon, so they will be killed when the program shuts down.
     editor_plugin_thread = threading.Thread(
         target=editor_plugin_server, name="Editor plugin server", daemon=True
     )
