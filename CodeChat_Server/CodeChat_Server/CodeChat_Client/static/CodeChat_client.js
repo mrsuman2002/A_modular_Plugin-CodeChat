@@ -35,12 +35,12 @@ const GetResultType = {
 let percent_regex = new RegExp(
     // Capture the number in front of the percent sign.
     "(" +
-        // Look for one or more digits, ...
-        "\\d+" +
-        // Optionally followed by a decimal point and one ore more digits. (Don't include these in a capture group.)
-        "(?:\\.\\d+)?" +
-        // End the capture group, then require a percent sign.
-        ")%",
+    // Look for one or more digits, ...
+    "\\d+" +
+    // Optionally followed by a decimal point and one ore more digits. (Don't include these in a capture group.)
+    "(?:\\.\\d+)?" +
+    // End the capture group, then require a percent sign.
+    ")%",
     // Search globally (for all matches).
     "g"
 );
@@ -373,17 +373,17 @@ const error_regex = new RegExp(
     //
     // The filename is anything up to the colon. Windows filenames may begin with a drive letter followed by a colon -- don't capture this (the leading ``?:``).
     "^((?:\\w:)?[^:]*)" +
-        // Find the first occurrence of a pair of colons, or just a single colon. Between them there can be numbers or "None" or nothing. For example, this expression matches the string ":1589:" or string ":None:" or the string "::" or the string ":".
-        ":(\\d*|None):? " +
-        // Next match the error type, which can only be "WARNING", "ERROR" or "SEVERE". Before this error type the message may optionally contain one left parenthesis.
-        "\\(?(WARNING|ERROR|SEVERE)" +
-        // Since one error message occupies one line, a ``*`` quantifier is used along with end-of-line ``$`` to make sure only the first match is used in each line.
-        ".*$",
+    // Find the first occurrence of a pair of colons, or just a single colon. Between them there can be numbers or "None" or nothing. For example, this expression matches the string ":1589:" or string ":None:" or the string "::" or the string ":".
+    ":(\\d*|None):? " +
+    // Next match the error type, which can only be "WARNING", "ERROR" or "SEVERE". Before this error type the message may optionally contain one left parenthesis.
+    "\\(?(WARNING|ERROR|SEVERE)" +
+    // Since one error message occupies one line, a ``*`` quantifier is used along with end-of-line ``$`` to make sure only the first match is used in each line.
+    ".*$",
 
     // The message usually contains multiple lines; search each line for errors and warnings.
     "m" +
-        // The global flag must be present to replace all occurrences.
-        "g"
+    // The global flag must be present to replace all occurrences.
+    "g"
 );
 
 // Parse the error output for errors and warnings.
