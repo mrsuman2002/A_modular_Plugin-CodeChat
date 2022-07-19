@@ -90,6 +90,13 @@ To do
 -   Would it be easier for extension authors if the server could be invoked from the command line in client mode to communicate with the server via stdio? For example, send render requests as JSON and receive replies as JSON, or something like that? For now, wait until more extensions are developed.
 -   The mdbook render seems slow. Perhaps cache rendered results instead of recomputing them each time?
 -   Provide a way to close CodeChat when running in browser mode.
+-   Dynamically assign all ports.
+
+    #.  The http port is easiest to change. See `this SO <https://stackoverflow.com/questions/1365265/on-localhost-how-do-i-pick-a-free-port-number>`_.
+    #.  Next, make the websocket port dynamically assigned. The render manager would set it, then the server would need to ask the render manager for it.
+    #.  Finally, make the Thrift port dynamically assigned. Perhaps return the port number in the exit code of the ``CodeChat_Server start`` command? Tricky part: how to discover the current port number if the server is already running in another process? Perhaps store it in a local file in /tmp?
+
+-   Disallow opening multiple CodeChat Clients for a given id. (This can only happen currently by manually entering a URL, so it's not a big problem.)
 
 
 Ideas:
