@@ -19,6 +19,8 @@
 // ***************************************************************************
 // |docname| - Core code for the CodeChat Client
 // ***************************************************************************
+"use strict";
+
 // Constants
 // =========
 // .. _GetResultType JS:
@@ -117,7 +119,7 @@ function run_client(
 
     // Handle messages.
     ws.onmessage = (event) => {
-        result = JSON.parse(event.data);
+        const result = JSON.parse(event.data);
         if (result.get_result_type === GetResultType.url) {
             console.log(
                 `CodeChat Client: URL ${result.text} received; loading...`
@@ -315,7 +317,7 @@ function run_client(
 }
 
 // Globally-accessible functions (see above). These must be declared as ``var`` (not ``let``) due to (I assume) scoping rules I don't understand.
-var navigate_to_error, save_file;
+var navigate_to_error, save_file, browser_navigation;
 
 // Utilities
 // =========
