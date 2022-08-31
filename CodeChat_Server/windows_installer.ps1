@@ -28,9 +28,11 @@ $pythonVersion = python --version 2>&1 | %{ "$_" }
 # Case 1: No Python
 # -----------------
 # sometimes the ``pythonVersion`` variable is empty other times it contains "Python was not found..."
-if(([string]::IsNullOrEmpty($pythonVersion)) -or (($pythonVersion[0] -ceq "P") -and ($pythonVersion[7] -eq "w"))) {
-    cls    # clear screen to hide confusing or conflicting powershell error message(s)
-    echo "Python $pythonVersionReq or later required. Type 'python' and press Enter to install from Microsoft Store, then rerun script."
+if (([string]::IsNullOrEmpty($pythonVersion)) -or (($pythonVersion.StartsWith("Python was")))) {
+    # clear screen to hide confusing or conflicting powershell error message(s)
+    cls
+    echo "Python $pythonVersionReq or later required. Type 'python' and press "
+    echo "Enter to install from Microsoft Store, then rerun script."
     # blank line
     echo "`n"
     # abort script
@@ -58,7 +60,8 @@ if ($pythonVersionMaj -lt $pythonVersionReqArray[0]) {
 # --------------------
 if (([int]$pythonVersionMaj -ne [int]$pythonVersionReqArray[0]) -or ([int]$pythonVersionMin -lt [int]$pythonVersionReqArray[1])) {
     echo $pythonVersion
-    echo "Unable to detect Python version. Check that Python $pythonVersionReq or later is installed, and that it is present in the path"
+    echo "Unable to detect Python version. Check that Python $pythonVersionReq"
+    echo "or later is installed, and that it is present in the path."
     exit
 }
 
@@ -72,7 +75,7 @@ if ([string]::IsNullOrEmpty($codechat)) {
     python -m venv codechat
     echo "virtual environment successfully created"
 } else {
-        echo "'codechat' virtual environment already found, skipping this step"
+        echo "'codechat' virtual environment already found, skipping this step."
 }
 # find CodeChat_Server.exe and tell user if just updating or installing
 $CodeChat_Server = Get-Command $env:USERPROFILE\codechat\Scripts\CodeChat_Server -ErrorAction SilentlyContinue
@@ -92,4 +95,5 @@ if ([string]::IsNullOrEmpty($CodeChat_Server)) {
 $pathToCodeChat = Get-Command $env:USERPROFILE\codechat\Scripts\CodeChat_Server | Select-Object -ExpandProperty Definition
 Set-Clipboard $pathToCodeChat
 echo "Here is your path to CodeChat (Also copied to your clipboard): $pathToCodeChat"
-echo "Now add this path to your plugin's setup - see https://codechat-system.readthedocs.io/en/latest/extensions/contents.html"
+echo "Now add this path to your plugin's setup - see"
+echo "https://codechat-system.readthedocs.io/en/latest/extensions/contents.html"

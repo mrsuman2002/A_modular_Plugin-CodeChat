@@ -18,50 +18,26 @@ To install the CodeChat Server:
 
 Windows
 -------
-#.  Go to this `link <https://github.com/bjones1/CodeChat_system/tree/master/CodeChat_Server>`_ and download the Powershell script ``installer.ps1``.
-
 #. Open up `Powershell in Admin mode <https://www.javatpoint.com/powershell-run-as-administrator>`_
-
-#. ``cd`` to the location where you downloaded ``installer.ps1``.
-
-#. Run ``installer.ps1``
-
+#. Run the following command: ``(Invoke-WebRequest -Uri https://raw.githubusercontent.com/bjones1/CodeChat_system/master/CodeChat_Server/windows_installer.ps1 -UseBasicParsing).Content | powershell -``
 
 Linux
 -----
-
 .. _install CodeChat Server on Linux:
 
 #.  `Open a terminal <https://www.howtogeek.com/howto/22283/four-ways-to-get-instant-access-to-a-terminal-in-linux/>`__.
-
-#.  Highlight this entire command: `wget <https://raw.githubusercontent.com/bjones1/CodeChat_system/master/CodeChat_Server/codechat.sh && bash codechat.sh>`_ and press Ctrl-C to copy. Go to the terminal window and press Ctrl-Shift-V. Press Enter.
-
-or
-
-#.  Download `codechat.sh <https://github.com/bjones1/CodeChat_system/releases>`__ to the directory where you want to install it.
-
-#.  `Open a terminal <https://www.howtogeek.com/howto/22283/four-ways-to-get-instant-access-to-a-terminal-in-linux/>`__ in that directory.
-
-#.  Type ``bash codechat.sh``
-
+#.  Highlight this entire command: ``wget https://raw.githubusercontent.com/bjones1/CodeChat_system/master/CodeChat_Server/codechat.sh | bash codechat.sh`` and press Ctrl-C to copy. Go to the terminal window and press Ctrl-Shift-V. Press Enter.
 
 
 Mac
 ---
 #.  `Open a terminal <https://support.apple.com/guide/terminal/open-or-quit-terminal-apd5265185d-f365-44cb-8b09-71a064a42125/mac>`__.
-
 #.  `Install modern Python <https://opensource.com/article/19/5/python-3-default-mac>`_.
-
 #.  Make sure pip, the Python installer, is `up to date`_: at the terminal, type ``python3 -m pip install --user --upgrade pip``.
-
 #.  `Create a virtual environment`_ named *codechat* by typing ``python3 -m venv codechat``. This keeps the installation of the CodeChat System from interfering with other installed Python programs and vice versa.
-
 #.  `Activate this virtual environment`_ by typing ``source codechat/bin/activate``.
-
 #.  Install the CodeChat Server by typing ``python3 -m pip install --upgrade CodeChat_Server``.
-
 #.  Determine the location of the installed CodeChat Server by typing ``which CodeChat_Server``. You'll need to enter this path when setting up the CodeChat plugin/extension in your IDE.
-
 #.  Install the `CodeChat extension/plugin <../extensions/contents>`_ for your IDE or text editor.
 
 To update the CodeChat Server, repeat steps 1, 5, and 6.
@@ -72,7 +48,6 @@ Troubleshooting
 
 Windows
 -------
-
 .. figure:: ./docs/Powershell_Error.png
 
 - If Powershell shows an error informing you that running scripts is forbidden on your system, follow these additional steps:
@@ -84,13 +59,7 @@ Windows
 
 Linux
 -----
-
-- If you don't have permission to run codechat.sh, type ``chmod 700 codechat.sh`` and try again.
-
 - CodeChat requires `an up-to-date installation of Python 3 <https://www.geeksforgeeks.org/how-to-download-and-install-python-latest-version-on-linux/>`__.
-
-
-
 
 
 CodeChat extension/plugin installation
