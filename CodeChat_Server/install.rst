@@ -18,8 +18,8 @@ To install the CodeChat Server:
 
 Windows
 -------
-#. Open up `Powershell in Admin mode <https://www.javatpoint.com/powershell-run-as-administrator>`_
-#. Run the following command: ``(Invoke-WebRequest -Uri https://raw.githubusercontent.com/bjones1/CodeChat_system/master/CodeChat_Server/windows_installer.ps1 -UseBasicParsing).Content | powershell -``
+#. Open up `PowerShell in Admin mode <https://www.javatpoint.com/powershell-run-as-administrator>`_.
+#. Run the following command: ``(Invoke-WebRequest -Uri https://raw.githubusercontent.com/bjones1/CodeChat_system/master/CodeChat_Server/windows_installer.ps1 -UseBasicParsing).Content | powershell -ExecutionPolicy Bypass -`` in PowerShell.
 
 Linux
 -----

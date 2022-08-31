@@ -24,7 +24,6 @@ $pythonVersionReqArray = '3','7','0'
 #   TODO: Explain this ``| %{ "$_" }`` magic.
 $pythonVersion = python --version 2>&1 | %{ "$_" }
 
-
 # Case 1: No Python
 # -----------------
 # sometimes the ``pythonVersion`` variable is empty other times it contains "Python was not found..."
