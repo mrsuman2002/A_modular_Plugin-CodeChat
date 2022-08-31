@@ -18,13 +18,13 @@ To install the CodeChat Server:
 
 Windows
 -------
-#.  Go to this `link <https://github.com/JoeKenn1118/CodeChat_system/releases/tag/v0.0.1>`_ and download the Powershell script (``windows_installer.ps1``)
+#.  Go to this `link <https://github.com/bjones1/CodeChat_system/tree/master/CodeChat_Server>`_ and download the Powershell script ``installer.ps1``.
 
-#. Open up Powershell in Admin mode
+#. Open up `Powershell in Admin mode <https://www.javatpoint.com/powershell-run-as-administrator>`_
 
-#. ``cd`` to the file location
+#. ``cd`` to the location where you downloaded ``installer.ps1``.
 
-#. Run ``windows_installer.ps1``
+#. Run ``installer.ps1``
 
 
 Linux
@@ -73,10 +73,10 @@ Troubleshooting
 Windows
 -------
 
-.. figure:: ./docs/Powershell_Error.PNG
+.. figure:: ./docs/Powershell_Error.png
 
-- If Powershell shows an error informing you that running scripts is forbidden on your system, follow these additional steps
-    - Open Powershell in administator mode
+- If Powershell shows an error informing you that running scripts is forbidden on your system, follow these additional steps:
+    - Open Powershell in administrator mode
     - type ``Set-ExecutionPolicy RemoteSigned``
     - Run Powershell Script again
 

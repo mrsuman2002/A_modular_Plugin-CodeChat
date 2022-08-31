@@ -1,12 +1,11 @@
 #!/bin/bash
 
 # *****************************************************************************
-# |codechat.sh| - The CodeChat System install script (Linux)
+# |docname| - The CodeChat System install script (Linux)
 # *****************************************************************************
-# This file downloads and installs CodeChat. To run this script,
+# This file downloads and installs the CodeChat Server. To run this script,
 # see the `Linux installation instructions <install CodeChat Server on Linux>`.
-# *****************************************************************************
-
+#
 # check for Python 3
 if ! hash python3; then
     echo "Python 3 is not installed"
@@ -35,4 +34,5 @@ codechat/bin/python3 -m pip install --upgrade CodeChat_Server
 echo
 echo "CodeChat installation complete!"
 echo "Install directory: ${PWD}/codechat/bin"
-echo "Now add this path to your plugin's setup - see https://codechat-system.readthedocs.io/en/latest/extensions/contents.html"
+echo "Now add this path to your plugin's setup; see"
+echo "https://codechat-system.readthedocs.io/en/latest/extensions/contents.html"
