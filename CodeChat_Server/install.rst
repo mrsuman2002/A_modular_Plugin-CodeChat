@@ -33,10 +33,10 @@ Mac
 ---
 #.  `Open a terminal <https://support.apple.com/guide/terminal/open-or-quit-terminal-apd5265185d-f365-44cb-8b09-71a064a42125/mac>`__.
 #.  `Install modern Python <https://opensource.com/article/19/5/python-3-default-mac>`_.
-#.  Make sure pip, the Python installer, is `up to date`_: at the terminal, type ``python3 -m pip install --user --upgrade pip``.
-#.  `Create a virtual environment`_ named *codechat* by typing ``python3 -m venv codechat``. This keeps the installation of the CodeChat System from interfering with other installed Python programs and vice versa.
-#.  `Activate this virtual environment`_ by typing ``source codechat/bin/activate``.
-#.  Install the CodeChat Server by typing ``python3 -m pip install --upgrade CodeChat_Server``.
+#.  Make sure pip, the Python installer, is `up to date <https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/#linux-and-macos>`_: at the terminal, type ``python3 -m pip install --user --upgrade pip``.
+#.  `Create a virtual environment <https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/#creating-a-virtual-environment>`_ named *codechat* by typing ``python3 -m venv codechat``. This keeps the installation of the CodeChat System from interfering with other installed Python programs and vice versa.
+#.  `Activate this virtual environment <https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/#activating-a-virtual-environment>`_ by typing ``source codechat/bin/activate``.
+#.  Install the CodeChat Server with the Sphinx renderer by typing ``python3 -m pip install --upgrade CodeChat_Server Sphinx``.
 #.  Determine the location of the installed CodeChat Server by typing ``which CodeChat_Server``. You'll need to enter this path when setting up the CodeChat plugin/extension in your IDE.
 #.  Install the `CodeChat extension/plugin <../extensions/contents>`_ for your IDE or text editor.
 
