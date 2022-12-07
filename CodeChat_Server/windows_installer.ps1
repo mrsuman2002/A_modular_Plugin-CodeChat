@@ -14,10 +14,10 @@ $pythonVersionReqArray = '3','7','0'
 
 # Checking if Python is Installed
 # ===============================
-# .. note::
-# 2>&1 Sends errors (2) and success output (1) to the success output stream. (PS> man about_Redirection)
-# %{ "$_" } converts objects on the error stream to strings
-# (https://stackoverflow.com/questions/10666101/lastexitcode-0-but-false-in-powershell-redirecting-stderr-to-stdout-gives/12866669)
+# In the command below:
+#
+# - ``2>&1`` Sends errors (2) and success output (1) to the success output stream. For more information, run the following in PowerShell: ``PS> man about_Redirection``.
+# - ``%{ "$_" }`` converts objects on the error stream to strings (see `SO <https://stackoverflow.com/questions/10666101/lastexitcode-0-but-false-in-powershell-redirecting-stderr-to-stdout-gives/12866669>`_).
 $pythonVersion = python --version 2>&1 | %{ "$_" }
 
 # Case 1: No Python
