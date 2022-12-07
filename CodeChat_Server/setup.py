@@ -107,15 +107,17 @@ setup(
     # These are taken from the `full list
     # <https://pypi.python.org/pypi?%3Aaction=list_classifiers>`_.
     classifiers=[
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
         "Operating System :: OS Independent",
         "Natural Language :: English",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
         "Topic :: Software Development :: Documentation",
         "Topic :: Text Processing :: Markup",
     ],
@@ -131,7 +133,6 @@ setup(
             "CodeChat",
             "markdown",
             "psutil",
-            "Sphinx",
             "strictyaml",
             "thrift",
             "typer",
@@ -145,7 +146,7 @@ setup(
     #
     #    ``$ pip install -e .[test]``
     extras_require={
-        "test": ["black", "coverage", "flake8", "mypy", "pytest", "requests", "tox"]
+        "test": ["black", "coverage", "flake8", "mypy", "pytest", "requests", "tox"],
     },
     # To package data files, I'm using ``include_package_data=True`` then
     # putting the files in :doc:`MANIFEST.in <MANIFEST.in>`. See `including data

@@ -22,13 +22,13 @@ fi
 python3 -m pip install --user --upgrade pip
 
 # install python3-venv
-sudo apt install python3-venv
+sudo apt install -y python3-venv
 
 # create virtual environment
 python3 -m venv codechat
 
-# install CodeChat
-codechat/bin/python3 -m pip install --upgrade CodeChat_Server
+# install CodeChat and Sphinx.
+codechat/bin/python3 -m pip install --upgrade CodeChat_Server Sphinx
 
 # echo server directory to user
 echo

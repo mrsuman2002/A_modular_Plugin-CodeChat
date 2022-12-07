@@ -17,7 +17,7 @@ $pythonVersionReqArray = '3','7','0'
 # .. note::
 # 2>&1 Sends errors (2) and success output (1) to the success output stream. (PS> man about_Redirection)
 # %{ "$_" } converts objects on the error stream to strings
-# (https://stackoverflow.com/questions/10666101/lastexitcode-0-but-false-in-powershell-redirecting-stderr-to-stdout-gives/12866669) 
+# (https://stackoverflow.com/questions/10666101/lastexitcode-0-but-false-in-powershell-redirecting-stderr-to-stdout-gives/12866669)
 $pythonVersion = python --version 2>&1 | %{ "$_" }
 
 # Case 1: No Python
@@ -77,12 +77,12 @@ $CodeChat_Server = Get-Command $env:USERPROFILE\codechat\Scripts\CodeChat_Server
 if ([string]::IsNullOrEmpty($CodeChat_Server)) {
     # Install the CodeChat Server
     echo "installing CodeChat_Server"
-    codechat\Scripts\python -m pip install --upgrade CodeChat_Server
+    codechat\Scripts\python -m pip install --upgrade CodeChat_Server Sphinx
     echo "CodeChat_Server successfully installed"
 } else {
     # Update the CodeChat Server
     echo "CodeChat_Server found, running update"
-    codechat\Scripts\python -m pip install --upgrade CodeChat_Server
+    codechat\Scripts\python -m pip install --upgrade CodeChat_Server Sphinx
     echo "CodeChat_Server successfully updated"
 }
 

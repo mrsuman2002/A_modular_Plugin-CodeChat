@@ -26,7 +26,7 @@ Linux
 .. _install CodeChat Server on Linux:
 
 #.  `Open a terminal <https://www.howtogeek.com/howto/22283/four-ways-to-get-instant-access-to-a-terminal-in-linux/>`__.
-#.  Highlight this entire command: ``wget https://raw.githubusercontent.com/bjones1/CodeChat_system/master/CodeChat_Server/codechat.sh | bash codechat.sh`` and press Ctrl-C to copy. Go to the terminal window and press Ctrl-Shift-V. Press Enter.
+#.  Highlight this entire command: ``curl -sSL  https://raw.githubusercontent.com/bjones1/CodeChat_system/master/CodeChat_Server/linux_installer.sh | bash -`` and press Ctrl-C to copy. Go to the terminal window and press Ctrl-Shift-V. Press Enter.
 
 
 Mac
@@ -91,7 +91,8 @@ Templates
 -   `Mkdocs <https://www.mkdocs.org/>`_ (`rendered template <../_static/mkdocs/site/index.html>`__)
 -   `PreTeXt <https://pretextbook.org/>`_ (`rendered template <../_static/pretext/_build/index.html>`__)
 -   `Runestone Components <https://runestone.academy/>`_ (`rendered template <../_static/runestone/build/runestone_template/index.html>`__)
--   `Sphinx <https://www.sphinx-doc.org/en/master/index.html>`_ (`rendered template <../_static/sphinx/_build/index.html>`__) -- note that this documentation is produced using CodeChat with Sphinx; see `../codechat_config.yaml` and `../conf.py`.
+-   `Sphinx <https://www.sphinx-doc.org/en/master/index.html>`_ (`rendered template <../_static/sphinx/_build/index.html>`__) -- note that this documentation is produced using CodeChat with Sphinx; see `../codechat_config.yaml` and `../conf.py`. Sphinx is the primary platform for literate programming with CodeChat; installing it is highly recommended. The `install <install CodeChat Server>` instructions install Sphinx by default.
+
 
 To use these templates:
 
