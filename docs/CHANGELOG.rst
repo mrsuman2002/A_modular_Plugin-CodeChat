@@ -15,11 +15,16 @@ Change Log
 
     -   No changes yet.
 
+-   0.2.8, 7-Dec-2022:
+
+    -   Update version for the CodeChat Client (missed in 0.2.7).
+
 -   0.2.7, 7-Dec-2022:
 
     -   Fix path resolution logic used to find an external renderer.
     -   Support running in GitHub Codespaces.
     -   Improve install process.
+    -   Make Sphinx an optional dependency (though installed by default when using the install instructions/scripts).
 
 -   0.2.6, 7-Jul-2022:
 
