@@ -88,15 +88,27 @@ function run_client(
     //
     // If the hosting page uses HTTPS, then use a secure websocket (WSS protocol); otherwise, use an insecure websocket (WS).
     const protocol = window.location.protocol === "http:" ? "ws" : "wss";
+    // Compute the URI for this websocket, dealing with special cases for CoCalc and GitHub Codespaces.
+    let ws_uri;
     const is_cocalc = window.location.hostname === "cocalc.com";
-    // A special case for CoCalc: use a different URL per the `CoCalc docs <https://doc.cocalc.com/howto/webserver.html>`_.
-    const separator = is_cocalc ? "/" : ":";
-    // The pathname is all but the last one or two elements of the hosting page's pathname: transform ``/a/long/path/to/the/client`` to ``/a/long/path/to/the``. For CoCalc, this transforms ``/f1d3f8ac-39da-48fe-9357-7d5c4ee132de/server/27377/client`` into ``/f1d3f8ac-39da-48fe-9357-7d5c4ee132de/server``.
-    const pathname = window.location.pathname.split("/").slice(0, is_cocalc ? -2 : -1).join("/");
-    const ws = new ReconnectingWebSocket(
+    const github_codespaces_subdomain = ".preview.app.github.dev";
+    const is_gihub_codespaces = window.location.hostname.endsWith(github_codespaces_subdomain);
+    if (is_cocalc || !is_gihub_codespaces) {
+        // A special case for CoCalc: use a different URL per the `CoCalc docs <https://doc.cocalc.com/howto/webserver.html>`_.
+        const separator = is_cocalc ? "/" : ":";
+        // The pathname is all but the last one or two elements of the hosting page's pathname: transform ``/a/long/path/to/the/client`` to ``/a/long/path/to/the``. For CoCalc, this transforms ``/f1d3f8ac-39da-48fe-9357-7d5c4ee132de/server/27377/client`` into ``/f1d3f8ac-39da-48fe-9357-7d5c4ee132de/server``.
+        const pathname = window.location.pathname.split("/").slice(0, is_cocalc ? -2 : -1).join("/");
         // Transform the hosting page's URL for the websocket. For example, transform from ``http://foo.org/client?id=0`` into ``ws://foo.org:27377``.
-        `${protocol}://${window.location.hostname}${pathname}${separator}${ws_port}`
-    );
+        ws_uri = `${protocol}://${window.location.hostname}${pathname}${separator}${ws_port}`;
+    } else {
+        // We're using GitHub CodeSpaces, where the ``window.location`` is (for example) ``https://bjones1-organic-goggles-wv46gpj9x4cv5qq-27377.preview.app.github.dev/client?id=0``. The desired URI for this example is ``wss://bjones1-organic-goggles-wv46gpj9x4cv5qq-27378.preview.app.github.dev``.
+        //
+        // Throw away everything after the last hyphen.
+        const hostname_prefix = window.location.hostname.split("-").slice(0, -1).join("-");
+        // Now, build the desired URI.
+        ws_uri = `${protocol}://${hostname_prefix}-${ws_port}${github_codespaces_subdomain}`;
+    }
+    const ws = new ReconnectingWebSocket(ws_uri);
 
     // Identify this client on connection.
     ws.onopen = () => {

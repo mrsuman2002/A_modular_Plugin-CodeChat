@@ -30,6 +30,7 @@
 # Standard library
 # ----------------
 import logging
+import os
 from pathlib import Path
 import re
 import signal
@@ -126,14 +127,17 @@ class CodeChatHandler:
             logger.info("  => {}".format(ret))
             return ret
 
-        # Return what's requested.
+        # Get the URL for this server.
         endpoint = "insecure" if self.insecure else "client"
-        url = (
+        if self.cocalc_project_id:
             # On CoCalc, use a special URL (see the `CoCalc docs <https://doc.cocalc.com/howto/webserver.html>`_).
-            f"https://cocalc.com/{self.cocalc_project_id}/server/{HTTP_PORT}/{endpoint}?id={id}"
-            if self.cocalc_project_id
-            else f"http://{LOCALHOST}:{HTTP_PORT}/{endpoint}?id={id}"
-        )
+            url = f"https://cocalc.com/{self.cocalc_project_id}/server/{HTTP_PORT}/{endpoint}?id={id}"
+        elif os.environ.get("CODESPACES") == "true":
+            # This is always true in a GitHub Codespace per the  `docs <https://docs.github.com/en/codespaces/developing-in-codespaces/default-environment-variables-for-your-codespace#list-of-default-environment-variables>`_.
+            url = f"https://{os.environ['CODESPACE_NAME']}-{HTTP_PORT}.preview.app.github.dev/{endpoint}?id={id}"
+        else:
+            url = f"http://{LOCALHOST}:{HTTP_PORT}/{endpoint}?id={id}"
+
         if codeChat_client_location == CodeChatClientLocation.url:
             # Just return the URL.
             ret_str = url
