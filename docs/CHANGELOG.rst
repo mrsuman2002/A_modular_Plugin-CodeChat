@@ -13,7 +13,13 @@ Change Log
 **********
 -   `Github master <https://github.com/bjones1/CodeChat_system.git>`_:
 
+    -   No changes yet.
+
+-   0.2.7, 7-Dec-2022:
+
     -   Fix path resolution logic used to find an external renderer.
+    -   Support running in GitHub Codespaces.
+    -   Improve install process.
 
 -   0.2.6, 7-Jul-2022:
 
