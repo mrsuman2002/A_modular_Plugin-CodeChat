@@ -248,13 +248,28 @@ class ProjectTypeEnum(Enum):
 
 # This class reads and interprets a project configuration file.
 class ProjectConfFile:
+    # The type of the project declared in this project's configuration file.
+    project_type: ProjectTypeEnum
+    # The absolute path to this project's root directory.
+    project_path: Path
+    # The extension for HTML files.
+    html_ext: str
+    # The absolute path to this project's source files.
+    source_path: Path
+    # The absolute path to this project's output files.
+    output_path: Path
+    # Arguments used to invoke this project's renderer.
+    args: Union[list, str]
+
     # Read and process a CodeChat project configuration file.
-    def __init__(self, project_path: Path):
+    def __init__(self, project_config_file_path: Path):
         try:
-            with open(project_path, encoding="utf-8") as f:
+            with open(project_config_file_path, encoding="utf-8") as f:
                 data = f.read()
         except Exception as e:
-            raise RuntimeError(f"{project_path}:: ERROR: Unable to open. {e}")
+            raise RuntimeError(
+                f"{project_config_file_path}:: ERROR: Unable to open. {e}"
+            )
 
         schema = strictyaml.Map(
             {
@@ -270,19 +285,21 @@ class ProjectConfFile:
         try:
             data_dict = strictyaml.load(data, schema).data
         except strictyaml.YAMLError as e:
-            raise RuntimeError(f"{project_path}:: ERROR: Unable to parse. {e}")
+            raise RuntimeError(
+                f"{project_config_file_path}:: ERROR: Unable to parse. {e}"
+            )
 
         # Save items that don't need processing.
         self.project_type = ProjectTypeEnum[data_dict["project_type"]]
         self.html_ext = data_dict["html_ext"]
 
         # Make paths absolute.
-        project_path = project_path.parent
+        self.project_path = project_config_file_path.parent
 
         def abs_path(path: Union[str, Path]) -> Path:
             path_ = Path(path)
             if not path_.is_absolute():
-                path_ = project_path / path_
+                path_ = self.project_path / path_
             return path_
 
         self.source_path = abs_path(data_dict["source_path"])
@@ -291,7 +308,7 @@ class ProjectConfFile:
         # Perform replacement on the args.
         def args_format(arg):
             return arg.format(
-                project_path=project_path,
+                project_path=self.project_path,
                 source_path=self.source_path,
                 output_path=self.output_path,
                 sys_executable=sys.executable,
@@ -445,6 +462,9 @@ async def _render_external_project(
     await co_build(
         f"Loading project file {project_conf_file_path}.\n",
     )
+
+    # The ``text`` argument isn't used, since this is an external project, meaning that everything must be saved to disk, instead of rendering the ``text`` currently being edited.
+    del text
 
     # Read the project configuration.
     try:
@@ -643,11 +663,12 @@ GLOB_TO_RENDERER.update(
 
 # Return the converter for the provided file.
 def _select_renderer(
+    # See file_path_.
     file_path: Path,
 ) -> Tuple[
     # _`renderer`: a function or coroutine which will perform the render.
     Callable,
-    # tool_or_project_path:
+    # tool_or_project_config_file_path:
     #
     # - The path to the CodeChat System configuration file if this is a project.
     # - A sequence of parameters used to invoke a single-file renderer if one was found.
@@ -661,15 +682,15 @@ def _select_renderer(
 
     # Search for an external builder configuration file. I can't find an equivalent of `parents <https://docs.python.org/3/library/pathlib.html#pathlib.PurePath.parents>`_ that includes the full path, so the list below constructs it.
     for project_path in [project_path_search, *project_path_search.parents]:
-        project_file = project_path / "codechat_config.yaml"
-        if project_file.exists():
-            return _render_external_project, str(project_file), True
+        project_config_file_path = project_path / "codechat_config.yaml"
+        if project_config_file_path.exists():
+            return _render_external_project, str(project_config_file_path), True
 
     # Otherwise, look for a single-file converter.
     str_file_path = str(file_path)
-    for glob, (converter, tool_or_project_path) in GLOB_TO_RENDERER.items():
+    for glob, (converter, tool_or_project_config_file_path) in GLOB_TO_RENDERER.items():
         if fnmatch.fnmatch(str_file_path, glob):
-            return converter, tool_or_project_path, False
+            return converter, tool_or_project_config_file_path, False
     return _error_renderer, None, False
 
 
@@ -677,7 +698,7 @@ def _select_renderer(
 async def render_file(
     # _`text`: The text to be converted. If this is a project, the text will be loaded from the disk by the external renderer instead.
     text: str,
-    # _`file_path`: The path to the file which (mostly -- see ``is_dirty``) contains this text.
+    # _`file_path`: The path to the file which (mostly -- see ``is_dirty``) contains this text OR a directory containing a CodeChat project.
     file_path: str,
     # _`html_path`: The html file currently being displayed (if available).
     html_path: Optional[Path],
