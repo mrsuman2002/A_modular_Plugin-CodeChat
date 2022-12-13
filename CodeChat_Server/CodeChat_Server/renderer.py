@@ -360,8 +360,10 @@ class ProjectConfFile:
             except Exception:
                 pass
             else:
-                # Before looking up the file, ``resolve()`` it to get the canonical representation (fix case on Windows).
-                xml_id_list = mapping.get(str(source_file.resolve()))
+                # Before looking up the file, ``resolve()`` it to get the canonical representation (fix case on Windows), then make this relative to the project directory.
+                xml_id_list = mapping.get(
+                    str(source_file.resolve().relative_to(self.project_path))
+                )
                 if xml_id_list:
                     # See if any of the mappings match the currently-displayed file. If so, use that one. Otherwise, pick the first mapping.
                     for id_ in reversed(xml_id_list):
