@@ -189,7 +189,7 @@ class CodeChatHandler:
             logger.info(" => (empty string)")
             return ""
         else:
-            # If the client specified an non-existant ID, create it.
+            # If the client specified an non-existent ID, create it.
             if id < 0:
                 if self.render_manager.threadsafe_create_client(id) != id:
                     ret = f"Duplicate id {id}."
