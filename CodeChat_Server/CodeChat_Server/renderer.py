@@ -444,7 +444,7 @@ class ProjectConfFile:
             )
 
     def load_pretext_mapping(self):
-        return json.loads((self.output_path / "mapping.json").read_text())
+        return json.loads((self.output_path / ".mapping.json").read_text())
 
 
 # Convert an project using an external renderer.
