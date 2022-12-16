@@ -13,6 +13,10 @@ Change Log
 **********
 -   `Github master <https://github.com/bjones1/CodeChat_system.git>`_:
 
+    -   No changes yet.
+
+-   0.2.9, 15-Dec-2022:
+
     -   Support relative pathnames for PreTeXt projects.
 
 -   0.2.8, 7-Dec-2022:
