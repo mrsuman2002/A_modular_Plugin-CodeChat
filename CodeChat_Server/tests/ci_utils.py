@@ -38,7 +38,6 @@ def xqt(
     # Optional keyword arguments to pass on to `subprocess.run <https://docs.python.org/3/library/subprocess.html#subprocess.run>`_.
     **kwargs: Any
 ) -> Union[subprocess.CompletedProcess, List[subprocess.CompletedProcess]]:
-
     ret = []
     # Although https://docs.python.org/3/library/subprocess.html#subprocess.Popen
     # states, "The only time you need to specify ``shell=True`` on Windows is
@@ -81,7 +80,6 @@ class pushd:
         # The path to change to upon entering the context manager.
         path: str,
     ):
-
         self.path = path
 
     def __enter__(self):

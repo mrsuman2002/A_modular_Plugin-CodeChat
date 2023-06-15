@@ -99,7 +99,6 @@ def _render_markdown(text: str, file_path: str) -> Tuple[str, str]:
 def _render_ReST(
     text: str, filePath: str, use_codechat: bool = False
 ) -> Tuple[str, str]:
-
     errStream = io.StringIO()
     settingsDict = {
         # Make sure to use Unicode everywhere. This name comes from
@@ -334,7 +333,6 @@ class ProjectConfFile:
         # A list of error messages.
         List[str],
     ]:
-
         # Determine a first guess at the location of the rendered HTML.
         prefix = (
             self.output_path

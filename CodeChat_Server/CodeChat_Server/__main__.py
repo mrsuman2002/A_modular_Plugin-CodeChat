@@ -445,9 +445,7 @@ def vscode_install():
     elif is_linux:
         settings_file = f"{os.environ['HOME']}/.config/Code/User/settings.json"
     elif is_darwin:
-        settings_file = (
-            f"{os.environ['HOME']}/Library/Application\\ Support/Code/User/settings.json"
-        )
+        settings_file = f"{os.environ['HOME']}/Library/Application\\ Support/Code/User/settings.json"
     else:
         print("Unsupported operating system.")
         raise typer.Exit(1)
