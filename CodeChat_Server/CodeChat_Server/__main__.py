@@ -422,7 +422,7 @@ def vscode_install():
     """
 
     # Install the VSCode extension.
-    vscode_executable = shutil.which("codse")
+    vscode_executable = shutil.which("code")
     if vscode_executable is None:
         print(
             "Error: unable to find the Visual Studio Code executable in the path. Note that\n"
