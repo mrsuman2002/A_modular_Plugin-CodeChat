@@ -135,7 +135,7 @@ setup(
             "psutil",
             "strictyaml",
             "thrift",
-            "typer",
+            "typer[all]",
             "watchdog",
             "websockets",
         ]

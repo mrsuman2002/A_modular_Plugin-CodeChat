@@ -16,9 +16,10 @@ This extension provides CodeChat's capabilities within the Visual Studio Code ed
 
 Installation
 ============
-First, install `Visual Studio Code <https://code.visualstudio.com/>`_ then install the `CodeChat extension for Visual Studio code <https://marketplace.visualstudio.com/items?itemName=CodeChat.codechat>`_. Next:
+First, install `Visual Studio Code <https://code.visualstudio.com/>`_. Next:
 
 #.  `Install the CodeChat Server <../../CodeChat_Server/contents>`, which performs all the back-end work and is required for the extension to work.
+#.  Run ``CodeChat_Server vscode_install`` to install and configure the Visual Studio Code CodeChat extension.
 #.  (Recommended) `switch to a light theme <https://code.visualstudio.com/docs/getstarted/themes>`_, since the CodeChat System only provides a light theme.
 
 

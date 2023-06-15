@@ -29,8 +29,10 @@
 # Standard library
 # ----------------
 import asyncio
+import json
 import os
 from pathlib import Path
+import shutil
 import sys
 import subprocess
 import threading
@@ -410,6 +412,53 @@ def watch(
 
     wc = WatcherClient(paths, patterns, ignore_patterns)
     wc.run()
+
+
+@app.command()
+def vscode_install():
+    """Install the CodeChat Server extension (see https://marketplace.visualstudio.com/items?itemName=CodeChat.codechat) into the Visual Studio Code editor, and set the extension's path to point to this CodeChat Server executable.
+
+    Note: Visual Studio Code must be installed before running this command.
+    """
+
+    # Install the VSCode extension.
+    vscode_executable = shutil.which("codse")
+    if vscode_executable is None:
+        print(
+            "Error: unable to find the Visual Studio Code executable in the path. Note that\n"
+            "Visual Studio Code must be installed before running this command."
+        )
+        raise typer.Exit(1)
+    cmd = [vscode_executable, "--install-extension", "CodeChat.codechat"]
+    print(f"Installing the CodeChat Visual Studio Code extension...\n  {' '.join(cmd)}")
+    subprocess.run(cmd, check=True)
+
+    print("Configuring the CodeChat extension...")
+    # This follows the `Python recommendations <https://docs.python.org/3/library/sys.html#sys.platform>`_.
+    is_win = sys.platform == "win32"
+    is_linux = sys.platform.startswith("linux")
+    is_darwin = sys.platform == "darwin"
+
+    # See the `VSCode docs <https://code.visualstudio.com/docs/getstarted/settings>`_.
+    if is_win:
+        settings_file = f"{os.environ['APPDATA']}/Code/User/settings1.json"
+    elif is_linux:
+        settings_file = f"{os.environ['HOME']}/.config/Code/User/settings.json"
+    elif is_darwin:
+        settings_file = (
+            f"{os.environ['HOME']}/Library/Application\\ Support/Code/User/settings.json"
+        )
+    else:
+        print("Unsupported operating system.")
+        raise typer.Exit(1)
+    with open(settings_file, "r+") as f:
+        settings = json.load(f)
+        settings["CodeChat.CodeChatServer.Path"] = str(Path(sys.argv[0]).absolute())
+        # Prepare to overwrite the file with new contents.
+        f.seek(0)
+        f.truncate()
+        json.dump(settings, f, indent=4)
+    print("Success.")
 
 
 if __name__ == "__main__":
