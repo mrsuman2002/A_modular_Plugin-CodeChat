@@ -34,7 +34,7 @@ output_path: output/html
 # - ``{output_path}``: the ``output_path`` above, but as an absolute path.
 # - ``{sys_executable}``: the value of the running Python's `sys.executable <https://docs.python.org/3/library/sys.html#sys.executable>`_.
 #
-args: pretext build html
+args: "{sys_executable} -m pretext build web"
 
 # ``html_ext``: optional; defaults to ``.html``. The extension used by this renderer when generating HTML files.
 #html_ext: .html
