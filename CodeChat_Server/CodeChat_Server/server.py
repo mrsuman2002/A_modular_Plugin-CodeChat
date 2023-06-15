@@ -133,7 +133,7 @@ class CodeChatHandler:
             # On CoCalc, use a special URL (see the `CoCalc docs <https://doc.cocalc.com/howto/webserver.html>`_).
             url = f"https://cocalc.com/{self.cocalc_project_id}/server/{HTTP_PORT}/{endpoint}?id={id}"
         elif os.environ.get("CODESPACES") == "true":
-            # This is always true in a GitHub Codespace per the  `docs <https://docs.github.com/en/codespaces/developing-in-codespaces/default-environment-variables-for-your-codespace#list-of-default-environment-variables>`_.
+            # This is always true in a GitHub Codespace per the  `docs <https://docs.github.com/en/codespaces/developing-in-codespaces/default-environment-variables-for-your-codespace#list-of-default-environment-variables>`__.
             url = f"https://{os.environ['CODESPACE_NAME']}-{HTTP_PORT}.preview.app.github.dev/{endpoint}?id={id}"
         else:
             url = f"http://{LOCALHOST}:{HTTP_PORT}/{endpoint}?id={id}"
@@ -377,16 +377,16 @@ def run_servers(
     insecure = insecure or bool(handler.cocalc_project_id)
     handler.insecure = insecure
 
-    # Make the websocket port public if running in a codespace. To detect if we're running in the codespace, see the [docs](https://docs.github.com/en/codespaces/developing-in-codespaces/default-environment-variables-for-your-codespace).
-    if os.environ["CODESPACES"] == "true":
-        # Per the [docs](https://docs.github.com/en/codespaces/developing-in-codespaces/forwarding-ports-in-your-codespace#sharing-a-port), a private port requires an access token that's VSCode automatically sends over (I assume) HTTP/HTTPS. Therefore, the HTTP port this server uses works when private. In contrast, a public port doesn't require the token, so I'm guessing  this works with non-HTTP protocols such as websockets. When this is private, the websocket never connects. The code below configures this.
+    # Make the websocket port public if running in a codespace. To detect if we're running in the codespace, see the `docs <https://docs.github.com/en/codespaces/developing-in-codespaces/default-environment-variables-for-your-codespace>`_.
+    if os.environ.get("CODESPACES") == "true":
+        # Per the `docs <https://docs.github.com/en/codespaces/developing-in-codespaces/forwarding-ports-in-your-codespace#sharing-a-port>`__, a private port requires an access token that's VSCode automatically sends over (I assume) HTTP/HTTPS. Therefore, the HTTP port this server uses works when private. In contrast, a public port doesn't require the token, so I'm guessing  this works with non-HTTP protocols such as websockets. When this is private, the websocket never connects. The code below configures this.
         #
-        # The most obvious place to configure this would be the ``devcontainer.json`` file for the codepace. This doesn't work. I tried:
+        # The most obvious place to configure this would be the ``devcontainer.json`` file for the codepace. This doesn't work:
         #
-        # - I'd like to put this setting in `devcontainer.json`, but a `visibility` setting doesn't exist (see this [discussion](https://github.com/community/community/discussions/10394)).
-        # - Another option: call `gh codespace ports forward` then `gh codespace ports visibility`. However, this fails: `gh codespace ports forward` never returns. Running `gh codespace ports forward &` works, but also owns the port, which prevents the CodeChat Server from using it.
-        # - Yet another option: forward the port in `devcontainer.json`, then run `gh codespace ports visibility` here. However, that fails, probably due to a timing issue: the port mapping seems to occur after this script runs, causing the visibility setting to be lost.
-        # - So, first wait for the port to be forwarded by the codespace, based on setting in `devcontainer.json`, then set its visibilty. This also fails; in fact, the visibility setting seems to be lost across Wifi disconnects.
+        # - I'd like to put this setting in ``devcontainer.json``, but a ``visibility`` setting doesn't exist (see this `discussion <https://github.com/community/community/discussions/10394>`_).
+        # - Another option: call ``gh codespace ports forward`` then ``gh codespace ports visibility``. However, this fails: ``gh codespace ports forward`` never returns. Running ``gh codespace ports forward &`` works, but also owns the port, which prevents the CodeChat Server from using it.
+        # - Yet another option: forward the port in ``devcontainer.json``, then run ``gh codespace ports visibility`` in a startup script. However, that fails, probably due to a timing issue: the port mapping seems to occur after this script runs, causing the visibility setting to be lost.
+        # - So, first wait for the port to be forwarded by the codespace, based on setting in ``devcontainer.json``, then set its visibility. This also fails; in fact, the visibility setting seems to be lost across Wifi disconnects.
         #
         # So, the CodeChat Server sets this every time it starts up.
         subprocess.run(
@@ -455,7 +455,7 @@ def run_servers(
 # Inspired by Stack Overflow. The original post used ``connect_ex``, which is very slow (~2 seconds).
 def is_port_in_use(port):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        # Allow reusing sockets in the TIME_WAIT state -- see the `Python docs <https://docs.python.org/3/library/socket.html#notes-on-socket-timeouts>`_.
+        # Allow reusing sockets in the TIME_WAIT state -- see the `Python docs <https://docs.python.org/3/library/socket.html#notes-on-socket-timeouts>`__.
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         try:
             s.bind((LOCALHOST, port))
