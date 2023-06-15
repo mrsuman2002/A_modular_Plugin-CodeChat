@@ -451,7 +451,7 @@ def vscode_install():
         raise typer.Exit(1)
     with open(settings_file, "r+") as f:
         settings = json.load(f)
-        settings["CodeChat.CodeChatServer.Path"] = str(Path(sys.argv[0]).absolute())
+        settings["CodeChat.CodeChatServer.Command"] = str(Path(sys.argv[0]).absolute())
         # Prepare to overwrite the file with new contents.
         f.seek(0)
         f.truncate()
