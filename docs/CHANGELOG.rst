@@ -15,9 +15,9 @@ Change Log
 
     -   No changes.
 
--   0.2.13 and 0.2.14, 15-Jun-2023:
+-   0.2.13, 0.2.14, and 0.2.15, 15-Jun-2023:
 
-    -   Fix typo in ``vscode-install`` subcommand.
+    -   Fix typos in ``vscode-install`` subcommand.
 
 -   0.2.11 and 0.2.12, 15-Jun-2023:
 
