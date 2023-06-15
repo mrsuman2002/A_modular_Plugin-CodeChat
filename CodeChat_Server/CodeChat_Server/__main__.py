@@ -441,7 +441,7 @@ def vscode_install():
 
     # See the `VSCode docs <https://code.visualstudio.com/docs/getstarted/settings>`_.
     if is_win:
-        settings_file = f"{os.environ['APPDATA']}/Code/User/settings1.json"
+        settings_file = f"{os.environ['APPDATA']}/Code/User/settings.json"
     elif is_linux:
         settings_file = f"{os.environ['HOME']}/.config/Code/User/settings.json"
     elif is_darwin:
