@@ -39,6 +39,7 @@ import io
 import json
 import os
 from pathlib import Path
+import re
 import shlex
 import shutil
 import sys
@@ -251,6 +252,8 @@ class ProjectConfFile:
     project_type: ProjectTypeEnum
     # The absolute path to this project's root directory.
     project_path: Path
+    # The absolute path to the currently open file.
+    file_path: Path
     # The extension for HTML files.
     html_ext: str
     # The absolute path to this project's source files.
@@ -261,7 +264,7 @@ class ProjectConfFile:
     args: Union[list, str]
 
     # Read and process a CodeChat project configuration file.
-    def __init__(self, project_config_file_path: Path):
+    def __init__(self, project_config_file_path: Path, file_path: Path):
         try:
             with open(project_config_file_path, encoding="utf-8") as f:
                 data = f.read()
@@ -291,6 +294,7 @@ class ProjectConfFile:
         # Save items that don't need processing.
         self.project_type = ProjectTypeEnum[data_dict["project_type"]]
         self.html_ext = data_dict["html_ext"]
+        self.file_path = file_path
 
         # Make paths absolute.
         self.project_path = project_config_file_path.parent
@@ -304,6 +308,14 @@ class ProjectConfFile:
         self.source_path = abs_path(data_dict["source_path"])
         self.output_path = abs_path(data_dict["output_path"])
 
+        # Find the first XML ID in the source file if this is a PreTeXt project.
+        xml_id = ""
+        if self.project_type == ProjectTypeEnum.PreTeXt:
+            # A crude approximation of an XML ID that should cover most cases.
+            match = re.search(r'xml:id="([\w:_\-.]+)', self.file_path.read_text())
+            if match:
+                xml_id = match.group(1)
+
         # Perform replacement on the args.
         def args_format(arg):
             return arg.format(
@@ -311,6 +323,7 @@ class ProjectConfFile:
                 source_path=self.source_path,
                 output_path=self.output_path,
                 sys_executable=sys.executable,
+                xml_id=xml_id,
             )
 
         args = data_dict["args"]
@@ -465,14 +478,13 @@ async def _render_external_project(
 
     # The ``text`` argument isn't used, since this is an external project, meaning that everything must be saved to disk, instead of rendering the ``text`` currently being edited.
     del text
+    file_path = Path(file_path_)
 
     # Read the project configuration.
     try:
-        project_conf = ProjectConfFile(project_conf_file_path)
+        project_conf = ProjectConfFile(project_conf_file_path, file_path)
     except RuntimeError as e:
         return "", str(e)
-
-    file_path = Path(file_path_)
 
     # Compare dates to see if the rendered file is current
     html_path, error_arr = project_conf.checkModificationTime(file_path, html_path)

@@ -376,12 +376,13 @@ class RenderManager:
                     f"Save to {data['xml_node']} values:\n{data['file_contents'][:77]}..."
                 )
                 # Get the location of the project file.
-                pp = self._client_state_dict[id_]._project_path
+                csd = self._client_state_dict[id_]
+                pp = csd._project_path
                 if not pp:
                     print("Unable to save: no project file available.")
                     continue
                 # Read the source path from it.
-                project_conf = ProjectConfFile(Path(pp))
+                project_conf = ProjectConfFile(Path(pp), Path(csd._file_path))
                 # Find the source file which matches this mapping.
                 xml_id_to_replace = data["xml_node"]
                 for (
