@@ -15,6 +15,10 @@ Change Log
 
     -   No changes.
 
+-   0.2.13, 15-Jun-2023:
+
+    -   Fix typo in ``vscode-install`` subcommand.
+
 -   0.2.11 and 0.2.12, 15-Jun-2023:
 
     -   When running in a GitHub Codespace, make the websocket port public on server startup.
