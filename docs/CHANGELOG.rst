@@ -15,6 +15,10 @@ Change Log
 
     -   No changes.
 
+-   0.2.16, 15-Jun-2023:
+
+    -   Add an ``{xml_id}`` replacement for PreTeXt projects.
+
 -   0.2.13, 0.2.14, and 0.2.15, 15-Jun-2023:
 
     -   Fix typos in ``vscode-install`` subcommand.
