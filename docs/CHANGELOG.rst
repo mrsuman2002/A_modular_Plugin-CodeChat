@@ -13,6 +13,10 @@ Change Log
 **********
 -   `Github master <https://github.com/bjones1/CodeChat_system.git>`_:
 
+    -   No changes yet.
+
+-   0.2.10, 14-Jun-2023:
+
     -   Added the ``vscode-install`` subcommand.
 
 -   0.2.9, 15-Dec-2022:
