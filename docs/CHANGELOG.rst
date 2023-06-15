@@ -13,7 +13,7 @@ Change Log
 **********
 -   `Github master <https://github.com/bjones1/CodeChat_system.git>`_:
 
-    -   No changes yet.
+    -   When running in a GitHub Codespace, make the websocket port public on server startup.
 
 -   0.2.10, 14-Jun-2023:
 

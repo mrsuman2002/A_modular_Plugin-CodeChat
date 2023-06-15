@@ -347,7 +347,6 @@ def run_servers(
     # See the ``--quiet`` option in the `CLI interface`.
     quiet=False,
 ) -> int:
-
     print(f"The CodeChat Server, v.{__version__}\n")
     logging.basicConfig(level=logging.INFO)
 
@@ -377,6 +376,30 @@ def run_servers(
     # Run in insecure mode if commanded to, or if running under CoCalc.
     insecure = insecure or bool(handler.cocalc_project_id)
     handler.insecure = insecure
+
+    # Make the websocket port public if running in a codespace. To detect if we're running in the codespace, see the [docs](https://docs.github.com/en/codespaces/developing-in-codespaces/default-environment-variables-for-your-codespace).
+    if os.environ["CODESPACES"] == "true":
+        # Per the [docs](https://docs.github.com/en/codespaces/developing-in-codespaces/forwarding-ports-in-your-codespace#sharing-a-port), a private port requires an access token that's VSCode automatically sends over (I assume) HTTP/HTTPS. Therefore, the HTTP port this server uses works when private. In contrast, a public port doesn't require the token, so I'm guessing  this works with non-HTTP protocols such as websockets. When this is private, the websocket never connects. The code below configures this.
+        #
+        # The most obvious place to configure this would be the ``devcontainer.json`` file for the codepace. This doesn't work. I tried:
+        #
+        # - I'd like to put this setting in `devcontainer.json`, but a `visibility` setting doesn't exist (see this [discussion](https://github.com/community/community/discussions/10394)).
+        # - Another option: call `gh codespace ports forward` then `gh codespace ports visibility`. However, this fails: `gh codespace ports forward` never returns. Running `gh codespace ports forward &` works, but also owns the port, which prevents the CodeChat Server from using it.
+        # - Yet another option: forward the port in `devcontainer.json`, then run `gh codespace ports visibility` here. However, that fails, probably due to a timing issue: the port mapping seems to occur after this script runs, causing the visibility setting to be lost.
+        # - So, first wait for the port to be forwarded by the codespace, based on setting in `devcontainer.json`, then set its visibilty. This also fails; in fact, the visibility setting seems to be lost across Wifi disconnects.
+        #
+        # So, the CodeChat Server sets this every time it starts up.
+        subprocess.run(
+            [
+                "gh",
+                "codespace",
+                "ports",
+                "visibility",
+                f"{WEBSOCKET_PORT}:public",
+                "-c",
+                os.environ["CODESPACE_NAME"],
+            ]
+        )
 
     # Both servers block when run, so place them in a thread. Mark the servers as a daemon, so they will be killed when the program shuts down.
     editor_plugin_thread = threading.Thread(
