@@ -421,41 +421,54 @@ def vscode_install():
     Note: Visual Studio Code must be installed before running this command.
     """
 
+    # This follows the `Python recommendations <https://docs.python.org/3/library/sys.html#sys.platform>`_.
+    is_win = sys.platform == "win32"
+    is_linux = sys.platform.startswith("linux")
+    is_darwin = sys.platform == "darwin"
+
     # Install the VSCode extension.
     vscode_executable = shutil.which("code")
     if vscode_executable is None:
         print(
             "Error: unable to find the Visual Studio Code executable in the path. Note that\n"
-            "Visual Studio Code must be installed before running this command."
+            "Visual Studio Code must be installed and in the path before running this command."
         )
+        if is_darwin:
+            print(
+                "See https://code.visualstudio.com/docs/setup/mac for instructions on updating\n"
+                "the path to contain VSCode."
+            )
         raise typer.Exit(1)
     cmd = [vscode_executable, "--install-extension", "CodeChat.codechat"]
     print(f"Installing the CodeChat Visual Studio Code extension...\n  {' '.join(cmd)}")
     subprocess.run(cmd, check=True)
 
     print("Configuring the CodeChat extension...")
-    # This follows the `Python recommendations <https://docs.python.org/3/library/sys.html#sys.platform>`_.
-    is_win = sys.platform == "win32"
-    is_linux = sys.platform.startswith("linux")
-    is_darwin = sys.platform == "darwin"
-
     # See the `VSCode docs <https://code.visualstudio.com/docs/getstarted/settings>`_.
     if is_win:
-        settings_file = f"{os.environ['APPDATA']}/Code/User/settings.json"
+        settings_file = Path(f"{os.environ['APPDATA']}/Code/User/settings.json")
     elif is_linux:
-        settings_file = f"{os.environ['HOME']}/.config/Code/User/settings.json"
+        settings_file = Path(f"{os.environ['HOME']}/.config/Code/User/settings.json")
     elif is_darwin:
-        settings_file = f"{os.environ['HOME']}/Library/Application\\ Support/Code/User/settings.json"
+        settings_file = Path(
+            f"{os.environ['HOME']}/Library/Application\\ Support/Code/User/settings.json"
+        )
     else:
         print("Unsupported operating system.")
         raise typer.Exit(1)
-    with open(settings_file, "r+") as f:
-        settings = json.load(f)
-        settings["CodeChat.CodeChatServer.Command"] = str(Path(sys.argv[0]).absolute())
-        # Prepare to overwrite the file with new contents.
-        f.seek(0)
-        f.truncate()
-        json.dump(settings, f, indent=4)
+
+    # Read the current settings (if they exist).
+    try:
+        settings_contents = settings_file.read_text()
+    except FileNotFoundError:
+        settings_contents = "{}"
+
+    # Update the CodeChat Server command.
+    settings = json.loads(settings_contents)
+    settings["CodeChat.CodeChatServer.Command"] = str(Path(sys.argv[0]).absolute())
+
+    # Write the results back.
+    settings_file.write_text(json.dumps(settings, indent=4))
     print("Success.")
 
 
