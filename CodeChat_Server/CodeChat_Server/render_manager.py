@@ -89,39 +89,39 @@ def path_to_uri(file_path: str):
 class ClientState:
     def __init__(self):
         # A queue of messages for the CodeChat Client.
-        self.q = asyncio.Queue()
+        self.q: asyncio.Queue = asyncio.Queue()
 
         # The remaining data in this class should only be accessed by the rendering thread.
         #
         # The most recent HTML and editor text after rendering the specified file_path.
-        self._html = None
-        self._editor_text = None
-        self._file_path = None
+        self._html: Optional[str] = None
+        self._editor_text: Optional[str] = None
+        self._file_path: Optional[str] = None
         # The path to the CodeChat project configuration file if this is a project; None otherwise.
-        self._project_path = None
+        self._project_path: Optional[str] = None
 
         # A flag to indicate if this has been placed in the renderer's job queue.
-        self._in_job_q = False
+        self._in_job_q: bool = False
         # A flag to indicate that this client has work to perform.
-        self._needs_processing = True
+        self._needs_processing: bool = True
 
         # A bucket to hold text and the associated file to render.
-        self._to_render_editor_text = None
-        self._to_render_file_path = None
-        self._to_render_is_dirty = None
+        self._to_render_editor_text: Optional[str] = None
+        self._to_render_file_path: Optional[str] = None
+        self._to_render_is_dirty: Optional[bool] = None
 
         # A bucket to hold a sync request.
         #
         # The index into either the editor text or HTML converted to text.
-        self._to_sync_index = None
-        self._to_sync_from_editor = None
+        self._to_sync_index: Optional[int] = None
+        self._to_sync_from_editor: Optional[int] = None
         # The HTML converted to text.
-        self._html_as_text = None
+        self._html_as_text: Optional[str] = None
 
         # Shutdown is tricky; see `this discussion <shut down an editor client>`.
         #
         # A flag to request the worker to delete this client.
-        self._is_deleting = False
+        self._is_deleting: bool = False
 
 
 # Use the contents of the provided ClientState to perform a render.
@@ -142,11 +142,11 @@ async def render_client_state(cs: ClientState) -> None:
         html,
         err_string,
     ) = await render_file(
-        cs._to_render_editor_text,
-        cs._to_render_file_path,
+        cast(str, cs._to_render_editor_text),
+        cast(str, cs._to_render_file_path),
         Path(cs._file_path) if cs._file_path else None,
         co_build,
-        cs._to_render_is_dirty,
+        cast(bool, cs._to_render_is_dirty),
     )
 
     if not is_converted:
@@ -171,6 +171,7 @@ async def render_client_state(cs: ClientState) -> None:
 class RenderManager:
     def __init__(self, shutdown_event):
         self.shutdown_event = shutdown_event
+        self._is_shutdown = False
 
     # Provide a way to perform thread-safe access of methods in this class.
     def __getattr__(self, name: str) -> Callable:
@@ -275,7 +276,8 @@ class RenderManager:
         cs = self.get_client_state(id)
         return (
             cast(ClientState, cs)._html
-            if cs and path_to_uri(cast(ClientState, cs)._file_path) == url_path
+            if cs
+            and path_to_uri(cast(str, cast(ClientState, cs)._file_path)) == url_path
             else False
         )
 
@@ -382,7 +384,9 @@ class RenderManager:
                     print("Unable to save: no project file available.")
                     continue
                 # Read the source path from it.
-                project_conf = ProjectConfFile(Path(pp), Path(csd._file_path))
+                project_conf = ProjectConfFile(
+                    Path(pp), Path(cast(str, csd._file_path))
+                )
                 # Find the source file which matches this mapping.
                 xml_id_to_replace = data["xml_node"]
                 for (
@@ -450,7 +454,7 @@ class RenderManager:
 
                 # Update the HTML path
                 cs = self._client_state_dict[id_]
-                cs._file_path = pathname
+                cs._file_path = str(pathname)
 
                 # Get the location of the project file. TODO
                 pp = cs._project_path

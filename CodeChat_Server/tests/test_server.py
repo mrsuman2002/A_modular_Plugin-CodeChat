@@ -99,7 +99,7 @@ def test_4(run_server):
 # -------------------------
 async def atest_5():
     # Test an invalid id.
-    async with websockets.connect(WEBSOCKET_ADDRESS) as ws:
+    async with websockets.connect(WEBSOCKET_ADDRESS) as ws:  # type: ignore
         await ws.send("boom")
         r = await ws.recv()
         assert json.loads(r) == GetResultReturn(
@@ -107,7 +107,7 @@ async def atest_5():
         )
 
     # Test an unknown client.
-    async with websockets.connect(WEBSOCKET_ADDRESS) as ws:
+    async with websockets.connect(WEBSOCKET_ADDRESS) as ws:  # type: ignore
         await ws.send("1")
         r = await ws.recv()
         assert json.loads(r) == GetResultReturn(
