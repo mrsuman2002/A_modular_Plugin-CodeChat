@@ -15,6 +15,13 @@ Change Log
 
     -   No changes.
 
+-   0.2.17, 2-Aug-2023:
+
+    -   Address packaging deprecations.
+    -   Handle a nonexistent VSCode settings file.
+    -   Support JSON5 VSCode settings files.
+    -   Make PreTeXt mapping file platform-independent.
+
 -   0.2.16, 15-Jun-2023:
 
     -   Add an ``{xml_id}`` replacement for PreTeXt projects.
