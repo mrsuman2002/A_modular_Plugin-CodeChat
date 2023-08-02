@@ -11,6 +11,7 @@ extend-ignore = E203
 
 # Exclude generated/test files.
 exclude =
+    build
     gen_py
     .tox
     templates
