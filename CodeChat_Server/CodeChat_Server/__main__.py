@@ -29,7 +29,6 @@
 # Standard library
 # ----------------
 import asyncio
-import json
 import os
 from pathlib import Path
 import shutil
@@ -41,6 +40,7 @@ from typing import List, Optional, Sequence
 
 # Third-party imports
 # -------------------
+import json5
 import psutil
 from thrift.transport import TSocket
 from thrift.transport import TTransport
@@ -463,12 +463,12 @@ def vscode_install():
     except FileNotFoundError:
         settings_contents = "{}"
 
-    # Update the CodeChat Server command.
-    settings = json.loads(settings_contents)
+    # Update the CodeChat Server command. We use the ``json5`` package -- the settings file is actually JSON5. TODO: the current json5 implementation discards comments without a lot of `complexity <https://json-five.readthedocs.io/en/latest/comments.html>`_. Find a way to keep comments when writing the file back out.
+    settings = json5.loads(settings_contents)
     settings["CodeChat.CodeChatServer.Command"] = str(Path(sys.argv[0]).absolute())
 
     # Write the results back.
-    settings_file.write_text(json.dumps(settings, indent=4))
+    settings_file.write_text(json5.dumps(settings, indent=4))
     print("Success.")
 
 

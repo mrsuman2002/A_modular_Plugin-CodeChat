@@ -131,6 +131,7 @@ setup(
         [
             "bottle",
             "CodeChat",
+            "json-five",
             "markdown",
             "psutil",
             "strictyaml",
