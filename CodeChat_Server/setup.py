@@ -147,7 +147,16 @@ setup(
     #
     #    ``$ pip install -e .[test]``
     extras_require={
-        "test": ["black", "coverage", "flake8", "mypy", "pytest", "requests", "tox"],
+        "test": [
+            "black",
+            "coverage",
+            "flake8",
+            "myst-parser",
+            "mypy",
+            "pytest",
+            "requests",
+            "sphinx",
+        ],
     },
     # To package data files, I'm using ``include_package_data=True`` then
     # putting the files in :doc:`MANIFEST.in <MANIFEST.in>`. See `including data
