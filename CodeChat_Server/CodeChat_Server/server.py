@@ -306,8 +306,7 @@ def client_data(id: int, url_path: str) -> bottle.HTTPResponse:
     html = handler.render_manager.threadsafe_get_render_results(id, url_path)
 
     # If we have rendered HTML, return it.
-    if type(html) == str:
-        assert isinstance(html, str)
+    if isinstance(html, str):
         response = bottle.HTTPResponse(html)
     else:
         # The file is on disk. Send it or a 404 if nothing was found.

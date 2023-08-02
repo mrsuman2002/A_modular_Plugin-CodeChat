@@ -109,7 +109,7 @@ class WatcherClient:
 
         # See the `docs <https://watchdog.readthedocs.io/en/latest/api.html#watchdog.events.PatternMatchingEventHandler>`__. Rather than derive a separate class, just add a method to this instance.
         self.event_handler = PatternMatchingEventHandler(patterns, ignore_patterns)
-        self.event_handler.on_any_event = self.on_any_event
+        self.event_handler.on_any_event = self.on_any_event  # type: ignore
 
         for pathname in set(directories):
             # See the `docs <https://watchdog.readthedocs.io/en/latest/api.html#watchdog.observers.api.BaseObserver.schedule>`__.
