@@ -70,7 +70,7 @@ logger = logging.getLogger(__name__)
 # `copyright <http://sphinx-doc.org/config.html#confval-copyright>`_:
 # General information about the project. **Change this** for your project.
 project = "The CodeChat System"
-copyright = "2021, Bryan A. Jones"
+copyright = "2023, Bryan A. Jones"
 
 # The version info for the project you're documenting, acts as replacement for
 # ``|version|`` and ``|release|``, also used in various other places throughout
