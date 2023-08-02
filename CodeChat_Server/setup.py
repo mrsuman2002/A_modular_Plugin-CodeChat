@@ -39,8 +39,8 @@
 #   .. code-block:: console
 #       :linenos:
 #
-#       python -m pip install -U pip setuptools wheel twine
-#       python setup.py sdist bdist_wheel
+#       python -m pip install -U pip setuptools wheel twine build
+#       python -m build
 #       python -m twine upload dist/*
 #
 # For `development
@@ -64,7 +64,7 @@
 # <https://github.com/pypa/sampleproject/commit/3b73bd9433d031f0873a6cbc5bd04cea2e3407cb>`_.
 #
 # Always prefer setuptools over distutils
-from setuptools import setup, find_packages  # type: ignore
+from setuptools import setup, find_namespace_packages
 from os import path
 
 here = path.abspath(path.dirname(__file__))
@@ -122,7 +122,35 @@ setup(
         "Topic :: Text Processing :: Markup",
     ],
     keywords="literate programming",
-    packages=find_packages(),
+    # See `Subdirectory for Data Files <https://setuptools.pypa.io/en/latest/userguide/datafiles.html#subdirectory-for-data-files>`_. This avoid the needs to add an ``__init__.py`` to every subdirectory containing data files I want included in the package.
+    packages=find_namespace_packages(
+        include=("CodeChat_Server.*",),
+        exclude=(
+            "CodeChat_Server.templates.doxygen._build",
+            "CodeChat_Server.templates.doxygen._build.*",
+            "CodeChat_Server.templates.javadoc._build",
+            "CodeChat_Server.templates.javadoc._build.*",
+            "CodeChat_Server.templates.mdbook.book",
+            "CodeChat_Server.templates.mdbook.book.*",
+            # Problem: these still don't get ignored; I have to delete them manually. The same is true for other ``__pycache__`` instances in this list.
+            "CodeChat_Server.templates.mdbook.src.__pycache__",
+            "CodeChat_Server.templates.mdbook.src.__pycache__.*",
+            "CodeChat_Server.templates.mkdocs.site",
+            "CodeChat_Server.templates.mkdocs.site.*",
+            "CodeChat_Server.templates.pretext.output",
+            "CodeChat_Server.templates.pretext.output.*",
+            "CodeChat_Server.templates.pretext.generated-assets",
+            "CodeChat_Server.templates.pretext.generated-assets.*",
+            "CodeChat_Server.templates.runestone.__pycache__",
+            "CodeChat_Server.templates.runestone.__pycache__.*",
+            "CodeChat_Server.templates.runestone.build",
+            "CodeChat_Server.templates.runestone.build.*",
+            "CodeChat_Server.templates.sphinx._build",
+            "CodeChat_Server.templates.sphinx._build.*",
+            "CodeChat_Server.templates.sphinx.__pycache__",
+            "CodeChat_Server.templates.sphinx.__pycache__.*",
+        ),
+    ),
     # List run-time dependencies here.  These will be installed by pip when
     # your project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
