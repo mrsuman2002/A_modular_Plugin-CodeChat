@@ -371,9 +371,9 @@ class ProjectConfFile:
             except Exception:
                 pass
             else:
-                # Before looking up the file, ``resolve()`` it to get the canonical representation (fix case on Windows), then make this relative to the project directory.
+                # Before looking up the file, ``resolve()`` it to get the canonical representation (fix case on Windows), then make this relative to the project directory. Make it posix-formatted, so that the mappings work cross-platform. (For example, this runs on Windows, but the PreTeXt CLI runs on Linux in WSL.)
                 xml_id_list = mapping.get(
-                    str(source_file.resolve().relative_to(self.project_path))
+                    str(source_file.resolve().relative_to(self.project_path).as_posix())
                 )
                 if xml_id_list:
                     # See if any of the mappings match the currently-displayed file. If so, use that one. Otherwise, pick the first mapping.
