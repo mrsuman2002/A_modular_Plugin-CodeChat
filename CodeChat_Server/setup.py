@@ -64,7 +64,7 @@
 # <https://github.com/pypa/sampleproject/commit/3b73bd9433d031f0873a6cbc5bd04cea2e3407cb>`_.
 #
 # Always prefer setuptools over distutils
-from setuptools import setup, find_namespace_packages
+from setuptools import setup, find_namespace_packages, find_packages
 from os import path
 
 here = path.abspath(path.dirname(__file__))
@@ -123,7 +123,11 @@ setup(
     ],
     keywords="literate programming",
     # See `Subdirectory for Data Files <https://setuptools.pypa.io/en/latest/userguide/datafiles.html#subdirectory-for-data-files>`_. This avoid the needs to add an ``__init__.py`` to every subdirectory containing data files I want included in the package.
-    packages=find_namespace_packages(
+    packages=
+    # Include the Python code.
+    find_packages() +
+    # Inlclude the data files needed by the code.
+    find_namespace_packages(
         include=("CodeChat_Server.*",),
         exclude=(
             "CodeChat_Server.templates.doxygen._build",
