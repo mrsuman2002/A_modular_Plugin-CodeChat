@@ -15,6 +15,10 @@ Change Log
 
     -   No changes.
 
+-   0.2.18, 9-Aug-2023:
+
+    -   Fix packaging: no source files were included.
+
 -   0.2.17, 2-Aug-2023:
 
     -   Address packaging deprecations.
