@@ -27,7 +27,6 @@
 #   :maxdepth: 2
 #
 #   setup.cfg
-#   MANIFEST.in
 #
 #
 # Release procedure
@@ -123,10 +122,10 @@ setup(
     ],
     keywords="literate programming",
     # See `Subdirectory for Data Files <https://setuptools.pypa.io/en/latest/userguide/datafiles.html#subdirectory-for-data-files>`_. This avoid the needs to add an ``__init__.py`` to every subdirectory containing data files I want included in the package.
-    packages=
+    #
     # Include the Python code.
-    find_packages() +
-    # Inlclude the data files needed by the code.
+    packages=find_packages() +
+    # Include the data files needed by the code.
     find_namespace_packages(
         include=("CodeChat_Server.*",),
         exclude=(
@@ -190,11 +189,10 @@ setup(
             "sphinx",
         ],
     },
-    # To package data files, I'm using ``include_package_data=True`` then
-    # putting the files in :doc:`MANIFEST.in <MANIFEST.in>`. See `including data
+    # To package data files, I'm using ``include_package_data=True``. See `including data
     # files <http://pythonhosted.org/setuptools/setuptools.html#including-data-files>`_.
     include_package_data=True,
-    # _`Python version support`: the program uses ``asyncio.run``, which was introduced in Python 3.7. `Tox` tests also run beginning at Python 3.7.
+    # _`Python version support`: the program uses ``asyncio.run``, which was introduced in Python 3.7.
     python_requires=">=3.7",
     # Make it easy to run the server.
     entry_points={
