@@ -37,12 +37,12 @@ const GetResultType = {
 const percent_regex = new RegExp(
     // Capture the number in front of the percent sign.
     "(" +
-    // Look for one or more digits, ...
-    "\\d+" +
-    // Optionally followed by a decimal point and one ore more digits. (Don't include these in a capture group.)
-    "(?:\\.\\d+)?" +
-    // End the capture group, then require a percent sign.
-    ")%",
+        // Look for one or more digits, ...
+        "\\d+" +
+        // Optionally followed by a decimal point and one ore more digits. (Don't include these in a capture group.)
+        "(?:\\.\\d+)?" +
+        // End the capture group, then require a percent sign.
+        ")%",
     // Search globally (for all matches).
     "g"
 );
@@ -91,22 +91,32 @@ function run_client(
     // Compute the URI for this websocket, dealing with special cases for CoCalc and GitHub Codespaces.
     let ws_uri;
     const is_cocalc = window.location.hostname === "cocalc.com";
-    const github_codespaces_subdomain = ".preview.app.github.dev";
-    const is_gihub_codespaces = window.location.hostname.endsWith(github_codespaces_subdomain);
+    const is_gihub_codespaces = window.location.hostname.endsWith("github.dev");
     if (is_cocalc || !is_gihub_codespaces) {
         // A special case for CoCalc: use a different URL per the `CoCalc docs <https://doc.cocalc.com/howto/webserver.html>`_.
         const separator = is_cocalc ? "/" : ":";
         // The pathname is all but the last one or two elements of the hosting page's pathname: transform ``/a/long/path/to/the/client`` to ``/a/long/path/to/the``. For CoCalc, this transforms ``/f1d3f8ac-39da-48fe-9357-7d5c4ee132de/server/27377/client`` into ``/f1d3f8ac-39da-48fe-9357-7d5c4ee132de/server``.
-        const pathname = window.location.pathname.split("/").slice(0, is_cocalc ? -2 : -1).join("/");
+        const pathname = window.location.pathname
+            .split("/")
+            .slice(0, is_cocalc ? -2 : -1)
+            .join("/");
         // Transform the hosting page's URL for the websocket. For example, transform from ``http://foo.org/client?id=0`` into ``ws://foo.org:27377``.
         ws_uri = `${protocol}://${window.location.hostname}${pathname}${separator}${ws_port}`;
     } else {
         // We're using GitHub CodeSpaces, where the ``window.location`` is (for example) ``https://bjones1-organic-goggles-wv46gpj9x4cv5qq-27377.preview.app.github.dev/client?id=0``. The desired URI for this example is ``wss://bjones1-organic-goggles-wv46gpj9x4cv5qq-27378.preview.app.github.dev``.
         //
         // Throw away everything after the last hyphen.
-        const hostname_prefix = window.location.hostname.split("-").slice(0, -1).join("-");
+        const hostname_prefix = window.location.hostname
+            .split("-")
+            .slice(0, -1)
+            .join("-");
+        // Throw away everything before the second period. That is, we want a subdomain of ``app.github.dev``, instead of ``preview.app.github.dev``, since that's the URL created for the forwarded port. ???
+        const hostname_suffix = window.location.hostname
+            .split(".")
+            .slice(2)
+            .join(".");
         // Now, build the desired URI.
-        ws_uri = `${protocol}://${hostname_prefix}-${ws_port}${github_codespaces_subdomain}`;
+        ws_uri = `${protocol}://${hostname_prefix}-${ws_port}.${hostname_suffix}`;
     }
     const ws = new ReconnectingWebSocket(ws_uri);
 
@@ -390,17 +400,17 @@ const error_regex = new RegExp(
     //
     // The filename is anything up to the colon. Windows filenames may begin with a drive letter followed by a colon -- don't capture this (the leading ``?:``).
     "^((?:\\w:)?[^:]*)" +
-    // Find the first occurrence of a pair of colons, or just a single colon. Between them there can be numbers or "None" or nothing. For example, this expression matches the string ":1589:" or string ":None:" or the string "::" or the string ":".
-    ":(\\d*|None):? " +
-    // Next match the error type, which can only be "WARNING", "ERROR" or "SEVERE". Before this error type the message may optionally contain one left parenthesis.
-    "\\(?(WARNING|ERROR|SEVERE)" +
-    // Since one error message occupies one line, a ``*`` quantifier is used along with end-of-line ``$`` to make sure only the first match is used in each line.
-    ".*$",
+        // Find the first occurrence of a pair of colons, or just a single colon. Between them there can be numbers or "None" or nothing. For example, this expression matches the string ":1589:" or string ":None:" or the string "::" or the string ":".
+        ":(\\d*|None):? " +
+        // Next match the error type, which can only be "WARNING", "ERROR" or "SEVERE". Before this error type the message may optionally contain one left parenthesis.
+        "\\(?(WARNING|ERROR|SEVERE)" +
+        // Since one error message occupies one line, a ``*`` quantifier is used along with end-of-line ``$`` to make sure only the first match is used in each line.
+        ".*$",
 
     // The message usually contains multiple lines; search each line for errors and warnings.
     "m" +
-    // The global flag must be present to replace all occurrences.
-    "g"
+        // The global flag must be present to replace all occurrences.
+        "g"
 );
 
 // Parse the error output for errors and warnings.
