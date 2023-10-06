@@ -15,6 +15,11 @@ Change Log
 
     -   No changes.
 
+-   0.2.19, 6-Oct-2023:
+
+    -   Fix URL used in Codespaces.
+    -   Add a better initial rendering placeholder (thanks, @StevenClontz!).
+
 -   0.2.18, 9-Aug-2023:
 
     -   Fix packaging: no source files were included.
