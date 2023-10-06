@@ -215,7 +215,7 @@ class CodeChatHandler:
             logger.info(" => {}".format(ret))
             return ret
 
-    # _`Shut down an editor client`. The sequence is complex. Here's a web of links which step throughs the process.
+    # _`Shut down an editor client`. The sequence is complex. Here's a web of links which step through the process.
     #
     # _`Delete step 1.` `--> <Delete step 2.>` The editor/IDE invokes stop_client, which delegates to the render manager thread.
     def stop_client(self, id: int) -> str:
