@@ -110,10 +110,10 @@ function run_client(
             .split("-")
             .slice(0, -1)
             .join("-");
-        // Throw away everything before the second period. That is, we want a subdomain of ``app.github.dev``, instead of ``preview.app.github.dev``, since that's the URL created for the forwarded port. ???
+        // Throw away everything before the first period.
         const hostname_suffix = window.location.hostname
             .split(".")
-            .slice(2)
+            .slice(1)
             .join(".");
         // Now, build the desired URI.
         ws_uri = `${protocol}://${hostname_prefix}-${ws_port}.${hostname_suffix}`;

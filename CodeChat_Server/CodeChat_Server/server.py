@@ -134,7 +134,7 @@ class CodeChatHandler:
             url = f"https://cocalc.com/{self.cocalc_project_id}/server/{HTTP_PORT}/{endpoint}?id={id}"
         elif os.environ.get("CODESPACES") == "true":
             # This is always true in a GitHub Codespace per the  `docs <https://docs.github.com/en/codespaces/developing-in-codespaces/default-environment-variables-for-your-codespace#list-of-default-environment-variables>`__.
-            url = f"https://{os.environ['CODESPACE_NAME']}-{HTTP_PORT}.preview.app.github.dev/{endpoint}?id={id}"
+            url = f"https://{os.environ['CODESPACE_NAME']}-{HTTP_PORT}.{os.environ['GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN']}/{endpoint}?id={id}"
         else:
             url = f"http://{LOCALHOST}:{HTTP_PORT}/{endpoint}?id={id}"
 
