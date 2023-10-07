@@ -15,6 +15,10 @@ Change Log
 
     -   No changes.
 
+-   0.2.20, 6-Oct-2023:
+
+    -   Improve Codespaces URL support.
+
 -   0.2.19, 6-Oct-2023:
 
     -   Fix URL used in Codespaces.
