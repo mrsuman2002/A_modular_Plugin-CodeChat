@@ -6,4 +6,4 @@
 mkdocs
 myst-parser
 runestone
-pretextbook
+pretext
