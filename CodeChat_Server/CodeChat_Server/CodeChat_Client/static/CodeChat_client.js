@@ -361,56 +361,71 @@ function scroll_to_bottom(element) {
 }
 
 // This regex parses the error string to determine get the number of warnings and errors.
+//
+// prettier-ignore
 const error_regex = new RegExp(
-    // Common docutils error messages read:
-    //
-    // .. code:: none
-    //  :number-lines:
-    //
-    //  <string>:1589: (ERROR/3) Unknown interpreted text role "ref".
-    //  X:\ode.py:docstring of sympy:5: (ERROR/3) Unexpected indentation.
-    //
-    // Common Sphinx errors read:
-    //
-    // .. code:: none
-    //  :number-lines:
-    //
-    //  X:\SVM_train.m.rst:2: SEVERE: Title overline & underline mismatch.
-    //  X:\indexs.rst:None: WARNING: image file not readable: a.jpg
-    //  X:\conf.py.rst:: WARNING: document isn't included in any toctree
-    //  # In Sphinx 1.6.1:
-    //  X:\file.rst: WARNING: document isn't included in any toctree
-    //
-    // The CodeChat renderer also produces `error messages <checkModificationTime>`_ formatted in a similar way so they'll be identified by the same regex:
-    //
-    // .. code:: none
-    //  :number-lines:
-    //
-    //  X:\ode.py:: ERROR: CodeChat renderer - source file older than the html file X:\_build\html\ode.py.
-    //
-    // Each error/warning occupies one line. The following `regular
-    // expression <https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions>`_ is designed to find the error position (1589/None) and message type (ERROR/WARNING/SEVERE). Extra spaces are added to show which parts of the example string it matches.
-    //
-    // Examining the following expression one element at a time:
-    //
-    // .. code::
-    //  :number-lines:
-    //
-    //   <string>:1589:        (ERROR/3)Unknown interpreted text role "ref".
-    //
-    // The filename is anything up to the colon. Windows filenames may begin with a drive letter followed by a colon -- don't capture this (the leading ``?:``).
-    "^((?:\\w:)?[^:]*)" +
-        // Find the first occurrence of a pair of colons, or just a single colon. Between them there can be numbers or "None" or nothing. For example, this expression matches the string ":1589:" or string ":None:" or the string "::" or the string ":".
-        ":(\\d*|None):? " +
-        // Next match the error type, which can only be "WARNING", "ERROR" or "SEVERE". Before this error type the message may optionally contain one left parenthesis.
-        "\\(?(WARNING|ERROR|SEVERE)" +
-        // Since one error message occupies one line, a ``*`` quantifier is used along with end-of-line ``$`` to make sure only the first match is used in each line.
-        ".*$",
-
+    // Don't capture this group (the ``?:``).
+    "(?:" +
+        // Common docutils error messages read:
+        //
+        // .. code:: none
+        //  :number-lines:
+        //
+        //  <string>:1589: (ERROR/3) Unknown interpreted text role "ref".
+        //  X:\ode.py:docstring of sympy:5: (ERROR/3) Unexpected indentation.
+        //
+        // Common Sphinx errors read:
+        //
+        // .. code:: none
+        //  :number-lines:
+        //
+        //  X:\SVM_train.m.rst:2: SEVERE: Title overline & underline mismatch.
+        //  X:\index.rst:None: WARNING: image file not readable: a.jpg
+        //  X:\conf.py.rst:: WARNING: document isn't included in any toctree
+        //  # In Sphinx 1.6.1:
+        //  X:\file.rst: WARNING: document isn't included in any toctree
+        //
+        // The CodeChat renderer also produces `error messages <checkModificationTime>`_ formatted in a similar way so they'll be identified by the same regex:
+        //
+        // .. code:: none
+        //  :number-lines:
+        //
+        //  X:\ode.py:: ERROR: CodeChat renderer - source file older than the html file X:\_build\html\ode.py.
+        //
+        // Each error/warning occupies one line. The following `regular
+        // expression <https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions>`_ is designed to find the error position (1589/None) and message type (ERROR/WARNING/SEVERE). Extra spaces are added to show which parts of the example string it matches.
+        //
+        // Examining the following expression one element at a time:
+        //
+        // .. code::
+        //  :number-lines:
+        //
+        //   <string>:1589:        (ERROR/3)Unknown interpreted text role "ref".
+        //
+        // The filename is anything up to the colon. Windows filenames may begin with a drive letter followed by a colon -- don't capture this (the leading ``?:``).
+        "^((?:\\w:)?[^:]*)" +
+            // Find the first occurrence of a pair of colons, or just a single colon. Between them there can be numbers or "None" or nothing. For example, this expression matches the string ":1589:" or string ":None:" or the string "::" or the string ":".
+            ":(\\d*|None):? " +
+            // Next match the error type, which can only be "WARNING", "ERROR" or "SEVERE". Before this error type the message may optionally contain one left parenthesis.
+            "\\(?(WARNING|ERROR|SEVERE)" +
+            // Since one error message occupies one line, a ``*`` quantifier is used along with end-of-line ``$`` to make sure only the first match is used in each line.
+            ".*$" +
+    // Start another non-capturing group (the ``?:``).
+    ")|(?:" +
+        // PreText CLI messages are very simple:
+        //
+        // .. code:: none
+        //  :number-lines:
+        //
+        //  critical: StartTag: invalid element name, line 8, column 6
+        //  error: stuff stuff
+        //  warning: Using CLI version 2.3.0 but project's `requirements.txt`
+        "^(critical: |error: |warning: )" +
+    ")",
     // The message usually contains multiple lines; search each line for errors and warnings.
     "m" +
-        // The global flag must be present to replace all occurrences.
-        "g"
+    // The global flag must be present to find all occurrences.
+    "g"
 );
 
 // Parse the error output for errors and warnings.
@@ -420,10 +435,24 @@ function parse_for_errors(errors_html) {
     // The replacement function is called with the match text then each matched group.
     errors_html = errors_html.replace(
         error_regex,
-        function (match_text, file_path, line, error_string) {
-            if (error_string === "ERROR" || error_string === "SEVERE") {
+        function (
+            match_text,
+            file_path,
+            line,
+            error_string,
+            pretext_error_string
+        ) {
+            if (
+                error_string === "ERROR" ||
+                error_string === "SEVERE" ||
+                pretext_error_string === "critical: " ||
+                pretext_error_string === "error: "
+            ) {
                 ++errNum;
-            } else if (error_string === "WARNING") {
+            } else if (
+                error_string === "WARNING" ||
+                pretext_error_string === "warning: "
+            ) {
                 ++warningNum;
             }
 
