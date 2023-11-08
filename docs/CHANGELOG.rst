@@ -15,6 +15,10 @@ Change Log
 
     -   No changes.
 
+-   0.2.21, 8-Nov-2023:
+
+    -   Recognize PreTeXt error messages.
+
 -   0.2.20, 6-Oct-2023:
 
     -   Improve Codespaces URL support.
